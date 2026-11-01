@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="0 0 56 74">
+<g id="shadow"><ellipse cx="28" cy="67" rx="10" ry="3" fill="#000000" opacity="0.3"/></g>
+<g id="pin"><path d="M28 66 C24 57 5 45 5 27 A23 23 0 1 1 51 27 C51 45 32 57 28 66 Z" fill="#FF5C8A" stroke="#FFFFFF" stroke-width="1"/>
+<circle cx="28" cy="27" r="16.5" fill="#FFFFFF"/></g>
+<g id="ring"><circle cx="28" cy="31" r="7.2" fill="none" stroke="#F2B21B" stroke-width="2.8"/><circle cx="28" cy="31" r="7.2" fill="none" stroke="#FFE08A" stroke-width="0.8" stroke-dasharray="6 40" transform="rotate(200 28 31)"/><path d="M22.5 18.5 L25.5 15 L30.5 15 L33.5 18.5 L28 25 Z" fill="#9FDCFF" stroke="#4FA8E0" stroke-width="0.8" stroke-linejoin="round"/><path d="M22.5 18.5 H33.5 M25.5 15 L27 18.5 L28 25 L29 18.5 L30.5 15" fill="none" stroke="#4FA8E0" stroke-width="0.6"/><path d="M36 13.1 L36.72 14.78 L38.4 15.5 L36.72 16.22 L36 17.9 L35.28 16.22 L33.6 15.5 L35.28 14.78 Z" fill="#FFC93C"/><path d="M19.5 21.4 L19.98 22.52 L21.1 23 L19.98 23.48 L19.5 24.6 L19.02 23.48 L17.9 23 L19.02 22.52 Z" fill="#FF7FA8"/></g>
+</svg>

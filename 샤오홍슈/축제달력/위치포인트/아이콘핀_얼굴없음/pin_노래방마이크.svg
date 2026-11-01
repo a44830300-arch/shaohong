@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="0 0 56 74">
+<g id="shadow"><ellipse cx="28" cy="67" rx="10" ry="3" fill="#000000" opacity="0.3"/></g>
+<g id="pin"><path d="M28 66 C24 57 5 45 5 27 A23 23 0 1 1 51 27 C51 45 32 57 28 66 Z" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="1"/>
+<circle cx="28" cy="27" r="16.5" fill="#FFFFFF"/></g>
+<g id="mic"><path d="M24.5 25 L31.5 25 L29.6 39 Q28 40.5 26.4 39 Z" fill="#7B4BFF"/><rect x="24" y="24" width="8" height="3" rx="1" fill="#FFD23F"/><circle cx="28" cy="19" r="6.8" fill="#C9CED6"/><path d="M22 17 H34 M21.4 20 H34.6 M23 23 H33 M25 13 V25 M28 12.2 V25.8 M31 13 V25" stroke="#8A919C" stroke-width="0.8"/><circle cx="28" cy="19" r="6.8" fill="none" stroke="#5A606B" stroke-width="1"/><ellipse cx="25.5" cy="16" rx="1.8" ry="1.1" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 25.5 16)"/><path d="M36 30 V35.5" stroke="#FF3D8B" stroke-width="1.2"/><circle cx="34.9" cy="35.8" r="1.4" fill="#FF3D8B"/><path d="M36 30 Q38 30.5 38.4 32.5" fill="none" stroke="#FF3D8B" stroke-width="1.1"/><path d="M19.5 28.6 L20.22 30.28 L21.9 31 L20.22 31.72 L19.5 33.4 L18.78 31.72 L17.1 31 L18.78 30.28 Z" fill="#FFC93C"/></g>
+</svg>
