@@ -1,6 +1,6 @@
 """핀 캐릭터 SVG 만들기 도구.
 
-쓰는 법:  python3 pin_character.py <포즈이름> <저장할.svg>
+쓰는 법:  python3 pin_character.py <포즈이름 또는 GROUPS 이름> <저장할.svg> [레이어 이름]
 포즈는 아래 POSES에 있다. 새 포즈는 POSES에 하나 더 넣어서 만든다.
 좌표는 '핀 기준 좌표'(원래 핀 61x86, 뾰족한 끝 = (30.5, 83))다.
 """
@@ -42,6 +42,42 @@ def build(name, pose):
 <g id="핀"><path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/></g>
 {pose.get("prop_front", "")}
 </g>
+</g>
+</svg>'''
+
+
+def heart(cx, cy, size=14, color=RED, gid="하트"):
+    """흰 테두리 달린 하트 (캔버스 좌표). size = 가로 폭."""
+    k = size / 14
+    d = (f"M{cx} {cy + 6 * k}C{cx - 9 * k} {cy}, {cx - 8 * k} {cy - 8 * k}, {cx - 3.5 * k} {cy - 7.5 * k}"
+         f"C{cx - 1.5 * k} {cy - 7.3 * k}, {cx} {cy - 6 * k}, {cx} {cy - 4.5 * k}"
+         f"C{cx} {cy - 6 * k}, {cx + 1.5 * k} {cy - 7.3 * k}, {cx + 3.5 * k} {cy - 7.5 * k}"
+         f"C{cx + 8 * k} {cy - 8 * k}, {cx + 9 * k} {cy}, {cx} {cy + 6 * k}Z")
+    return (f'<g id="{gid}"><path d="{d}" fill="white" stroke="white" stroke-width="{6 * k:.2f}" stroke-linejoin="round"/>'
+            f'<path d="{d}" fill="{color}"/></g>')
+
+
+def build_group(name, size, chars, effects="", front=""):
+    """여러 캐릭터(커플 등)를 한 장에. chars = [(포즈, (x, y), 좌우뒤집기?, 이름)].
+    흰 테두리를 모두 먼저 깔고 그 위에 소품·팔다리·핀을 쌓아서, 손을 맞잡아도 한 스티커처럼 붙어 보인다."""
+    def tf(pose, move, flip):
+        t = f"translate({move[0]} {move[1]})" + (" translate(61 0) scale(-1 1)" if flip else "")
+        return t + f' rotate({pose.get("tilt", 0)} 30.5 {pose.get("pivot_y", 45)})'
+
+    def layer(gid, fn):
+        return (f'<g id="{gid}">' + "".join(f'<g id="{nm}" transform="{tf(pz, mv, fl)}">{fn(pz)}</g>'
+                                             for pz, mv, fl, nm in chars) + "</g>")
+    chars = [(POSES[pz] if isinstance(pz, str) else pz, mv, fl, nm) for pz, mv, fl, nm in chars]
+    w, h = size
+    return f'''<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="{name}">
+{effects}
+{layer("흰 테두리", lambda pz: pz.get("prop_outline", "") + _layer(pz, "white", OUTLINE_W, 3) + f'<path d="{PIN}" fill="white" stroke="white" stroke-width="8" stroke-linejoin="round"/>')}
+{layer("소품", lambda pz: pz.get("prop", ""))}
+{layer("팔다리", lambda pz: _layer(pz, RED, LIMB_W, 0))}
+{layer("핀", lambda pz: f'<path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/>')}
+{layer("앞 소품", lambda pz: pz.get("prop_front", ""))}
+{front}
 </g>
 </svg>'''
 
@@ -167,9 +203,29 @@ POSES = {
                    + motion_lines(["M7 0 L-1 -7", "M19 -8 L15 -17", "M32 -10 L33 -20"], "노래선", 3.5),
         effects=music_notes([(124, 40, 1.35, False), (146, 22, 1.15, True), (162, 58, 1.0, False), (140, 82, 0.85, False), (22, 44, 1.0, False)]),
     ),
+    # 💑 커플 듀엣용 한 명 (오른쪽 사람 기준, 왼쪽 사람은 좌우 뒤집어 씀). 바깥손 마이크, 안쪽 손은 짝꿍 손 잡기
+    "sing_duet": dict(
+        tilt=-8, pivot_y=50,
+        limbs=["M51 43 L79 42 L74 26", "M10 46 L-2 54 L-13 52", "M24 63 L22 85", "M37 62 L48 72 L46 84"],
+        hands=[(74, 26), (-13, 52)],
+        shoes=[(11, 82, 15, 8), (40, 81, 15, 8, -14, 47, 85)],
+        prop_outline=_mic_outline + '<path d="M51 43 L79 42 L74 26 L58 22Z" fill="white" stroke="white" stroke-width="6" stroke-linejoin="round"/>',
+        prop_front=_mic + f'<circle id="마이크 잡은 손" cx="74" cy="26" r="{HAND_R}" fill="{RED}"/>',
+    ),
+}
+
+# 여러 명이 나오는 그림: 이름 → (캔버스 크기, [(포즈, 위치, 뒤집기, 이름)], 효과선, 맨 앞 소품)
+GROUPS = {
+    "couple_sing": (
+        (260, 182),
+        [("sing_duet", (44, 68), True, "왼쪽 핀"), ("sing_duet", (130, 68), False, "오른쪽 핀")],
+        music_notes([(20, 62, 1.1, False), (34, 36, 0.9, True), (238, 56, 1.1, False), (212, 34, 0.9, True), (246, 94, 0.8, False)]),
+        heart(130, 44, 24, gid="하트") + heart(113, 22, 12, gid="작은 하트") + heart(148, 18, 10, gid="작은 하트2"),
+    ),
 }
 
 if __name__ == "__main__":
     pose, out = sys.argv[1], sys.argv[2]
-    open(out, "w").write(build(sys.argv[3] if len(sys.argv) > 3 else "핀 캐릭터", POSES[pose]))
+    nm = sys.argv[3] if len(sys.argv) > 3 else "핀 캐릭터"
+    open(out, "w").write(build_group(nm, *GROUPS[pose]) if pose in GROUPS else build(nm, POSES[pose]))
     print("저장:", out)
