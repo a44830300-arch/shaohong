@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="0 0 56 74">
+<g id="shadow"><ellipse cx="28" cy="67" rx="10" ry="3" fill="#000000" opacity="0.3"/></g>
+<g id="pin"><path d="M28 66 C24 57 5 45 5 27 A23 23 0 1 1 51 27 C51 45 32 57 28 66 Z" fill="#FF5C8A" stroke="#FFFFFF" stroke-width="1"/>
+<circle cx="28" cy="27" r="16.5" fill="#FFFFFF"/></g>
+<g id="hearts"><path d="M24 32.85 C14.90 27.65 18.15 20.82 24 24.73 C29.85 20.82 33.10 27.65 24 32.85 Z" fill="#FF9EBB"/><path d="M32 34.85 C22.90 29.65 26.15 22.82 32 26.73 C37.85 22.82 41.10 29.65 32 34.85 Z" fill="#FF3D6E" stroke="#FFFFFF" stroke-width="1"/><ellipse cx="29.5" cy="25.8" rx="1.6" ry="1" fill="#FFFFFF" opacity="0.7" transform="rotate(-35 29.5 25.8)"/><path d="M19 16.2 L19.54 17.46 L20.8 18 L19.54 18.54 L19 19.8 L18.46 18.54 L17.2 18 L18.46 17.46 Z" fill="#FFC93C"/></g>
+</svg>
