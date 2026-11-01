@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="22 2 76 100.4">
+<defs><clipPath id="clip-hearts"><path d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z"/></clipPath></defs>
+<ellipse id="shadow" cx="60" cy="99" rx="15" ry="3.4" fill="#3A2210" opacity="0.3"/>
+<g id="behind"></g>
+<path id="body" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="#FF5C7A"/>
+<g id="pattern" clip-path="url(#clip-hearts)"></g>
+<path id="outline" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+<ellipse cx="42" cy="32" rx="6" ry="3.5" transform="rotate(-35 42 32)" fill="#FFFFFF" opacity="0.55"/><g id="face"><path d="M50 49.78 C44.12 46.42 46.22 42.01 50 44.53 C53.78 42.01 55.88 46.42 50 49.78 Z" fill="#FF2D55"/><path d="M70 49.78 C64.12 46.42 66.22 42.01 70 44.53 C73.78 42.01 75.88 46.42 70 49.78 Z" fill="#FF2D55"/><path d="M54 55 C56 59 64 59 66 55" fill="none" stroke="#3A2210" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="42" cy="54" rx="4" ry="2.5" fill="#FF6B5B" opacity="0.7"/><ellipse cx="78" cy="54" rx="4" ry="2.5" fill="#FF6B5B" opacity="0.7"/></g>
+<g id="topper"><path d="M50 16.95 C42.30 12.55 45.05 6.78 50 10.07 C54.95 6.78 57.70 12.55 50 16.95 Z" fill="#FFB3C6" stroke="#FFFFFF" stroke-width="1"/><path d="M70 16.95 C62.30 12.55 65.05 6.78 70 10.07 C74.95 6.78 77.70 12.55 70 16.95 Z" fill="#FF2D55" stroke="#FFFFFF" stroke-width="1"/><path d="M88 18.5 L89.05 20.95 L91.5 22 L89.05 23.05 L88 25.5 L86.95 23.05 L84.5 22 L86.95 20.95 Z" fill="#FFC93C"/></g>
+</svg>
