@@ -256,6 +256,49 @@ def moon_stars(moon=(22, 24), r=13, stars=(), gid="달과 별"):
 _lantern_outline, _lantern = lantern()
 _bag_outline, _bag = shopping_bag(x=-17, y=64, w=17, h=21, hand=(-8.5, 57))
 
+
+def beer_mug(hand=(80, 16), x=84, y=0, w=16, h=22):
+    """손잡이를 잡은 노란 맥주잔(거품 넘침). (흰 테두리용, 본체) 두 개를 돌려준다. 잡은 손은 prop_front에서 한 번 더 그린다."""
+    hx, hy = hand
+    handle = f"M{x} {y + 6} C{hx - 4} {y + 6} {hx - 4} {y + h - 5} {x} {y + h - 5}"
+    foam = (f"M{x - 2} {y + 3} Q{x - 3} {y - 5} {x + 4} {y - 4} Q{x + 7} {y - 9} {x + 11} {y - 5} "
+            f"Q{x + w + 4} {y - 6} {x + w + 2} {y + 2} Q{x + w + 3} {y + 7} {x + w - 1} {y + 5} "
+            f"L{x + w - 1} {y + 3} Z")
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="10" stroke-linecap="round"/>'
+               f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="3" fill="white" stroke="white" stroke-width="7"/>'
+               f'<path d="{foam}" fill="white" stroke="white" stroke-width="7" stroke-linejoin="round"/>')
+    bubbles = "".join(f'<circle cx="{x + a}" cy="{y + b}" r="{r}" fill="white" opacity="0.8"/>'
+                      for a, b, r in [(5, 12, 1.4), (10, 17, 1.1), (11, 9, 0.9)])
+    main = (f'<g id="맥주잔"><path d="{handle}" stroke="{DARK}" stroke-width="3" stroke-linecap="round" fill="none"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="3" fill="#FFD84D" stroke="{DARK}" stroke-width="1.8"/>{bubbles}'
+            f'<path d="{foam}" fill="white" stroke="{DARK}" stroke-width="1.6" stroke-linejoin="round"/>'
+            f'</g>')
+    return outline, main
+
+
+def dizzy(cx, cy, r=9, turns=1.6, gid="어질선"):
+    """머리 위 빙글빙글 어질 효과 (캔버스 좌표, 연한 빨강)."""
+    pts = []
+    n = 40
+    for i in range(n + 1):
+        t = i / n
+        a = 2 * math.pi * turns * t
+        rr = r * (0.15 + 0.85 * t)
+        pts.append((cx + rr * math.cos(a), cy + rr * 0.55 * math.sin(a)))
+    d = "M" + " L".join(f"{x:.2f} {y:.2f}" for x, y in pts)
+    return (f'<g id="{gid}" stroke="{RED}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '
+            f'fill="none" opacity="0.45"><path d="{d}"/></g>')
+
+
+def hic_bubbles(bubbles, gid="딸꾹방울"):
+    """'딸꾹' 느낌의 동글동글 방울 (캔버스 좌표). bubbles = [(x, y, r)]."""
+    return (f'<g id="{gid}" stroke="{RED}" stroke-width="2.4" fill="none" opacity="0.45">'
+            + "".join(f'<circle cx="{x}" cy="{y}" r="{r}"/>' for x, y, r in bubbles) + "</g>")
+
+
+_beer_outline, _beer = beer_mug()
+_lantern_l_outline, _lantern_l = lantern(hand=(-12, 40), tip=(-26, 22), c=(-26, 43))
+
 _flag_outline, _flag = checker_flag()
 
 POSES = {
@@ -323,6 +366,20 @@ POSES = {
         prop_front=f'<circle id="장바구니 든 손" cx="-8.5" cy="57" r="{HAND_R}" fill="{RED}"/>',
         effects=moon_stars((24, 26), 14, [(58, 12, 1.0), (150, 22, 0.8), (14, 62, 0.7)])
                 + motion_lines(["M149 65 L156 62", "M152 80 L160 80", "M149 95 L156 98", "M122 57 L119 51"], "불빛선", 3),
+    ),
+    # 🍺 알딸딸 달빛장터 핀: 맥주잔 번쩍 + 초롱 삐딱 + 꼬인 다리 + 어질선 (달빛장터_알딸딸핀.svg)
+    "tipsy": dict(
+        size=(200, 170), move=(66, 58), tilt=-13, pivot_y=60,
+        limbs=["M51 43 L70 34 L80 16", "M10 45 L-1 48 L-12 40", "M23 62 L12 73 L17 85", "M39 61 L50 71 L45 84"],
+        hands=[(80, 16), (-12, 40)],
+        shoes=[(8, 82, 15, 8, 10, 15, 86), (39, 81, 15, 8, -12, 46, 85)],
+        prop_outline=_lantern_l_outline + _beer_outline, prop=_lantern_l,
+        prop_front=_beer + f'<circle id="맥주잔 든 손" cx="80" cy="16" r="{HAND_R}" fill="{RED}"/>',
+        effects=moon_stars((24, 26), 14, [(150, 14, 0.9), (186, 64, 0.7), (16, 150, 0.6)])
+                + dizzy(94, 40, 11)
+                + hic_bubbles([(152, 48, 3.2), (163, 36, 2.3), (170, 26, 1.6)])
+                + motion_lines(["M150 104 Q157 112 151 121", "M158 98 Q168 112 159 127",
+                                "M10 92 Q3 100 9 109"], "비틀선", 3),
     ),
     # 💑 커플 듀엣용 한 명 (오른쪽 사람 기준, 왼쪽 사람은 좌우 뒤집어 씀). 바깥손 마이크, 안쪽 손은 짝꿍 손 잡기
     "sing_duet": dict(
