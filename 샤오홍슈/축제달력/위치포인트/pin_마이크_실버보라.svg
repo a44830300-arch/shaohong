@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="0 0 56 74">
+<defs>
+<radialGradient id="head-grad" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#AEB4BF"/></radialGradient>
+<linearGradient id="handle-grad" x1="0" x2="1"><stop offset="0" stop-color="#8B5CF6"/><stop offset="0.55" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6D3FE0"/></linearGradient>
+<clipPath id="head-clip"><circle cx="28" cy="20" r="16"/></clipPath>
+</defs>
+<ellipse id="shadow" cx="28" cy="70" rx="9" ry="2.6" fill="#3A2210" opacity="0.3"/>
+<path id="handle" d="M18.5 38 H37.5 L29.6 67 Q28 69.5 26.4 67 Z" fill="url(#handle-grad)" stroke="#FFFFFF" stroke-width="1"/>
+<rect id="band" x="16" y="33" width="24" height="7" rx="2.5" fill="#FFC93C" stroke="#FFFFFF" stroke-width="1"/>
+<rect x="16.5" y="37.3" width="23" height="1.6" fill="#E0A100"/>
+<circle id="head" cx="28" cy="20" r="16" fill="url(#head-grad)"/>
+<g clip-path="url(#head-clip)" opacity="0.9"><path d="M14 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M19 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M24 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M29 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M34 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M39 2 V38" stroke="#7D8592" stroke-width="0.9"/><path d="M10 8 H46" stroke="#7D8592" stroke-width="0.9"/><path d="M10 13 H46" stroke="#7D8592" stroke-width="0.9"/><path d="M10 18 H46" stroke="#7D8592" stroke-width="0.9"/><path d="M10 23 H46" stroke="#7D8592" stroke-width="0.9"/><path d="M10 28 H46" stroke="#7D8592" stroke-width="0.9"/><path d="M10 33 H46" stroke="#7D8592" stroke-width="0.9"/></g>
+<circle cx="28" cy="20" r="16" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+<ellipse cx="21.5" cy="12" rx="4.2" ry="2.3" transform="rotate(-35 21.5 12)" fill="#FFFFFF" opacity="0.75"/>
+<g id="note"><path d="M49 4 V13" stroke="#FF3D8B" stroke-width="1.6"/><ellipse cx="47.2" cy="13.4" rx="2.3" ry="1.7" fill="#FF3D8B"/><path d="M49 4 Q52.5 4.6 52.8 8" fill="none" stroke="#FF3D8B" stroke-width="1.4"/></g><path d="M7 40 L7.8 41.9 L9.7 42.7 L7.8 43.5 L7 45.4 L6.2 43.5 L4.3 42.7 L6.2 41.9 Z" fill="#FFC93C"/>
+</svg>
