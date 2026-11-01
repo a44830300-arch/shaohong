@@ -337,6 +337,73 @@ _tie_outline, _tie = head_tie()
 
 _flag_outline, _flag = checker_flag()
 
+
+ORANGE, ORANGE_DARK = "#FF9F1C", "#F0820A"           # 귤 색 (귤지도 귤 핀과 같은 색)
+LEAF, LEAF_LIGHT, STEM = "#4E8A2E", "#6FB03C", "#7A5A2E"
+
+
+def tangerine(cx, cy, r=7, leaf=0, gid="귤"):
+    """귤 하나. leaf = 꼭지 잎 기울기(도), None이면 잎 없음. (흰 테두리용, 본체) 두 개를 돌려준다."""
+    k = r / 7
+    lf = ""
+    if leaf is not None:
+        lf = (f'<g transform="rotate({leaf} {cx} {cy - r})"><path d="M{cx} {cy - r + 0.5} C{cx + 2 * k} {cy - r - 4 * k} {cx + 6 * k} {cy - r - 5 * k} {cx + 8 * k} {cy - r - 4 * k} '
+              f'C{cx + 6 * k} {cy - r - 1 * k} {cx + 3 * k} {cy - r + 0.5} {cx} {cy - r + 0.5}Z" fill="{LEAF_LIGHT}" stroke="{DARK}" stroke-width="1" stroke-linejoin="round"/></g>')
+    dots = "".join(f'<circle cx="{cx + a * k:.2f}" cy="{cy + b * k:.2f}" r="{0.6 * k:.2f}" fill="{ORANGE_DARK}"/>'
+                   for a, b in [(3, 2), (-2, 3.5), (4, -2.5), (0.5, 5)])
+    outline = f'<circle cx="{cx}" cy="{cy}" r="{r + 3.5}" fill="white"/>'
+    body = (f'<g id="{gid}"><circle cx="{cx}" cy="{cy}" r="{r}" fill="{ORANGE}" stroke="{DARK}" stroke-width="1.4"/>{dots}'
+            f'<ellipse cx="{cx - 2.6 * k:.2f}" cy="{cy - 2.8 * k:.2f}" rx="{2.2 * k:.2f}" ry="{1.3 * k:.2f}" transform="rotate(-35 {cx - 2.6 * k:.2f} {cy - 2.8 * k:.2f})" fill="white" opacity="0.6"/>'
+            f'<circle cx="{cx}" cy="{cy - r + 0.6}" r="{1.3 * k:.2f}" fill="{STEM}"/>{lf}</g>')
+    return outline, body
+
+
+def leaf_shape(x, y, angle, L=11, W=4.5, color=LEAF):
+    """잎 하나 ((x, y) = 잎자루, angle = 잎 방향)."""
+    return (f'<path d="M0 0 C{L * 0.3} {-W} {L * 0.75} {-W} {L} 0 C{L * 0.75} {W} {L * 0.3} {W} 0 0Z" '
+            f'transform="translate({x} {y}) rotate({angle})" fill="{color}" stroke="{DARK}" stroke-width="1" stroke-linejoin="round"/>')
+
+
+def tangerine_branch(branch="M134 -26 Q104 -10 56 -20", twigs=(), fruits=(), leaves=()):
+    """귤나무 가지 (잎·매달린 귤). twigs = 가지에서 귤로 내려가는 꼭지 줄, fruits = [(x, y, r, 잎각도)],
+    leaves = [(x, y, 각도, 색)]. (흰 테두리용, 본체) 두 개를 돌려준다."""
+    tw = "".join(f'<path d="{d}" stroke="{STEM}" stroke-width="1.8" stroke-linecap="round"/>' for d in twigs)
+    fo, fb = zip(*[tangerine(x, y, r, lf, f"매달린 귤{i + 1}") for i, (x, y, r, lf) in enumerate(fruits)]) if fruits else ((), ())
+    lv_o = "".join(f'<circle cx="{x + 6 * math.cos(math.radians(a)):.2f}" cy="{y + 6 * math.sin(math.radians(a)):.2f}" r="8" fill="white"/>'
+                   for x, y, a, _ in leaves)
+    outline = (f'<path d="{branch}" stroke="white" stroke-width="11" stroke-linecap="round"/>{lv_o}'
+               + "".join(f'<path d="{d}" stroke="white" stroke-width="7" stroke-linecap="round"/>' for d in twigs) + "".join(fo))
+    body = (f'<g id="귤나무 가지"><path d="{branch}" stroke="{STEM}" stroke-width="4.5" stroke-linecap="round"/>'
+            + "".join(leaf_shape(x, y, a, color=c) for x, y, a, c in leaves) + tw + "".join(fb) + "</g>")
+    return outline, body
+
+
+def tangerine_basket(x=-30, y=66, w=30, h=17, hand=(-15, 55)):
+    """귤이 수북한 바구니. 손잡이 꼭대기를 손으로 든다. (흰 테두리용, 본체) 두 개를 돌려준다."""
+    hx, hy = hand
+    handle = f"M{x + 3} {y + 1} Q{hx} {hy - 14} {x + w - 3} {y + 1}"
+    shape = f"M{x - 1} {y} H{x + w + 1} L{x + w - 2} {y + h - 3} Q{x + w - 3} {y + h} {x + w - 6} {y + h} H{x + 6} Q{x + 3} {y + h} {x + 2} {y + h - 3}Z"
+    fruits = [(x + 6, y - 2, 5.5, -30), (x + 15, y - 5, 6, 20), (x + 24, y - 2, 5.5, 60)]
+    fo, fb = zip(*[tangerine(a, b, r, lf, f"바구니 귤{i + 1}") for i, (a, b, r, lf) in enumerate(fruits)])
+    weave = "".join(f'<path d="M{x + 1} {y + o} H{x + w - 1}" stroke="{DARK}" stroke-width="1" opacity="0.55"/>' for o in (5, 10))
+    weave += "".join(f'<path d="M{x + a} {y + 1} L{x + a + (a - w / 2) * 0.08:.2f} {y + h - 1}" stroke="{DARK}" stroke-width="1" opacity="0.55"/>'
+                     for a in (7, 15, 23))
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="9" stroke-linecap="round" fill="none"/>'
+               f'<path d="{shape}" fill="white" stroke="white" stroke-width="7" stroke-linejoin="round"/>' + "".join(fo))
+    body = (f'<g id="귤 바구니"><path d="{handle}" stroke="{STEM}" stroke-width="3" stroke-linecap="round" fill="none"/>'
+            + "".join(fb)
+            + f'<path d="{shape}" fill="#C98A4B" stroke="{DARK}" stroke-width="1.6" stroke-linejoin="round"/>{weave}</g>')
+    return outline, body
+
+
+_branch_outline, _branch = tangerine_branch(
+    branch="M140 -30 Q110 -12 58 -22",
+    twigs=["M84 -16 L80 -2", "M112 -16 L114 -6", "M64 -21 L62 -14"],
+    fruits=[(80, 4, 7.5, 25), (114, 1, 7, -20), (62, -7, 6, None)],
+    leaves=[(96, -15, -150, LEAF), (96, -15, -30, LEAF_LIGHT), (124, -21, 160, LEAF_LIGHT), (124, -21, 60, LEAF),
+            (72, -19, -110, LEAF_LIGHT), (58, -22, 175, LEAF), (104, -14, 70, LEAF_LIGHT)])
+_basket_outline, _basket = tangerine_basket()
+
 POSES = {
     # 🏃 뛰는 핀 (올레_러닝핀.svg)
     "run": dict(
@@ -416,6 +483,16 @@ POSES = {
                 + hic_bubbles([(152, 48, 3.2), (163, 36, 2.3), (170, 26, 1.6)])
                 + motion_lines(["M150 104 Q157 112 151 121", "M158 98 Q168 112 159 127",
                                 "M10 92 Q3 100 9 109"], "비틀선", 3),
+    ),
+    # 🍊 귤 따는 핀: 까치발로 가지의 귤을 똑 따고, 한 손엔 귤 바구니 (귤따기핀.svg)
+    "tangerine": dict(
+        size=(204, 142), move=(46, 36), tilt=6, pivot_y=50,
+        limbs=["M51 43 L70 34 L76 9", "M10 46 L-1 54 L-15 55", "M24 63 L23 85", "M37 63 L41 84"],
+        hands=[(76, 9), (-15, 55)],
+        shoes=[(12, 82, 15, 8), (37, 81, 15, 8, -8, 44, 85)],
+        prop_outline=_branch_outline + _basket_outline, prop=_branch + _basket,
+        prop_front=f'<circle id="바구니 든 손" cx="-15" cy="55" r="{HAND_R}" fill="{RED}"/>'
+                   + motion_lines(["M90 12 L97 15", "M88 21 L94 26", "M68 13 L62 17"], "똑선", 3),
     ),
     # 💑 커플 듀엣용 한 명 (오른쪽 사람 기준, 왼쪽 사람은 좌우 뒤집어 씀). 바깥손 마이크, 안쪽 손은 짝꿍 손 잡기
     "sing_duet": dict(
