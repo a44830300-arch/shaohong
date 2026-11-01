@@ -160,8 +160,52 @@ def microphone(hand=(69, 23), head=(60, 7), r=6, hw=5.5, tail=6):
     return outline, body
 
 
+def yellowtail(x, y, angle=30, k=1.0):
+    """방어 (등은 푸른 남색, 배는 은색, 몸 가운데 노란 줄, 노란 갈래 꼬리).
+    (x, y) = 입 위치, 기본 모양은 머리가 왼쪽. (흰 테두리용, 본체) 두 개를 돌려준다."""
+    body = "M0 0C4 -8 18 -11 32 -6C36 -4 39 -2 41 0C39 2 36 4 32 6C18 11 4 8 0 0Z"
+    back = "M0 0C4 -8 18 -11 32 -6C36 -4 39 -2 41 0C28 -1.5 12 -2 0 0Z"
+    tail = "M38 0L50 -10L47 0L50 10Z"
+    fins = "M18 -9.5L24 -14L27 -7.5Z M22 8.5L27 12L28 6.5Z"
+    t = f'transform="translate({x} {y}) rotate({angle}) scale({k})"'
+    lw, ow = 1.4 / k, 8 / k   # 크기를 키워도 선 굵기·흰 테두리 굵기는 그대로
+    outline = (f'<g {t}><path d="{body}" fill="white" stroke="white" stroke-width="{ow:.2f}" stroke-linejoin="round"/>'
+               f'<path d="{tail}" fill="white" stroke="white" stroke-width="{ow:.2f}" stroke-linejoin="round"/>'
+               f'<path d="{fins}" fill="white" stroke="white" stroke-width="{ow:.2f}" stroke-linejoin="round"/></g>')
+    fish = (f'<g id="방어" {t}>'
+            f'<path d="{fins}" fill="#2E5C8A" stroke="{DARK}" stroke-width="{lw:.2f}" stroke-linejoin="round"/>'
+            f'<path d="{tail}" fill="#F6C343" stroke="{DARK}" stroke-width="{lw:.2f}" stroke-linejoin="round"/>'
+            f'<path d="{body}" fill="#DDE6EE"/><path d="{back}" fill="#2E5C8A"/>'
+            f'<path d="M7 -0.6C17 -2.2 29 -1.6 39 0" stroke="#F6C343" stroke-width="2.6" stroke-linecap="round"/>'
+            f'<path d="M12 -6.5Q15 0 12 6" stroke="{DARK}" stroke-width="{lw * 0.8:.2f}" opacity="0.5"/>'
+            f'<path d="{body}" stroke="{DARK}" stroke-width="{lw:.2f}" stroke-linejoin="round"/>'
+            f'<circle cx="5.5" cy="-2" r="2" fill="white" stroke="{DARK}" stroke-width="{lw * 0.6:.2f}"/><circle cx="5.9" cy="-2" r="1" fill="{DARK}"/>'
+            f'<path d="M0 0L3 1.2" stroke="{DARK}" stroke-width="{lw * 0.8:.2f}" stroke-linecap="round"/></g>')
+    return outline, fish
+
+
+def fishing_rod(butt=(16, 72), bend=(66, 34), ctrl=(94, 10), tip=(114, 22), reel=(28, 66)):
+    """휘어진 낚싯대 + 릴. (흰 테두리용, 본체) 두 개를 돌려준다. 낚싯줄은 따로 그린다."""
+    rod = f"M{butt[0]} {butt[1]} L{bend[0]} {bend[1]} Q{ctrl[0]} {ctrl[1]} {tip[0]} {tip[1]}"
+    gx, gy = butt[0] + (bend[0] - butt[0]) * 0.38, butt[1] + (bend[1] - butt[1]) * 0.38
+    grip = f"M{butt[0]} {butt[1]} L{gx:.2f} {gy:.2f}"
+    rx, ry = reel
+    outline = (f'<path d="{rod}" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+               f'<path d="{grip}" stroke="white" stroke-width="11" stroke-linecap="round"/>'
+               f'<circle cx="{rx}" cy="{ry}" r="7.5" fill="white"/>')
+    body = (f'<g id="낚싯대"><path d="{rod}" stroke="{DARK}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+            f'<path d="{grip}" stroke="{DARK}" stroke-width="5.5" stroke-linecap="round"/>'
+            f'<circle cx="{rx}" cy="{ry}" r="4.5" fill="{DARK}"/><circle cx="{rx}" cy="{ry}" r="1.8" fill="#8A8A8A"/></g>')
+    return outline, body
+
+
 _mic_outline, _mic = microphone(hand=(74, 26), head=(56, 1), r=10.5, hw=8, tail=9)
 
+_rod_outline, _rod = fishing_rod()
+_fish_outline, _fish = yellowtail(124, 44, angle=72, k=1.15)
+_line = '<path id="낚싯줄" d="M114 22 L124 44" stroke="#2B2B2B" stroke-width="1.3" stroke-linecap="round"/>'
+# 앞으로 뻗은 왼팔 (핀 몸 앞으로 지나가서 따로 한 번 더 그린다)
+_front_arm = "M10 47 L13 62 L32 60"
 
 def lantern(hand=(74, 30), tip=(92, 10), c=(92, 31), rx=9, ry=11):
     """막대 끝에 매달린 불 켠 초롱. (흰 테두리용, 본체) 두 개를 돌려준다. 안쪽만 노란 불빛(달빛장터 포스터 색)."""
@@ -253,6 +297,22 @@ POSES = {
                    + motion_lines(["M7 0 L-1 -7", "M19 -8 L15 -17", "M32 -10 L33 -20"], "노래선", 3.5),
         effects=music_notes([(124, 40, 1.35, False), (146, 22, 1.15, True), (162, 58, 1.0, False), (140, 82, 0.85, False), (22, 44, 1.0, False)]),
     ),
+    # 🎣 방어 잡는 핀 (방어낚시핀.svg)
+    "fishing": dict(
+        size=(198, 118), move=(22, 8), tilt=-12, pivot_y=50,
+        limbs=["M51 43 L70 47 L62 37", _front_arm, "M24 63 L15 74 L10 85", "M38 61 L52 71 L57 83"],
+        hands=[(62, 37)],
+        shoes=[(2, 82, 15, 8), (50, 80, 15, 8, -10, 57, 84)],
+        prop_outline=_rod_outline + _fish_outline + '<path d="M114 22 L124 44" stroke="white" stroke-width="4"/>',
+        prop=_line + _fish,
+        # 낚싯대·앞팔은 핀 앞에 그려서 두 손으로 잡은 것처럼 보이게 한다
+        prop_front=(f'<g id="앞팔"><path d="{_front_arm}" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+                    f'<path d="{_front_arm}" stroke="{RED}" stroke-width="{LIMB_W}" stroke-linecap="round" stroke-linejoin="round"/></g>'
+                    + _rod
+                    + f'<g id="낚싯대 잡은 손" fill="{RED}" stroke="white" stroke-width="1.5"><circle cx="32" cy="60" r="{HAND_R}"/><circle cx="62" cy="37" r="{HAND_R}"/></g>'
+                    + motion_lines(["M-4 12 L-12 6", "M-8 24 L-17 22",
+                                    "M108 62 Q102 66 104 74", "M152 64 Q158 70 154 78", "M146 46 L152 42"], "효과선", 3)),
+    ),
     # 🏮 달빛장터 핀: 초롱 들고 장바구니 들고 야시장 걷기 (달빛장터핀.svg)
     "market": dict(
         size=(170, 150), move=(44, 46), tilt=5, pivot_y=45,
@@ -298,8 +358,28 @@ GROUPS = {
     ),
 }
 
+def build_fish_point(name="방어 포인트", k=1.6):
+    """방어만으로 만든 위치 포인트. 머리를 아래로 내리꽂는 방어, 입 끝 = 실제 위치."""
+    w, h = 88, 116
+    mx, my = 42, 106          # 입 끝(위치를 가리키는 점)
+    o, f = yellowtail(mx, my, angle=-78, k=k)
+    fx = motion_lines(["M10 10 L10 28", "M5 38 L5 50", "M78 6 L78 20", "M83 30 L83 42"], "효과선", 3.5)
+    return f'''<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="{name}">
+{fx}
+<g id="흰 테두리">{o}</g>
+{f}
+</g>
+</svg>'''
+
+
 if __name__ == "__main__":
     pose, out = sys.argv[1], sys.argv[2]
     nm = sys.argv[3] if len(sys.argv) > 3 else "핀 캐릭터"
-    open(out, "w").write(build_group(nm, *GROUPS[pose]) if pose in GROUPS else build(nm, POSES[pose]))
+    # "yellowtail" = 핀 없이 방어만으로 만든 포인트
+    if pose == "yellowtail":
+        svg = build_fish_point(nm)
+    else:
+        svg = build_group(nm, *GROUPS[pose]) if pose in GROUPS else build(nm, POSES[pose])
+    open(out, "w").write(svg)
     print("저장:", out)
