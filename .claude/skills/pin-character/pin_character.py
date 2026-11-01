@@ -1,6 +1,6 @@
 """핀 캐릭터 SVG 만들기 도구.
 
-쓰는 법:  python3 pin_character.py <포즈이름> <저장할.svg>
+쓰는 법:  python3 pin_character.py <포즈이름 또는 GROUPS 이름> <저장할.svg> [레이어 이름]
 포즈는 아래 POSES에 있다. 새 포즈는 POSES에 하나 더 넣어서 만든다.
 좌표는 '핀 기준 좌표'(원래 핀 61x86, 뾰족한 끝 = (30.5, 83))다.
 """
@@ -42,6 +42,42 @@ def build(name, pose):
 <g id="핀"><path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/></g>
 {pose.get("prop_front", "")}
 </g>
+</g>
+</svg>'''
+
+
+def heart(cx, cy, size=14, color=RED, gid="하트"):
+    """흰 테두리 달린 하트 (캔버스 좌표). size = 가로 폭."""
+    k = size / 14
+    d = (f"M{cx} {cy + 6 * k}C{cx - 9 * k} {cy}, {cx - 8 * k} {cy - 8 * k}, {cx - 3.5 * k} {cy - 7.5 * k}"
+         f"C{cx - 1.5 * k} {cy - 7.3 * k}, {cx} {cy - 6 * k}, {cx} {cy - 4.5 * k}"
+         f"C{cx} {cy - 6 * k}, {cx + 1.5 * k} {cy - 7.3 * k}, {cx + 3.5 * k} {cy - 7.5 * k}"
+         f"C{cx + 8 * k} {cy - 8 * k}, {cx + 9 * k} {cy}, {cx} {cy + 6 * k}Z")
+    return (f'<g id="{gid}"><path d="{d}" fill="white" stroke="white" stroke-width="{6 * k:.2f}" stroke-linejoin="round"/>'
+            f'<path d="{d}" fill="{color}"/></g>')
+
+
+def build_group(name, size, chars, effects="", front=""):
+    """여러 캐릭터(커플 등)를 한 장에. chars = [(포즈, (x, y), 좌우뒤집기?, 이름)].
+    흰 테두리를 모두 먼저 깔고 그 위에 소품·팔다리·핀을 쌓아서, 손을 맞잡아도 한 스티커처럼 붙어 보인다."""
+    def tf(pose, move, flip):
+        t = f"translate({move[0]} {move[1]})" + (" translate(61 0) scale(-1 1)" if flip else "")
+        return t + f' rotate({pose.get("tilt", 0)} 30.5 {pose.get("pivot_y", 45)})'
+
+    def layer(gid, fn):
+        return (f'<g id="{gid}">' + "".join(f'<g id="{nm}" transform="{tf(pz, mv, fl)}">{fn(pz)}</g>'
+                                             for pz, mv, fl, nm in chars) + "</g>")
+    chars = [(POSES[pz] if isinstance(pz, str) else pz, mv, fl, nm) for pz, mv, fl, nm in chars]
+    w, h = size
+    return f'''<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="{name}">
+{effects}
+{layer("흰 테두리", lambda pz: pz.get("prop_outline", "") + _layer(pz, "white", OUTLINE_W, 3) + f'<path d="{PIN}" fill="white" stroke="white" stroke-width="8" stroke-linejoin="round"/>')}
+{layer("소품", lambda pz: pz.get("prop", ""))}
+{layer("팔다리", lambda pz: _layer(pz, RED, LIMB_W, 0))}
+{layer("핀", lambda pz: f'<path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/>')}
+{layer("앞 소품", lambda pz: pz.get("prop_front", ""))}
+{front}
 </g>
 </svg>'''
 
@@ -171,6 +207,55 @@ _line = '<path id="낚싯줄" d="M114 22 L124 44" stroke="#2B2B2B" stroke-width=
 # 앞으로 뻗은 왼팔 (핀 몸 앞으로 지나가서 따로 한 번 더 그린다)
 _front_arm = "M10 47 L13 62 L32 60"
 
+def lantern(hand=(74, 30), tip=(92, 10), c=(92, 31), rx=9, ry=11):
+    """막대 끝에 매달린 불 켠 초롱. (흰 테두리용, 본체) 두 개를 돌려준다. 안쪽만 노란 불빛(달빛장터 포스터 색)."""
+    (hx, hy), (tx, ty), (cx, cy) = hand, tip, c
+    stick = f"M{hx} {hy} L{tx} {ty}"
+    string = f"M{tx} {ty} L{cx} {cy - ry - 2}"
+    body = f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"'
+    ribs = "".join(f'<path d="M{cx - rx * f:.2f} {cy + o:.2f} Q{cx} {cy + o + 2.2:.2f} {cx + rx * f:.2f} {cy + o:.2f}" stroke="{DARK}" stroke-width="1.3" fill="none"/>'
+                   for o, f in [(-5, 0.86), (0, 1.0), (5, 0.86)])
+    caps = (f'<rect x="{cx - 4.5}" y="{cy - ry - 2.5}" width="9" height="4" rx="1.5" fill="{DARK}"/>'
+            f'<rect x="{cx - 4.5}" y="{cy + ry - 1.5}" width="9" height="4" rx="1.5" fill="{DARK}"/>'
+            f'<path d="M{cx} {cy + ry + 2.5} L{cx} {cy + ry + 8}" stroke="{DARK}" stroke-width="2" stroke-linecap="round"/>')
+    outline = (f'<path d="{stick} M{tx} {ty} L{cx} {cy}" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+               f'{body} fill="white" stroke="white" stroke-width="7"/>'
+               f'<path d="M{cx} {cy + ry} L{cx} {cy + ry + 8}" stroke="white" stroke-width="8" stroke-linecap="round"/>')
+    main = (f'<g id="초롱"><path d="{stick}" stroke="{DARK}" stroke-width="3.2" stroke-linecap="round"/>'
+            f'<path d="{string}" stroke="{DARK}" stroke-width="1.6" stroke-linecap="round"/>'
+            f'{body} fill="#FFD84D" stroke="{DARK}" stroke-width="1.8"/>{ribs}{caps}</g>')
+    return outline, main
+
+
+def shopping_bag(x=-10, y=70, w=22, h=18, hand=(1, 64)):
+    """손에 든 장바구니(종이 쇼핑백). (흰 테두리용, 본체) 두 개를 돌려준다."""
+    hx, hy = hand
+    handle = f"M{x + 4} {y + 1} Q{hx} {hy - 8} {x + w - 4} {y + 1}"
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="8" stroke-linecap="round"/>'
+               f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="2.5" fill="white" stroke="white" stroke-width="7"/>')
+    main = (f'<g id="장바구니"><path d="{handle}" stroke="{DARK}" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="2.5" fill="white" stroke="{DARK}" stroke-width="1.8"/>'
+            f'<path d="M{x + 3} {y + 4} H{x + w - 3}" stroke="{DARK}" stroke-width="1.4" stroke-linecap="round"/></g>')
+    return outline, main
+
+
+def moon_stars(moon=(22, 24), r=13, stars=(), gid="달과 별"):
+    """연한 빨간 초승달과 반짝이 별 효과 (캔버스 좌표). stars = [(x, y, 크기)]."""
+    mx, my = moon
+    # 큰 원에서 오른쪽 위로 비킨 원을 빼서 초승달 모양
+    d = (f"M{mx + r * 0.42:.2f} {my - r * 0.91:.2f} A{r} {r} 0 1 0 {mx + r * 0.98:.2f} {my + r * 0.2:.2f} "
+         f"A{r * 0.82:.2f} {r * 0.82:.2f} 0 1 1 {mx + r * 0.42:.2f} {my - r * 0.91:.2f}Z")
+    sp = ""
+    for x, y, k in stars:
+        a, b = 6 * k, 1.6 * k
+        sp += (f'<path d="M{x} {y - a} Q{x + b} {y - b} {x + a} {y} Q{x + b} {y + b} {x} {y + a} '
+               f'Q{x - b} {y + b} {x - a} {y} Q{x - b} {y - b} {x} {y - a}Z"/>')
+    return f'<g id="{gid}" fill="{RED}" opacity="0.45"><path d="{d}"/>{sp}</g>'
+
+
+_lantern_outline, _lantern = lantern()
+_bag_outline, _bag = shopping_bag(x=-17, y=64, w=17, h=21, hand=(-8.5, 57))
+
 _flag_outline, _flag = checker_flag()
 
 POSES = {
@@ -228,6 +313,49 @@ POSES = {
                     + motion_lines(["M-4 12 L-12 6", "M-8 24 L-17 22",
                                     "M108 62 Q102 66 104 74", "M152 64 Q158 70 154 78", "M146 46 L152 42"], "효과선", 3)),
     ),
+    # 🏮 달빛장터 핀: 초롱 들고 장바구니 들고 야시장 걷기 (달빛장터핀.svg)
+    "market": dict(
+        size=(170, 150), move=(44, 46), tilt=5, pivot_y=45,
+        limbs=["M51 44 L68 47 L74 30", "M10 46 L-2 52 L-8.5 57", "M24 63 L18 74 L12 84", "M38 62 L46 72 L46 84"],
+        hands=[(74, 30), (-8.5, 57)],
+        shoes=[(3, 81, 15, 8, -12, 10, 85), (41, 81, 15, 8)],
+        prop_outline=_lantern_outline + _bag_outline, prop=_lantern + _bag,
+        prop_front=f'<circle id="장바구니 든 손" cx="-8.5" cy="57" r="{HAND_R}" fill="{RED}"/>',
+        effects=moon_stars((24, 26), 14, [(58, 12, 1.0), (150, 22, 0.8), (14, 62, 0.7)])
+                + motion_lines(["M149 65 L156 62", "M152 80 L160 80", "M149 95 L156 98", "M122 57 L119 51"], "불빛선", 3),
+    ),
+    # 💑 커플 듀엣용 한 명 (오른쪽 사람 기준, 왼쪽 사람은 좌우 뒤집어 씀). 바깥손 마이크, 안쪽 손은 짝꿍 손 잡기
+    "sing_duet": dict(
+        tilt=-8, pivot_y=50,
+        limbs=["M51 43 L79 42 L74 26", "M10 46 L-2 54 L-13 52", "M24 63 L22 85", "M37 62 L48 72 L46 84"],
+        hands=[(74, 26), (-13, 52)],
+        shoes=[(11, 82, 15, 8), (40, 81, 15, 8, -14, 47, 85)],
+        prop_outline=_mic_outline + '<path d="M51 43 L79 42 L74 26 L58 22Z" fill="white" stroke="white" stroke-width="6" stroke-linejoin="round"/>',
+        prop_front=_mic + f'<circle id="마이크 잡은 손" cx="74" cy="26" r="{HAND_R}" fill="{RED}"/>',
+    ),
+}
+
+POSES["couple"] = dict(   # 💑 커플 한 명 (오른쪽 사람 기준). 안쪽 손은 짝꿍 손 잡기, 바깥손은 편하게 내림
+    tilt=-7, pivot_y=50,
+    limbs=["M10 46 L-2 54 L-13 52", "M51 44 L62 54 L59 66", "M24 63 L22 85", "M37 63 L39 85"],
+    hands=[(-13, 52), (59, 66)],
+    shoes=[(11, 82, 15, 8), (35, 82, 15, 8)],
+)
+
+# 여러 명이 나오는 그림: 이름 → (캔버스 크기, [(포즈, 위치, 뒤집기, 이름)], 효과선, 맨 앞 소품)
+GROUPS = {
+    "couple": (
+        (204, 150),
+        [("couple", (30, 50), True, "왼쪽 핀"), ("couple", (113, 50), False, "오른쪽 핀")],
+        "",
+        heart(102, 28, 26, gid="하트") + heart(80, 12, 12, gid="작은 하트") + heart(124, 8, 10, gid="작은 하트2"),
+    ),
+    "couple_sing": (
+        (260, 182),
+        [("sing_duet", (44, 68), True, "왼쪽 핀"), ("sing_duet", (130, 68), False, "오른쪽 핀")],
+        music_notes([(20, 62, 1.1, False), (34, 36, 0.9, True), (238, 56, 1.1, False), (212, 34, 0.9, True), (246, 94, 0.8, False)]),
+        heart(130, 44, 24, gid="하트") + heart(113, 22, 12, gid="작은 하트") + heart(148, 18, 10, gid="작은 하트2"),
+    ),
 }
 
 def build_fish_point(name="방어 포인트", k=1.6):
@@ -247,8 +375,11 @@ def build_fish_point(name="방어 포인트", k=1.6):
 
 if __name__ == "__main__":
     pose, out = sys.argv[1], sys.argv[2]
-    title = sys.argv[3] if len(sys.argv) > 3 else "핀 캐릭터"
+    nm = sys.argv[3] if len(sys.argv) > 3 else "핀 캐릭터"
     # "yellowtail" = 핀 없이 방어만으로 만든 포인트
-    svg = build_fish_point(title) if pose == "yellowtail" else build(title, POSES[pose])
+    if pose == "yellowtail":
+        svg = build_fish_point(nm)
+    else:
+        svg = build_group(nm, *GROUPS[pose]) if pose in GROUPS else build(nm, POSES[pose])
     open(out, "w").write(svg)
     print("저장:", out)
