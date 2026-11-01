@@ -1,0 +1,12 @@
+<svg width="150" height="134" viewBox="0 0 150 134" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="올레 환영핀">
+<g id="캐릭터" transform="translate(26 32) rotate(-8 30.5 45)">
+<g id="흰 테두리"><path d="M51 42 L82 6" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 46 L0 57 L3 68" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 63 L22 85" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 63 L39 85" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><circle cx="82" cy="6" r="8.5" fill="white"/><circle cx="3" cy="68" r="8.5" fill="white"/><rect x="11" y="82" width="15" height="8" rx="4" fill="white" stroke="white" stroke-width="6"/><rect x="35" y="82" width="15" height="8" rx="4" fill="white" stroke="white" stroke-width="6"/><path d="M30.5 2C13.4 2 2 16.5412 2 35.2371C2 56.0102 30.5 83.0153 30.5 83.0153C30.5 83.0153 59 56.0102 59 35.2371C59 16.5412 47.6 2 30.5 2Z" fill="white" stroke="white" stroke-width="8" stroke-linejoin="round"/></g>
+<g id="팔다리"><path d="M51 42 L82 6" stroke="#EF3D32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 46 L0 57 L3 68" stroke="#EF3D32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 63 L22 85" stroke="#EF3D32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 63 L39 85" stroke="#EF3D32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="82" cy="6" r="5.5" fill="#EF3D32"/><circle cx="3" cy="68" r="5.5" fill="#EF3D32"/><rect x="11" y="82" width="15" height="8" rx="4" fill="#EF3D32"/><rect x="35" y="82" width="15" height="8" rx="4" fill="#EF3D32"/></g>
+<g id="핀"><path d="M30.5 2C13.4 2 2 16.5412 2 35.2371C2 56.0102 30.5 83.0153 30.5 83.0153C30.5 83.0153 59 56.0102 59 35.2371C59 16.5412 47.6 2 30.5 2Z" fill="#EF3D32"/><path d="M30.5004 43.5459C35.7471 43.5459 40.0004 38.8956 40.0004 33.1593C40.0004 27.4229 35.7471 22.7727 30.5004 22.7727C25.2537 22.7727 21.0004 27.4229 21.0004 33.1593C21.0004 38.8956 25.2537 43.5459 30.5004 43.5459Z" fill="white"/></g>
+<g id="흔들기선" stroke="#EF3D32" stroke-width="3.5" stroke-linecap="round" opacity="0.45">
+<path d="M94 -3 Q100 7 93 17"/><path d="M102 -10 Q112 7 101 24"/><path d="M70 -10 Q63 -1 67 8"/><path d="M76 -18 Q83 -22 90 -18"/>
+</g>
+</g>
+</g>
+</svg>
