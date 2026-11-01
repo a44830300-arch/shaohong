@@ -299,6 +299,42 @@ def hic_bubbles(bubbles, gid="딸꾹방울"):
 _beer_outline, _beer = beer_mug()
 _lantern_l_outline, _lantern_l = lantern(hand=(-12, 40), tip=(-26, 22), c=(-26, 43))
 
+
+def head_tie(band="M5.5 22 Q30 7 51 12", knot=(5, 21), ends=((-9, -5), (-21, 12)), color="#2B2B2B"):
+    """머리에 질끈 묶은 넥타이(머리띠). 띠는 핀 머리 위, 매듭은 옆, 넥타이 끝 두 개가 휘날린다.
+    (흰 테두리용, 본체) 두 개를 돌려준다. 본체는 prop_front에 넣어 핀 앞에 그린다."""
+    kx, ky = knot
+
+    def piece(ex, ey, w0=1.8, w1=4.6, tip=4.5):
+        dx, dy = ex - kx, ey - ky
+        L = math.hypot(dx, dy)
+        ux, uy = dx / L, dy / L
+        px, py = -uy, ux
+        bx, by = ex - ux * tip, ey - uy * tip          # 뾰족 끝 시작
+        pts = [(kx + px * w0, ky + py * w0), (bx + px * w1, by + py * w1), (ex, ey),
+               (bx - px * w1, by - py * w1), (kx - px * w0, ky - py * w0)]
+        d = "M" + " L".join(f"{x:.2f} {y:.2f}" for x, y in pts) + "Z"
+        st = ""
+        for f in (0.4, 0.58, 0.76):   # 빨간 사선 줄무늬 (핀 색)
+            cx, cy = kx + dx * f, ky + dy * f
+            w = w0 + (w1 - w0) * f - 0.5
+            st += (f'<path d="M{cx + px * w + ux * 2:.2f} {cy + py * w + uy * 2:.2f} '
+                   f'L{cx - px * w - ux * 2:.2f} {cy - py * w - uy * 2:.2f}" stroke="{RED}" stroke-width="1.5" stroke-linecap="round"/>')
+        return d, st
+
+    pieces = [piece(*e) for e in ends]
+    outline = (f'<path d="{band}" stroke="white" stroke-width="12" stroke-linecap="round"/>'
+               + "".join(f'<path d="{d}" fill="white" stroke="white" stroke-width="7" stroke-linejoin="round"/>' for d, _ in pieces)
+               + f'<circle cx="{kx}" cy="{ky}" r="7" fill="white"/>')
+    body = (f'<g id="넥타이 머리띠"><path d="{band}" stroke="{color}" stroke-width="6" stroke-linecap="round"/>'
+            + "".join(f'<path d="{d}" fill="{color}" stroke="{color}" stroke-width="1" stroke-linejoin="round"/>{st}' for d, st in pieces)
+            + f'<rect x="{kx - 4}" y="{ky - 4}" width="8" height="8" rx="2.2" fill="{color}" stroke="white" stroke-width="1.2" '
+              f'transform="rotate(-20 {kx} {ky})"/></g>')
+    return outline, body
+
+
+_tie_outline, _tie = head_tie()
+
 _flag_outline, _flag = checker_flag()
 
 POSES = {
@@ -373,8 +409,8 @@ POSES = {
         limbs=["M51 43 L70 34 L80 16", "M10 45 L-1 48 L-12 40", "M23 62 L12 73 L17 85", "M39 61 L50 71 L45 84"],
         hands=[(80, 16), (-12, 40)],
         shoes=[(8, 82, 15, 8, 10, 15, 86), (39, 81, 15, 8, -12, 46, 85)],
-        prop_outline=_lantern_l_outline + _beer_outline, prop=_lantern_l,
-        prop_front=_beer + f'<circle id="맥주잔 든 손" cx="80" cy="16" r="{HAND_R}" fill="{RED}"/>',
+        prop_outline=_lantern_l_outline + _beer_outline + _tie_outline, prop=_lantern_l,
+        prop_front=_tie + _beer + f'<circle id="맥주잔 든 손" cx="80" cy="16" r="{HAND_R}" fill="{RED}"/>',
         effects=moon_stars((24, 26), 14, [(150, 14, 0.9), (186, 64, 0.7), (16, 150, 0.6)])
                 + dizzy(94, 40, 11)
                 + hic_bubbles([(152, 48, 3.2), (163, 36, 2.3), (170, 26, 1.6)])
