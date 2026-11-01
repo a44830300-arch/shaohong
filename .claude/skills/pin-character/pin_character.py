@@ -126,6 +126,56 @@ def microphone(hand=(69, 23), head=(60, 7), r=6, hw=5.5, tail=6):
 
 _mic_outline, _mic = microphone(hand=(74, 26), head=(56, 1), r=10.5, hw=8, tail=9)
 
+
+def lantern(hand=(74, 30), tip=(92, 10), c=(92, 31), rx=9, ry=11):
+    """막대 끝에 매달린 불 켠 초롱. (흰 테두리용, 본체) 두 개를 돌려준다. 안쪽만 노란 불빛(달빛장터 포스터 색)."""
+    (hx, hy), (tx, ty), (cx, cy) = hand, tip, c
+    stick = f"M{hx} {hy} L{tx} {ty}"
+    string = f"M{tx} {ty} L{cx} {cy - ry - 2}"
+    body = f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"'
+    ribs = "".join(f'<path d="M{cx - rx * f:.2f} {cy + o:.2f} Q{cx} {cy + o + 2.2:.2f} {cx + rx * f:.2f} {cy + o:.2f}" stroke="{DARK}" stroke-width="1.3" fill="none"/>'
+                   for o, f in [(-5, 0.86), (0, 1.0), (5, 0.86)])
+    caps = (f'<rect x="{cx - 4.5}" y="{cy - ry - 2.5}" width="9" height="4" rx="1.5" fill="{DARK}"/>'
+            f'<rect x="{cx - 4.5}" y="{cy + ry - 1.5}" width="9" height="4" rx="1.5" fill="{DARK}"/>'
+            f'<path d="M{cx} {cy + ry + 2.5} L{cx} {cy + ry + 8}" stroke="{DARK}" stroke-width="2" stroke-linecap="round"/>')
+    outline = (f'<path d="{stick} M{tx} {ty} L{cx} {cy}" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+               f'{body} fill="white" stroke="white" stroke-width="7"/>'
+               f'<path d="M{cx} {cy + ry} L{cx} {cy + ry + 8}" stroke="white" stroke-width="8" stroke-linecap="round"/>')
+    main = (f'<g id="초롱"><path d="{stick}" stroke="{DARK}" stroke-width="3.2" stroke-linecap="round"/>'
+            f'<path d="{string}" stroke="{DARK}" stroke-width="1.6" stroke-linecap="round"/>'
+            f'{body} fill="#FFD84D" stroke="{DARK}" stroke-width="1.8"/>{ribs}{caps}</g>')
+    return outline, main
+
+
+def shopping_bag(x=-10, y=70, w=22, h=18, hand=(1, 64)):
+    """손에 든 장바구니(종이 쇼핑백). (흰 테두리용, 본체) 두 개를 돌려준다."""
+    hx, hy = hand
+    handle = f"M{x + 4} {y + 1} Q{hx} {hy - 8} {x + w - 4} {y + 1}"
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="8" stroke-linecap="round"/>'
+               f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="2.5" fill="white" stroke="white" stroke-width="7"/>')
+    main = (f'<g id="장바구니"><path d="{handle}" stroke="{DARK}" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="2.5" fill="white" stroke="{DARK}" stroke-width="1.8"/>'
+            f'<path d="M{x + 3} {y + 4} H{x + w - 3}" stroke="{DARK}" stroke-width="1.4" stroke-linecap="round"/></g>')
+    return outline, main
+
+
+def moon_stars(moon=(22, 24), r=13, stars=(), gid="달과 별"):
+    """연한 빨간 초승달과 반짝이 별 효과 (캔버스 좌표). stars = [(x, y, 크기)]."""
+    mx, my = moon
+    # 큰 원에서 오른쪽 위로 비킨 원을 빼서 초승달 모양
+    d = (f"M{mx + r * 0.42:.2f} {my - r * 0.91:.2f} A{r} {r} 0 1 0 {mx + r * 0.98:.2f} {my + r * 0.2:.2f} "
+         f"A{r * 0.82:.2f} {r * 0.82:.2f} 0 1 1 {mx + r * 0.42:.2f} {my - r * 0.91:.2f}Z")
+    sp = ""
+    for x, y, k in stars:
+        a, b = 6 * k, 1.6 * k
+        sp += (f'<path d="M{x} {y - a} Q{x + b} {y - b} {x + a} {y} Q{x + b} {y + b} {x} {y + a} '
+               f'Q{x - b} {y + b} {x - a} {y} Q{x - b} {y - b} {x} {y - a}Z"/>')
+    return f'<g id="{gid}" fill="{RED}" opacity="0.45"><path d="{d}"/>{sp}</g>'
+
+
+_lantern_outline, _lantern = lantern()
+_bag_outline, _bag = shopping_bag(x=-17, y=64, w=17, h=21, hand=(-8.5, 57))
+
 _flag_outline, _flag = checker_flag()
 
 POSES = {
@@ -166,6 +216,17 @@ POSES = {
         prop_front=_mic + f'<circle id="마이크 잡은 손" cx="74" cy="26" r="{HAND_R}" fill="{RED}"/>'
                    + motion_lines(["M7 0 L-1 -7", "M19 -8 L15 -17", "M32 -10 L33 -20"], "노래선", 3.5),
         effects=music_notes([(124, 40, 1.35, False), (146, 22, 1.15, True), (162, 58, 1.0, False), (140, 82, 0.85, False), (22, 44, 1.0, False)]),
+    ),
+    # 🏮 달빛장터 핀: 초롱 들고 장바구니 들고 야시장 걷기 (달빛장터핀.svg)
+    "market": dict(
+        size=(170, 150), move=(44, 46), tilt=5, pivot_y=45,
+        limbs=["M51 44 L68 47 L74 30", "M10 46 L-2 52 L-8.5 57", "M24 63 L18 74 L12 84", "M38 62 L46 72 L46 84"],
+        hands=[(74, 30), (-8.5, 57)],
+        shoes=[(3, 81, 15, 8, -12, 10, 85), (41, 81, 15, 8)],
+        prop_outline=_lantern_outline + _bag_outline, prop=_lantern + _bag,
+        prop_front=f'<circle id="장바구니 든 손" cx="-8.5" cy="57" r="{HAND_R}" fill="{RED}"/>',
+        effects=moon_stars((24, 26), 14, [(58, 12, 1.0), (150, 22, 0.8), (14, 62, 0.7)])
+                + motion_lines(["M149 65 L156 62", "M152 80 L160 80", "M149 95 L156 98", "M122 57 L119 51"], "불빛선", 3),
     ),
 }
 
