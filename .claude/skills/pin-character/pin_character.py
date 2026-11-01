@@ -73,6 +73,50 @@ def checker_flag(x0=88, y0=-36, W=34, H=22, cols=4, rows=3, pole="M80.2 15 L88.6
     return outline, body
 
 
+
+def music_notes(notes, gid="음표"):
+    """연한 빨간 음표 효과 (캔버스 좌표). notes = [(x, y, 크기, 겹음표?)], (x, y) = 음표 머리 가운데."""
+    out = ""
+    for x, y, k, double in notes:
+        hx, hy, h = 4.2 * k, 3.2 * k, 15 * k   # 머리 가로·세로 반지름, 기둥 길이
+        sx = x + hx - 0.9 * k
+        head = f'<ellipse cx="{x}" cy="{y}" rx="{hx:.2f}" ry="{hy:.2f}" transform="rotate(-20 {x} {y})"/>'
+        if double:
+            x2, y2 = x + 11 * k, y - 3 * k
+            head += f'<ellipse cx="{x2}" cy="{y2}" rx="{hx:.2f}" ry="{hy:.2f}" transform="rotate(-20 {x2} {y2})"/>'
+            sx2 = x2 + hx - 0.9 * k
+            stem = (f'<path d="M{sx:.2f} {y:.2f}V{y - h:.2f}L{sx2:.2f} {y2 - h:.2f}V{y2:.2f}" fill="none" '
+                    f'stroke-width="{2.4 * k:.2f}" stroke-linejoin="round"/>'
+                    f'<path d="M{sx:.2f} {y - h + 4 * k:.2f}L{sx2:.2f} {y2 - h + 4 * k:.2f}" stroke-width="{2.4 * k:.2f}"/>')
+        else:
+            stem = (f'<path d="M{sx:.2f} {y:.2f}V{y - h:.2f}Q{sx + 2 * k:.2f} {y - h + 6 * k:.2f} {sx + 7 * k:.2f} {y - h + 8 * k:.2f}" '
+                    f'fill="none" stroke-width="{2.4 * k:.2f}" stroke-linecap="round"/>')
+        out += head + stem
+    return f'<g id="{gid}" fill="{RED}" stroke="{RED}" opacity="0.45">{out}</g>'
+
+
+def microphone(hand=(69, 23), head=(60, 7), r=6):
+    """손에 든 마이크. (흰 테두리용, 본체) 두 개를 돌려준다."""
+    (hx, hy), (mx, my) = hand, head
+    dx, dy = hx - mx, hy - my
+    L = math.hypot(dx, dy)
+    ux, uy = dx / L, dy / L
+    bx, by = hx + ux * 6, hy + uy * 6          # 손잡이 끝 (손 아래로 조금 나옴)
+    cx, cy = mx + ux * (r - 1), my + uy * (r - 1)   # 손잡이 시작 (머리 아래)
+    handle = f"M{cx:.2f} {cy:.2f} L{bx:.2f} {by:.2f}"
+    px, py = -uy, ux
+    grill = "".join(f'<path d="M{mx + px * r * 0.8 + ux * o:.2f} {my + py * r * 0.8 + uy * o:.2f} '
+                    f'L{mx - px * r * 0.8 + ux * o:.2f} {my - py * r * 0.8 + uy * o:.2f}" stroke="#8A8A8A" stroke-width="1.1"/>'
+                    for o in (-2.5, 0, 2.5))
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="12" stroke-linecap="round"/>'
+               f'<circle cx="{mx}" cy="{my}" r="{r + 3.5}" fill="white"/>')
+    body = (f'<g id="마이크"><path d="{handle}" stroke="{DARK}" stroke-width="5.5" stroke-linecap="round"/>'
+            f'<circle cx="{mx}" cy="{my}" r="{r}" fill="{DARK}"/>{grill}</g>')
+    return outline, body
+
+
+_mic_outline, _mic = microphone()
+
 _flag_outline, _flag = checker_flag()
 
 POSES = {
@@ -101,6 +145,15 @@ POSES = {
         shoes=[(11, 82, 15, 8), (35, 82, 15, 8)],
         prop_outline=_flag_outline, prop=_flag,
         effects=motion_lines(["M139 32 Q144 39 139 46", "M146 27 Q153 39 146 51"], "펄럭선", 3),
+    ),
+    # 🎤 노래 부르는 핀 (노래핀.svg)
+    "sing": dict(
+        size=(170, 140), move=(42, 42), tilt=-6,
+        limbs=["M51 43 L73 41 L69 23", "M10 45 L-3 37 L-13 24", "M24 63 L22 85", "M37 62 L47 73 L45 84"],
+        hands=[(69, 23), (-13, 24)],
+        shoes=[(11, 82, 15, 8), (39, 81, 15, 8, -14, 46, 85)],
+        prop_outline=_mic_outline + '<path d="M51 43 L73 41 L69 23 L56 22Z" fill="white" stroke="white" stroke-width="6" stroke-linejoin="round"/>', prop=_mic,
+        effects=music_notes([(118, 34, 1.0, False), (136, 18, 0.85, True), (142, 52, 0.7, False), (14, 30, 0.75, False)]),
     ),
 }
 
