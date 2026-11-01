@@ -95,27 +95,36 @@ def music_notes(notes, gid="음표"):
     return f'<g id="{gid}" fill="{RED}" stroke="{RED}" opacity="0.45">{out}</g>'
 
 
-def microphone(hand=(69, 23), head=(60, 7), r=6):
+def microphone(hand=(69, 23), head=(60, 7), r=6, hw=5.5, tail=6):
     """손에 든 마이크. (흰 테두리용, 본체) 두 개를 돌려준다."""
     (hx, hy), (mx, my) = hand, head
     dx, dy = hx - mx, hy - my
     L = math.hypot(dx, dy)
     ux, uy = dx / L, dy / L
-    bx, by = hx + ux * 6, hy + uy * 6          # 손잡이 끝 (손 아래로 조금 나옴)
-    cx, cy = mx + ux * (r - 1), my + uy * (r - 1)   # 손잡이 시작 (머리 아래)
-    handle = f"M{cx:.2f} {cy:.2f} L{bx:.2f} {by:.2f}"
     px, py = -uy, ux
-    grill = "".join(f'<path d="M{mx + px * r * 0.8 + ux * o:.2f} {my + py * r * 0.8 + uy * o:.2f} '
-                    f'L{mx - px * r * 0.8 + ux * o:.2f} {my - py * r * 0.8 + uy * o:.2f}" stroke="#8A8A8A" stroke-width="1.1"/>'
-                    for o in (-2.5, 0, 2.5))
-    outline = (f'<path d="{handle}" stroke="white" stroke-width="12" stroke-linecap="round"/>'
+    k = r / 6
+    bx, by = hx + ux * tail, hy + uy * tail            # 손잡이 끝 (손 아래로 조금 나옴)
+    cx, cy = mx + ux * (r - 1), my + uy * (r - 1)      # 손잡이 시작 (머리 아래)
+    handle = f"M{cx:.2f} {cy:.2f} L{bx:.2f} {by:.2f}"
+    c1 = (mx + ux * (r + 0.5), my + uy * (r + 0.5))    # 머리 아래 은색 고리
+    c2 = (mx + ux * (r + 3.5 * k), my + uy * (r + 3.5 * k))
+    collar = f"M{c1[0]:.2f} {c1[1]:.2f} L{c2[0]:.2f} {c2[1]:.2f}"
+    grill = ""
+    for o in [i * 2.6 * k for i in (-2, -1, 0, 1, 2)]:
+        half = math.sqrt(r * r - o * o) - 2.6 * k
+        if half > 0.5:
+            grill += (f'<path d="M{mx + px * half + ux * o:.2f} {my + py * half + uy * o:.2f} '
+                      f'L{mx - px * half + ux * o:.2f} {my - py * half + uy * o:.2f}" '
+                      f'stroke="#8A8A8A" stroke-width="{1.1 * k:.2f}" stroke-linecap="round"/>')
+    outline = (f'<path d="{handle}" stroke="white" stroke-width="{hw + 7}" stroke-linecap="round"/>'
                f'<circle cx="{mx}" cy="{my}" r="{r + 3.5}" fill="white"/>')
-    body = (f'<g id="마이크"><path d="{handle}" stroke="{DARK}" stroke-width="5.5" stroke-linecap="round"/>'
+    body = (f'<g id="마이크"><path d="{handle}" stroke="{DARK}" stroke-width="{hw}" stroke-linecap="round"/>'
+            f'<path d="{collar}" stroke="#8A8A8A" stroke-width="{hw + 2}" stroke-linecap="round"/>'
             f'<circle cx="{mx}" cy="{my}" r="{r}" fill="{DARK}"/>{grill}</g>')
     return outline, body
 
 
-_mic_outline, _mic = microphone()
+_mic_outline, _mic = microphone(hand=(74, 26), head=(56, 1), r=10.5, hw=8, tail=9)
 
 _flag_outline, _flag = checker_flag()
 
@@ -148,12 +157,15 @@ POSES = {
     ),
     # 🎤 노래 부르는 핀 (노래핀.svg)
     "sing": dict(
-        size=(170, 140), move=(42, 42), tilt=-6,
-        limbs=["M51 43 L73 41 L69 23", "M10 45 L-3 37 L-13 24", "M24 63 L22 85", "M37 62 L47 73 L45 84"],
-        hands=[(69, 23), (-13, 24)],
-        shoes=[(11, 82, 15, 8), (39, 81, 15, 8, -14, 46, 85)],
-        prop_outline=_mic_outline + '<path d="M51 43 L73 41 L69 23 L56 22Z" fill="white" stroke="white" stroke-width="6" stroke-linejoin="round"/>', prop=_mic,
-        effects=music_notes([(118, 34, 1.0, False), (136, 18, 0.85, True), (142, 52, 0.7, False), (14, 30, 0.75, False)]),
+        size=(190, 160), move=(50, 56), tilt=-10, pivot_y=50,
+        limbs=["M51 43 L79 42 L74 26", "M10 45 L-6 35 L-14 15", "M24 63 L22 85", "M37 62 L48 72 L46 84"],
+        hands=[(74, 26), (-14, 15)],
+        shoes=[(11, 82, 15, 8), (40, 81, 15, 8, -14, 47, 85)],
+        prop_outline=_mic_outline + '<path d="M51 43 L79 42 L74 26 L58 22Z" fill="white" stroke="white" stroke-width="6" stroke-linejoin="round"/>',
+        # 마이크는 핀 앞에 둬서 입에 댄 것처럼 보이게 하고, 마이크 잡은 손을 그 위에 한 번 더 그린다
+        prop_front=_mic + f'<circle id="마이크 잡은 손" cx="74" cy="26" r="{HAND_R}" fill="{RED}"/>'
+                   + motion_lines(["M7 0 L-1 -7", "M19 -8 L15 -17", "M32 -10 L33 -20"], "노래선", 3.5),
+        effects=music_notes([(124, 40, 1.35, False), (146, 22, 1.15, True), (162, 58, 1.0, False), (140, 82, 0.85, False), (22, 44, 1.0, False)]),
     ),
 }
 
