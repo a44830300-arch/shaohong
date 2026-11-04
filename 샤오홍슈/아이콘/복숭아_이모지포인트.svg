@@ -6,8 +6,8 @@
 <radialGradient id="cheek" cx="0.5" cy="0.5" r="0.5">
 <stop offset="0" stop-color="#EC6470" stop-opacity="0.85"/><stop offset="0.55" stop-color="#F07C82" stop-opacity="0.45"/><stop offset="1" stop-color="#F28C8C" stop-opacity="0"/>
 </radialGradient>
-<radialGradient id="eye" cx="0.4" cy="0.35" r="0.7">
-<stop offset="0" stop-color="#7A2A2A"/><stop offset="1" stop-color="#4A1616"/>
+<radialGradient id="eye" cx="0.55" cy="0.6" r="0.6">
+<stop offset="0" stop-color="#8A1214"/><stop offset="0.7" stop-color="#6E0A0C"/><stop offset="1" stop-color="#55100D"/>
 </radialGradient>
 <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
 <stop offset="0" stop-color="#48C4A4"/><stop offset="1" stop-color="#2A9C82"/>
@@ -34,7 +34,14 @@
 <g id="눈썹" stroke="#5A2A20" stroke-width="1.9" stroke-linecap="round" fill="none">
 <path d="M43 36 Q46.5 32.2 50 36"/><path d="M70 36 Q73.5 32.2 77 36"/>
 </g>
-<g id="눈"><circle cx="46.5" cy="46" r="4.1" fill="url(#eye)"/><circle cx="73.5" cy="46" r="4.1" fill="url(#eye)"/></g>
+<g id="눈">
+<ellipse cx="46.5" cy="46" rx="4.4" ry="4.1" fill="url(#eye)" stroke="#4A1410" stroke-width="0.8"/>
+<ellipse cx="73.5" cy="46" rx="4.4" ry="4.1" fill="url(#eye)" stroke="#4A1410" stroke-width="0.8"/>
+</g>
+<g id="눈 반짝" fill="#FFFFFF">
+<circle cx="47.6" cy="44.2" r="1.5"/><circle cx="74.6" cy="44.2" r="1.5"/>
+<circle cx="45.2" cy="47.9" r="0.6" opacity="0.7"/><circle cx="72.2" cy="47.9" r="0.6" opacity="0.7"/>
+</g>
 <path id="입" d="M53.5 54.5 Q60 60.5 66.5 54.5" fill="none" stroke="#5A1F1F" stroke-width="2.4" stroke-linecap="round"/>
 </g>
 </svg>
