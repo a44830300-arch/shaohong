@@ -14,6 +14,7 @@
 <path id="외곽선" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="none" stroke="#FFFFFF" stroke-width="1"/>
 <ellipse id="반짝" cx="41" cy="33" rx="5" ry="2.8" transform="rotate(-35 41 33)" fill="#FFFFFF" opacity="0.6"/>
 <g id="얼굴">
+<g id="눈썹" stroke="#2B1A16" stroke-width="2" stroke-linecap="round" fill="none"><path d="M45 38.5 Q49 36 53 37.5"/><path d="M67 37.5 Q71 36 75 38.5"/></g>
 <ellipse cx="41" cy="54" rx="6" ry="3.6" fill="#FF7C7C" opacity="0.55"/><ellipse cx="79" cy="54" rx="6" ry="3.6" fill="#FF7C7C" opacity="0.55"/>
 <ellipse cx="49" cy="45" rx="3.2" ry="3.8" fill="#2B1A16"/><ellipse cx="71" cy="45" rx="3.2" ry="3.8" fill="#2B1A16"/>
 <circle cx="50.2" cy="43.6" r="1.1" fill="#FFFFFF"/><circle cx="72.2" cy="43.6" r="1.1" fill="#FFFFFF"/>
