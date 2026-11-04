@@ -18,14 +18,20 @@ LIMB_W, OUTLINE_W, HAND_R = 6, 12, 5.5   # 팔다리 굵기, 흰 테두리 굵�
 
 
 def _layer(pose, color, w, extra):
+    # 손·신발 색은 포즈에서 따로 정할 수 있다(감자 캐릭터처럼). 흰 테두리 층은 늘 흰색.
+    hc = color if extra else pose.get("hand_color", color)
+    sc = color if extra else pose.get("shoe_color", color)
     s = "".join(f'<path d="{d}" stroke="{color}" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round"/>'
                 for d in pose["limbs"])
-    s += "".join(f'<circle cx="{x}" cy="{y}" r="{pose.get("hand_r", HAND_R) + extra}" fill="{color}"/>' for x, y in pose["hands"])
+    hs = "" if extra or hc == color else f' stroke="{DARK}" stroke-width="1.2"'
+    s += "".join(f'<circle cx="{x}" cy="{y}" r="{pose.get("hand_r", HAND_R) + extra}" fill="{hc}"{hs}/>' for x, y in pose["hands"])
     for r in pose["shoes"]:  # r = (x, y, w, h, 회전각, 회전중심x, 회전중심y)
         x, y, sw, sh, *rot = r
         t = f' transform="rotate({rot[0]} {rot[1]} {rot[2]})"' if rot else ""
         st = f' stroke="{color}" stroke-width="{extra * 2}"' if extra else ""
-        s += f'<rect x="{x}" y="{y}" width="{sw}" height="{sh}" rx="4"{t} fill="{color}"{st}/>'
+        if not extra and sc != color:
+            st = f' stroke="{DARK}" stroke-width="1.2"'
+        s += f'<rect x="{x}" y="{y}" width="{sw}" height="{sh}" rx="4"{t} fill="{sc}"{st}/>'
     return s
 
 
@@ -39,7 +45,7 @@ def build(name, pose):
 <g id="흰 테두리">{pose.get("prop_outline", "")}{_layer(pose, "white", OUTLINE_W, 3)}<path d="{PIN}" fill="white" stroke="white" stroke-width="8" stroke-linejoin="round"/></g>
 {pose.get("prop", "")}
 <g id="팔다리">{_layer(pose, RED, LIMB_W, 0)}</g>
-<g id="핀"><path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/></g>
+{pose.get("body", f'<g id="핀"><path d="{PIN}" fill="{RED}"/><path d="{HOLE}" fill="white"/></g>')}
 {pose.get("prop_front", "")}
 </g>
 </g>
@@ -510,6 +516,49 @@ POSES["couple"] = dict(   # 💑 커플 한 명 (오른쪽 사람 기준). 안�
     limbs=["M10 46 L-2 54 L-13 52", "M51 44 L62 54 L59 66", "M24 63 L22 85", "M37 63 L39 85"],
     hands=[(-13, 52), (59, 66)],
     shoes=[(11, 82, 15, 8), (35, 82, 15, 8)],
+)
+
+SKIN, BLUSH, SPROUT, SASH = "#F6C9A0", "#F59A8C", "#3FC79E", "#FFD84D"
+
+
+def potato_body(sash_text="JEJU"):
+    """🥔 감자 캐릭터 몸: 핀 모양 그대로(끝 = 위치) 칠만 바꾼다.
+    위는 감자 살색 + 빨간 머리띠, 가운데 얼굴, 아래는 빨간 후드 + 노란 띠(sash_text)."""
+    clip = '<clipPath id="감자몸"><path d="' + PIN + '"/></clipPath>'
+    face = (f'<g id="얼굴">'
+            f'<path d="M17.5 25.5 L25 28" stroke="{DARK}" stroke-width="2" stroke-linecap="round"/>'
+            f'<path d="M43.5 25.5 L36 28" stroke="{DARK}" stroke-width="2" stroke-linecap="round"/>'
+            f'<circle cx="23" cy="32.5" r="3.1" fill="{DARK}"/><circle cx="38" cy="32.5" r="3.1" fill="{DARK}"/>'
+            f'<circle cx="24" cy="31.4" r="1" fill="white"/><circle cx="39" cy="31.4" r="1" fill="white"/>'
+            f'<ellipse cx="15.5" cy="38.5" rx="4.2" ry="2.8" fill="{BLUSH}" opacity="0.85"/>'
+            f'<ellipse cx="45.5" cy="38.5" rx="4.2" ry="2.8" fill="{BLUSH}" opacity="0.85"/>'
+            f'<path d="M27 37.5 Q30.5 41.5 34 37.5" stroke="{DARK}" stroke-width="1.6" stroke-linecap="round"/></g>')
+    inner = (f'<path d="{PIN}" fill="{SKIN}"/>'
+             f'<path id="머리띠" d="M-2 21 Q30.5 12 63 21 V10 Q30.5 1 -2 10Z" fill="{RED}"/>'
+             f'<path d="M-2 21 Q30.5 12 63 21" stroke="white" stroke-width="1.6"/>'
+             f'<path id="후드" d="M-2 51 Q30.5 41 63 51 V90 H-2Z" fill="{RED}"/>'
+             f'<path id="후드 밑단" d="M-2 71 Q30.5 64 63 71" stroke="white" stroke-width="2.4"/>'
+             f'<g id="후드 끈" stroke="white" stroke-width="1.8" stroke-linecap="round">'
+             f'<path d="M26 47.5 L25 52"/><path d="M35 47.5 L36 52"/></g>'
+             f'<g id="노란 띠"><path d="M-2 59 L63 51 V61 L-2 69Z" fill="{SASH}"/>'
+             f'<text x="30.5" y="63" transform="rotate(-7 30.5 60)" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" '
+             f'font-weight="900" font-size="7" letter-spacing="0.6" fill="white" stroke="{RED}" stroke-width="0.3">{sash_text}</text></g>')
+    return (f'<g id="감자 몸"><defs>{clip}</defs><g clip-path="url(#감자몸)">{inner}</g>'
+            f'<path d="{PIN}" stroke="{DARK}" stroke-width="1.4" stroke-linejoin="round"/>{face}</g>')
+
+
+_sprout_stem = "M31 3 Q31 -3 35 -7"
+POSES["potato"] = dict(   # 🥔 감자 캐릭터 포인트핀 (샤오홍슈_감자핀.svg): 주먹 불끈 + 반대손 허리
+    size=(124, 136), move=(36, 38), tilt=-6, pivot_y=50,
+    limbs=["M10 46 L-4 38 L-8 20", "M51 46 L61 55 L57 66", "M24 63 L22 85", "M37 63 L39 85"],
+    hands=[(-8, 20), (57, 66)], hand_r=6,
+    shoes=[(11, 82, 15, 8), (35, 82, 15, 8)],
+    hand_color=SKIN, shoe_color="white",
+    prop_outline=f'<path d="{_sprout_stem}" stroke="white" stroke-width="8" stroke-linecap="round"/>',
+    prop=(f'<g id="새싹"><path d="{_sprout_stem}" stroke="#2E9C78" stroke-width="2.4" stroke-linecap="round"/>'
+          f'<g transform="rotate(25 38 -12)">{heart(38, -12, 15, SPROUT, "하트 잎")}</g></g>'),
+    body=potato_body(),
+    effects=motion_lines(["M10 46 L3 42", "M12 30 L4 26", "M22 20 L18 13"], "불끈선", 3),
 )
 
 # 여러 명이 나오는 그림: 이름 → (캔버스 크기, [(포즈, 위치, 뒤집기, 이름)], 효과선, 맨 앞 소품)
