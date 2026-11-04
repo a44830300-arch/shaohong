@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="22 2 76 100.4">
+<defs><clipPath id="potato-clip"><path d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z"/></clipPath></defs>
+<ellipse id="그림자" cx="60" cy="99" rx="15" ry="3.4" fill="#3A2210" opacity="0.3"/>
+<g id="새싹"><path d="M60 17 Q60 13 64 11" stroke="#2E9C78" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+<g transform="rotate(25 68 11)"><path d="M68 17.64C60.29 12.50,61.14 5.64,65.00 6.07C66.71 6.24,68 7.36,68 8.64C68 7.36,69.29 6.24,71.00 6.07C74.86 5.64,75.71 12.50,68 17.64Z" fill="#3FC79E" stroke="#FFFFFF" stroke-width="1"/></g></g>
+<path id="몸" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="#F6C9A0"/>
+<g id="옷" clip-path="url(#potato-clip)">
+<path id="머리띠" d="M20 34 Q60 22 100 34 V20 Q60 8 20 20Z" fill="#EF3D32"/>
+<path d="M20 34 Q60 22 100 34" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+<path id="후드" d="M20 70 Q60 58 100 70 V110 H20Z" fill="#EF3D32"/>
+<path id="노란 띠" d="M20 82 L100 70 V78 L20 90Z" fill="#FFD84D"/>
+<g id="후드 끈" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M55 65 L54 71"/><path d="M65 65 L66 71"/></g>
+</g>
+<path id="외곽선" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+<ellipse id="반짝" cx="40" cy="42" rx="4.5" ry="2.6" transform="rotate(-35 40 42)" fill="#FFFFFF" opacity="0.5"/>
+<g id="얼굴">
+<path d="M44 39 L54 42" stroke="#3A2210" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M76 39 L66 42" stroke="#3A2210" stroke-width="2.4" stroke-linecap="round"/>
+<ellipse cx="50" cy="48" rx="3.5" ry="4.2" fill="#3A2210"/><ellipse cx="70" cy="48" rx="3.5" ry="4.2" fill="#3A2210"/>
+<circle cx="51.2" cy="46.6" r="1.2" fill="#FFFFFF"/><circle cx="71.2" cy="46.6" r="1.2" fill="#FFFFFF"/>
+<path d="M55 55 C57 59 63 59 65 55" fill="none" stroke="#3A2210" stroke-width="2.2" stroke-linecap="round"/>
+<ellipse cx="41" cy="55" rx="4.5" ry="2.8" fill="#FF6B5B" opacity="0.7"/><ellipse cx="79" cy="55" rx="4.5" ry="2.8" fill="#FF6B5B" opacity="0.7"/>
+</g>
+</svg>
