@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="74" viewBox="22 2 76 100.4">
+<defs>
+<clipPath id="hanbok-clip"><path d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z"/></clipPath>
+<linearGradient id="pink-body" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#FFC4D6"/><stop offset="1" stop-color="#FF8FB3"/>
+</linearGradient>
+<clipPath id="jeogori-clip"><path d="M20 59 Q60 51 100 59 V70 Q60 82 20 70Z"/></clipPath>
+</defs>
+<ellipse id="그림자" cx="60" cy="99" rx="15" ry="3.4" fill="#5A1A2A" opacity="0.3"/>
+<g id="꽃 비녀">
+<g fill="#FFFFFF" stroke="#E2557A" stroke-width="0.8">
+<circle cx="80.5" cy="13.5" r="3.4"/><circle cx="86" cy="16" r="3.4"/><circle cx="85" cy="22" r="3.4"/><circle cx="79" cy="22.5" r="3.4"/><circle cx="77" cy="17.5" r="3.4"/>
+</g>
+<circle cx="81.6" cy="18.3" r="2.1" fill="#FFD84D"/>
+</g>
+<path id="몸" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="url(#pink-body)"/>
+<g id="한복" clip-path="url(#hanbok-clip)">
+<g id="치마">
+<path d="M20 70 Q60 82 100 70 V110 H20Z" fill="#C4162F"/>
+<g stroke="#9C0E25" stroke-width="1.3" stroke-linecap="round" fill="none">
+<path d="M44 78 L54 100"/><path d="M52 79.5 L58 100"/><path d="M68 79.5 L62 100"/><path d="M76 78 L66 100"/>
+</g>
+</g>
+<g id="저고리">
+<path d="M20 59 Q60 51 100 59 V70 Q60 82 20 70Z" fill="#EF3D32"/>
+<g clip-path="url(#jeogori-clip)">
+<path id="깃" d="M45 52 L60 72 L75 52" stroke="#9C0E25" stroke-width="4.6" stroke-linejoin="round" fill="none"/>
+<path id="동정" d="M45 52 L60 72 L75 52" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+</g>
+</g>
+<g id="고름">
+<path d="M64 69 Q63 78 58 86" stroke="#7A0F22" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+<path d="M64 69 Q68 77 67 84" stroke="#7A0F22" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+<path d="M64 69 C58 64 55 68 58 71 C60 72 62 70 64 69 C66 64 72 64 71 69 C70 72 66 71 64 69Z" fill="#7A0F22" stroke="#FFFFFF" stroke-width="0.8"/>
+</g>
+</g>
+<circle id="반지" cx="60" cy="38" r="9.5" fill="none" stroke="#FFFFFF" stroke-width="4.2"/>
+<path id="외곽선" d="M60 100 C52 88 28 72 28 48 A32 32 0 1 1 92 48 C92 72 68 88 60 100 Z" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+<ellipse id="반짝" cx="40" cy="36" rx="4.5" ry="2.6" transform="rotate(-35 40 36)" fill="#FFFFFF" opacity="0.55"/>
+</svg>
