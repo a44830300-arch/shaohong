@@ -1,0 +1,4 @@
+# 할 일판 앱(todo-app 폴더)만 인터넷에 올린다. 나머지 폴더(개인 자료)는 올라가지 않는다.
+[build]
+  publish = "todo-app"
+  command = "echo 할일판"
