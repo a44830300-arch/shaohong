@@ -1157,8 +1157,10 @@ renderGantt();
 const gtTip = h("div", { class: "gt-tip", hidden: true });
 document.body.append(gtTip);
 function gtHover(e) {
-  const tr = e.target.closest?.(".gt-track");
-  if (!tr || tr.classList.contains("gt-head")) { gtTip.hidden = true; return; }
+  // 막대(점) 위에 있을 때만 보여 줌 (2026-11-06 요청)
+  const bar = e.target.closest?.(".gt-bar, .gt-dot");
+  const tr = bar?.closest(".gt-track");
+  if (!tr) { gtTip.hidden = true; return; }
   const r = tr.getBoundingClientRect();
   const i = Math.floor((e.clientX - r.left) / r.width * GT_DAYS);
   if (i < 0 || i >= GT_DAYS) { gtTip.hidden = true; return; }
