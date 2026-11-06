@@ -189,7 +189,7 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .skeleton { color: var(--muted); padding: 14px; font-size: 14px; }
 
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
-:root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; --gt-dayline: color-mix(in srgb, var(--line) 55%, transparent); }
+:root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
 .gt-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .gt-tabs button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
 .gt-tabs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
@@ -199,14 +199,13 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .gt-lab.grp { font-weight: 700; min-height: 34px; }
 .gt-lab.it { color: var(--muted); padding-left: 22px; }
 .gt-lab.head { border-top: 0; }
-.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 63 - 1px), var(--gt-dayline) calc(100% / 63 - 1px) calc(100% / 63)), repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
-/* 요일 칸 (2026-11-06 요청): 주 칸을 7칸으로 쪼갠 아주 옅은 선 + 머리줄의 작은 요일 글씨 */
-.gt-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 3px; font-size: 8.5px; line-height: 1.2; color: var(--muted); opacity: .75; }
-.gt-days i { font-style: normal; text-align: center; }
-.gt-days i.we { color: var(--accent); }
+.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
+/* 마우스를 올린 자리의 날짜·요일 말풍선 (2026-11-06 요청) */
+.gt-tip { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, calc(-100% - 10px)); background: var(--fg); color: var(--bg); border-radius: 6px; padding: 3px 8px; font-size: 12px; font-family: var(--font-num); white-space: nowrap; }
+.gt-tip.we { background: var(--accent); color: #fff; }
 .gt-track.grp { min-height: 34px; }
 .gt-head { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-top: 0; }
-.gt-head span { padding: 6px 0 4px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
+.gt-head span { padding: 6px 2px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
 .gt-head b { display: block; font-size: 12px; color: var(--fg); font-weight: 700; min-height: 1.3em; }
 .gt-bar { position: absolute; top: 50%; height: 10px; transform: translateY(-50%); border-radius: 5px; }
 .gt-dot { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; }
@@ -1131,7 +1130,7 @@ function renderGantt() {
   const nowPct = (dayDiff(ymd(new Date()), GT_START) + 0.5) / GT_DAYS * 100;
   const nowLine = () => (nowPct >= 0 && nowPct <= 100 ? h("div", { class: "gt-now", style: `left:${nowPct}%` }) : null);
   const grid = h("div", { class: "gt-grid" });
-  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w, h("div", { class: "gt-days", "aria-hidden": "true" }, WD.map((x, i) => h("i", { class: i === 0 || i === 6 ? "we" : null }, x)))))));
+  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w))));
   for (const [gname, color, items] of g.groups) {
     grid.append(h("div", { class: "gt-lab grp" }, "• " + gname), h("div", { class: "gt-track grp" }, nowLine()));
     for (const [label, spans] of items) {
@@ -1149,6 +1148,25 @@ function renderGantt() {
   $("gantt").replaceChildren(grid, h("div", { class: "gt-foot" }, legend, h("span", { class: "note" }, "※ " + g.note)));
 }
 renderGantt();
+// 막대 일정표 위에 마우스(휴대폰은 손가락)를 올리면 그 자리의 날짜·요일을 말풍선으로 보여 줌 (2026-11-06 요청)
+const gtTip = h("div", { class: "gt-tip", hidden: true });
+document.body.append(gtTip);
+function gtHover(e) {
+  const tr = e.target.closest?.(".gt-track");
+  if (!tr || tr.classList.contains("gt-head")) { gtTip.hidden = true; return; }
+  const r = tr.getBoundingClientRect();
+  const i = Math.floor((e.clientX - r.left) / r.width * GT_DAYS);
+  if (i < 0 || i >= GT_DAYS) { gtTip.hidden = true; return; }
+  const d = addDays(parseYmd(GT_START), i);
+  gtTip.textContent = mdw(ymd(d));
+  gtTip.classList.toggle("we", d.getDay() === 0 || d.getDay() === 6);
+  gtTip.style.left = e.clientX + "px"; gtTip.style.top = e.clientY + "px";
+  gtTip.hidden = false;
+}
+$("gantt").addEventListener("pointermove", gtHover);
+$("gantt").addEventListener("pointerdown", gtHover);
+$("gantt").addEventListener("pointerleave", () => (gtTip.hidden = true));
+$("gantt").addEventListener("scroll", () => (gtTip.hidden = true));
 
 // ================= 앱 연결 (Claude 없이 Todoist·구글 캘린더에 직접) =================
 // 열쇠(토큰)는 이 기기 안에만 저장한다. 다른 곳으로 보내지 않는다.
