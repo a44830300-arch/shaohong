@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="Pretendard, 'Noto Sans KR', 'WenQuanYi Zen Hei', sans-serif">
+<rect width="1920" height="1080" fill="#FFFFFF"/>
+<text x="120" y="110" font-size="22" fill="#9A9A9A">nadllog · 11~12월 간트 차트</text>
+<text x="120" y="172" font-size="52" font-weight="700" fill="#333333">축제 · 고정 일정 · 목표</text>
+<text x="120" y="218" font-size="24" fill="#8A8A8A">샤오홍슈 nadllog 11~12월 일정 (시안)</text>
+<text x="646.0" y="242" font-size="22" font-weight="700" fill="#555555">11월</text>
+<line x1="640.0" y1="250" x2="640.0" y2="256" stroke="#BBBBBB"/>
+<text x="704.4" y="282" font-size="18" fill="#888888" text-anchor="middle">1주차</text>
+<rect x="768.9" y="240" width="128.9" height="740.0" fill="#F3F4F6"/>
+<text x="833.3" y="282" font-size="18" fill="#888888" text-anchor="middle">2주차</text>
+<text x="962.2" y="282" font-size="18" fill="#888888" text-anchor="middle">3주차</text>
+<rect x="1026.7" y="240" width="128.9" height="740.0" fill="#F3F4F6"/>
+<text x="1091.1" y="282" font-size="18" fill="#888888" text-anchor="middle">4주차</text>
+<text x="1161.6" y="242" font-size="22" font-weight="700" fill="#555555">12월</text>
+<line x1="1155.6" y1="250" x2="1155.6" y2="256" stroke="#BBBBBB"/>
+<text x="1220.0" y="282" font-size="18" fill="#888888" text-anchor="middle">1주차</text>
+<rect x="1284.4" y="240" width="128.9" height="740.0" fill="#F3F4F6"/>
+<text x="1348.9" y="282" font-size="18" fill="#888888" text-anchor="middle">2주차</text>
+<text x="1477.8" y="282" font-size="18" fill="#888888" text-anchor="middle">3주차</text>
+<rect x="1542.2" y="240" width="128.9" height="740.0" fill="#F3F4F6"/>
+<text x="1606.7" y="282" font-size="18" fill="#888888" text-anchor="middle">4주차</text>
+<text x="1735.6" y="282" font-size="18" fill="#888888" text-anchor="middle">5주차</text>
+<line x1="640" y1="294" x2="1800" y2="294" stroke="#CCCCCC"/>
+<text x="120" y="329.0" font-size="22" font-weight="700" fill="#333333">• 축제 기간</text>
+<text x="140" y="373.7" font-size="20" fill="#555555">· 제주올레걷기축제</text>
+<line x1="120" y1="389.3" x2="1800" y2="389.3" stroke="#F0F0F0"/>
+<rect x="713.7" y="359.0" width="55.2" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="140" y="418.4" font-size="20" fill="#555555">· 휴애리 동백축제 (작년 기준)</text>
+<line x1="120" y1="434.0" x2="1800" y2="434.0" stroke="#F0F0F0"/>
+<rect x="916.2" y="403.7" width="883.8" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="1808.0" y="417.7" font-size="15" fill="#999999">~1월</text>
+<text x="140" y="463.0" font-size="20" fill="#555555">· 최남단 방어축제 (예상)</text>
+<line x1="120" y1="478.7" x2="1800" y2="478.7" stroke="#F0F0F0"/>
+<rect x="971.4" y="448.3" width="92.1" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="140" y="507.7" font-size="20" fill="#555555">· 제주감귤박람회 (예상)</text>
+<line x1="120" y1="523.3" x2="1800" y2="523.3" stroke="#F0F0F0"/>
+<rect x="971.4" y="493.0" width="92.1" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="140" y="552.4" font-size="20" fill="#555555">· 감귤 따기 체험</text>
+<line x1="120" y1="568.0" x2="1800" y2="568.0" stroke="#F0F0F0"/>
+<rect x="640.0" y="537.7" width="1160.0" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="1808.0" y="551.7" font-size="15" fill="#999999">~1월</text>
+<text x="140" y="597.0" font-size="20" fill="#555555">· 함덕 비치 크리스마스</text>
+<line x1="120" y1="612.7" x2="1800" y2="612.7" stroke="#F0F0F0"/>
+<rect x="1634.3" y="582.3" width="18.4" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="140" y="641.7" font-size="20" fill="#555555">· 성산일출축제</text>
+<line x1="120" y1="657.3" x2="1800" y2="657.3" stroke="#F0F0F0"/>
+<rect x="1744.8" y="627.0" width="36.8" height="16.0" rx="8.0" fill="#EBC08A"/>
+<text x="120" y="686.4" font-size="22" font-weight="700" fill="#333333">• 고정 일정</text>
+<text x="140" y="731.0" font-size="20" fill="#555555">· 날씨달력 올리기 (매주 일 10시)</text>
+<line x1="120" y1="746.7" x2="1800" y2="746.7" stroke="#F0F0F0"/>
+<rect x="640.0" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="768.9" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="897.8" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1026.7" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1155.6" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1284.4" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1413.3" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1542.2" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<rect x="1671.1" y="716.3" width="18.4" height="16.0" rx="8.0" fill="#A9CBEA"/>
+<text x="140" y="775.7" font-size="20" fill="#555555">· 축제달력 (쉬는 중)</text>
+<line x1="120" y1="791.3" x2="1800" y2="791.3" stroke="#F0F0F0"/>
+<text x="120" y="820.4" font-size="22" font-weight="700" fill="#333333">• 목표</text>
+<text x="140" y="865.0" font-size="20" fill="#555555">· 11월 축제 피드 10개 · 저장 100+ 5개</text>
+<line x1="120" y1="880.7" x2="1800" y2="880.7" stroke="#F0F0F0"/>
+<rect x="640.0" y="850.3" width="552.4" height="16.0" rx="8.0" fill="#B9DDB3"/>
+<text x="140" y="909.7" font-size="20" fill="#555555">· 휴애리 동백 홍보 디자인</text>
+<line x1="120" y1="925.3" x2="1800" y2="925.3" stroke="#F0F0F0"/>
+<rect x="640.0" y="895.0" width="552.4" height="16.0" rx="8.0" fill="#B9DDB3"/>
+<text x="140" y="954.4" font-size="20" fill="#555555">· 첫 홍보 의뢰 1건</text>
+<line x1="120" y1="970.0" x2="1800" y2="970.0" stroke="#F0F0F0"/>
+<rect x="1155.6" y="939.7" width="257.8" height="16.0" rx="8.0" fill="#B9DDB3"/>
+<text x="1421.3" y="953.7" font-size="15" fill="#999999">12월 초</text>
+<rect x="120" y="1018" width="34" height="14" rx="7" fill="#EBC08A"/>
+<text x="164" y="1031" font-size="18" fill="#777777">축제 기간</text>
+<rect x="304" y="1018" width="34" height="14" rx="7" fill="#A9CBEA"/>
+<text x="348" y="1031" font-size="18" fill="#777777">고정 일정</text>
+<rect x="488" y="1018" width="34" height="14" rx="7" fill="#B9DDB3"/>
+<text x="532" y="1031" font-size="18" fill="#777777">목표</text>
+<text x="1800" y="1031" font-size="18" fill="#AAAAAA" text-anchor="end">※ 날짜가 정해진 것만 넣었어요. 피드 올릴 날을 정해 주시면 막대를 더해요.</text>
+</svg>
