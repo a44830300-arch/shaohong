@@ -572,6 +572,10 @@ function renderChip(row) {
 
 // ---------- 일주일 시간표 (오늘부터 7일, 시간이 정해진 것 전부) ----------
 const HOUR_PX = 40;
+// 공무원 공부 할 일 (📚 학업 > 공무원 구역, 또는 과목 이름) — 일주일 시간표에서 빼는 데 씀
+const GONG_SECTION = "6hvm37HXmvpXrPjv";
+const GONG_WORDS = /공무원|행정법|행정학|국어·영어|국어 ·영어|국어\/영어/;
+const isGong = (t) => t.sectionId === GONG_SECTION || GONG_WORDS.test(t.content);
 // 학교 수업 (매주 고정 · 학기 끝까지). 캘린더에 같은 수업이 있으면 캘린더 것을 씀
 const SCHOOL_END = "2026-12-18";
 const SCHOOL = [
@@ -625,6 +629,7 @@ function renderTimeline() {
   for (const t of state.tasks) {
     const d = taskDate(t), tm = taskTime(t);
     if (!tm || !blocks[d]) continue;
+    if (isGong(t)) continue; // 공무원 공부는 일주일 시간표에서 일단 뺌 (2026-11-06 요청)
     const key = t.content.split(" ")[0];
     if (key.length >= 2 && blocks[d].some((b) => b.cal && b.title.includes(key))) continue; // 캘린더와 같은 일은 한 번만
     const [hh, mm] = tm.split(":").map(Number);
