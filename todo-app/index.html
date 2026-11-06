@@ -182,6 +182,31 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .toast[hidden] { display: none; }
 .toast button { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 0; }
 .skeleton { color: var(--muted); padding: 14px; font-size: 14px; }
+
+/* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
+:root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
+.gt-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.gt-tabs button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.gt-tabs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.gt { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); -webkit-overflow-scrolling: touch; }
+.gt-grid { display: grid; grid-template-columns: 200px 1fr; min-width: 700px; }
+.gt-lab { position: sticky; left: 0; z-index: 2; background: var(--surface); padding: 0 10px 0 12px; font-size: 13px; display: flex; align-items: center; min-height: 30px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.gt-lab.grp { font-weight: 700; min-height: 34px; }
+.gt-lab.it { color: var(--muted); padding-left: 22px; }
+.gt-lab.head { border-top: 0; }
+.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
+.gt-track.grp { min-height: 34px; }
+.gt-head { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-top: 0; }
+.gt-head span { padding: 6px 2px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
+.gt-head b { display: block; font-size: 12px; color: var(--fg); font-weight: 700; min-height: 1.3em; }
+.gt-bar { position: absolute; top: 50%; height: 10px; transform: translateY(-50%); border-radius: 5px; }
+.gt-dot { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; }
+.gt-b { background: var(--gt-blue); } .gt-o { background: var(--gt-orange); } .gt-g { background: var(--gt-green); }
+.gt-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); opacity: .8; pointer-events: none; }
+.gt-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--muted); padding: 8px 12px; border-top: 1px solid var(--line); }
+.gt-foot i { display: inline-block; width: 22px; height: 8px; border-radius: 4px; margin-right: 5px; vertical-align: 1px; }
+.gt-foot .note { margin-left: auto; }
+@media (max-width: 760px) { .gt-grid { grid-template-columns: 136px 1fr; min-width: 600px; } .gt-lab { font-size: 12px; padding-right: 6px; } .gt-lab.it { padding-left: 16px; } }
 @media (prefers-reduced-motion: no-preference) { .row, .item, .chip { transition: opacity .2s; } }
 
 /* ---------- 휴대폰 (홈 화면 앱) ---------- */
@@ -297,6 +322,12 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
   <section>
     <h2>⏰ 일주일 시간표 <span class="sub">오늘부터 7일 · 시간이 정해진 일정 전부 · 빨강 = 꼭 · 노랑 = 중요 · 파랑 = 수업</span></h2>
     <div class="tl" id="timeline"><div class="tl-empty">불러오는 중…</div></div>
+  </section>
+
+  <section>
+    <h2>📊 막대 일정표 <span class="sub">11월 1주차 ~ 12월 5주차 · 시안 · 주황 세로줄 = 오늘</span></h2>
+    <div class="gt-tabs" id="gt-tabs" role="group" aria-label="막대 일정표 고르기"></div>
+    <div class="gt" id="gantt"></div>
   </section>
 
   <section>
@@ -980,6 +1011,93 @@ function swEdit(k) {
 if (timer.run) tTick = setInterval(tDraw, 250);
 if (sw.run) swTick = setInterval(swDraw, 250);
 tDraw(); swDraw();
+
+// ---------- 📊 막대 일정표 (간트 차트, 2026-11-06 요청) ----------
+// 마킴 캠페인: 항목·기간은 시안(예시). 샤오홍슈: 축제 날짜·고정 일정·목표만 (올리는 날짜는 강정준비준이 정함)
+const GT_START = "2026-11-01", GT_DAYS = 63; // 11/1(일)부터 9주
+const GT_WEEKS = [["11월", "1주차"], ["", "2주차"], ["", "3주차"], ["", "4주차"], ["12월", "1주차"], ["", "2주차"], ["", "3주차"], ["", "4주차"], ["", "5주차"]];
+const gtDate = (s) => (s.length === 5 ? (s.startsWith("01") ? "2027-" : "2026-") + s : s);
+const GT_SUNDAYS = [...Array(9)].map((_, i) => { const d = ymd(addDays(parseYmd(GT_START), i * 7)).slice(5); return [d, d]; });
+const GANTT = {
+  makim: {
+    name: "마킴 캠페인",
+    note: "시안: 항목·기간은 예시예요. 캠페인 컨셉이 정해지면 바꿔요.",
+    groups: [
+      ["기획 · 제작", "b", [
+        ["협업 브랜드 섭외", [["11-01", "11-14"]]],
+        ["라이프스타일 상품 기획", [["11-08", "11-21"]]],
+        ["샘플 제작 · 수정", [["11-15", "11-28"]]],
+        ["상품 생산", [["11-29", "12-12"]]],
+        ["팝업 공간 준비", [["12-06", "12-19"]]],
+      ]],
+      ["마케팅", "o", [
+        ["티저 광고", [["11-22", "11-28"]]],
+        ["자사 채널 홍보 (인스타 · 자사몰)", [["11-22", "12-26"]]],
+        ["앰버서더 콘텐츠 공개", [["11-29", "12-12"]]],
+        ["무신사 · 29CM 기획전", [["12-06", "12-19"]]],
+        ["SNS 인플루언서 협업", [["11-29", "12-26"]]],
+        ["커뮤니티 바이럴 활동", [["12-06", "12-19"]]],
+        ["오프라인 팝업 운영", [["12-13", "12-26"]]],
+        ["캠페인 종료 및 리뷰", [["12-27", "01-02"]]],
+      ]],
+    ],
+  },
+  xhs: {
+    name: "샤오홍슈",
+    note: "날짜가 정해진 것만 넣었어요. 피드 올릴 날을 정해 주시면 막대를 더해요.",
+    groups: [
+      ["축제 기간", "o", [
+        ["제주올레걷기축제", [["11-05", "11-07"]]],
+        ["휴애리 동백축제 (작년 기준, ~1월)", [["11-16", "01-02"]]],
+        ["최남단 방어축제 (예상)", [["11-19", "11-23"]]],
+        ["제주감귤박람회 (예상)", [["11-19", "11-23"]]],
+        ["감귤 따기 체험 (~1월)", [["11-01", "01-02"]]],
+        ["함덕 비치 크리스마스", [["12-25", "12-25"]]],
+        ["성산일출축제", [["12-31", "01-01"]]],
+      ]],
+      ["고정 일정", "b", [
+        ["날씨달력 올리기 (매주 일 10시)", GT_SUNDAYS],
+        ["축제달력 (쉬는 중)", []],
+      ]],
+      ["목표", "g", [
+        ["11월 축제 피드 10개 · 저장 100+ 5개", [["11-01", "11-30"]]],
+        ["휴애리 동백 홍보 디자인", [["11-01", "11-30"]]],
+        ["첫 홍보 의뢰 1건 (12월 초)", [["11-29", "12-12"]]],
+      ]],
+    ],
+  },
+};
+const GT_KEY = "board-gantt-tab";
+let gtTab = "makim";
+try { const v = localStorage.getItem(GT_KEY); if (GANTT[v]) gtTab = v; } catch {}
+const gtPct = (s) => (dayDiff(gtDate(s), GT_START) / GT_DAYS) * 100;
+function renderGantt() {
+  const tabs = $("gt-tabs"); tabs.replaceChildren();
+  for (const [k, g] of Object.entries(GANTT)) {
+    tabs.append(h("button", { type: "button", "aria-pressed": String(k === gtTab), onclick: () => { gtTab = k; try { localStorage.setItem(GT_KEY, k); } catch {} renderGantt(); } }, g.name));
+  }
+  const g = GANTT[gtTab];
+  const nowPct = (dayDiff(ymd(new Date()), GT_START) + 0.5) / GT_DAYS * 100;
+  const nowLine = () => (nowPct >= 0 && nowPct <= 100 ? h("div", { class: "gt-now", style: `left:${nowPct}%` }) : null);
+  const grid = h("div", { class: "gt-grid" });
+  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w))));
+  for (const [gname, color, items] of g.groups) {
+    grid.append(h("div", { class: "gt-lab grp" }, "• " + gname), h("div", { class: "gt-track grp" }, nowLine()));
+    for (const [label, spans] of items) {
+      const track = h("div", { class: "gt-track" }, nowLine());
+      for (const [s, e] of spans) {
+        const a = gtPct(s), b = gtPct(e) + 100 / GT_DAYS;
+        const title = `${label} · ${mdw(gtDate(s))}${s === e ? "" : " ~ " + mdw(gtDate(e))}`;
+        if (s === e && spans.length > 1 || b - a < 2) track.append(h("div", { class: `gt-dot gt-${color}`, style: `left:${(a + b) / 2}%`, title }));
+        else track.append(h("div", { class: `gt-bar gt-${color}`, style: `left:${a}%;width:${b - a}%`, title }));
+      }
+      grid.append(h("div", { class: "gt-lab it" }, "· " + label), track);
+    }
+  }
+  const legend = [...new Set(g.groups.map(([n, c]) => n + "|" + c))].map((x) => { const [n, c] = x.split("|"); return h("span", null, h("i", { class: `gt-${c}` }), n); });
+  $("gantt").replaceChildren(grid, h("div", { class: "gt-foot" }, legend, h("span", { class: "note" }, "※ " + g.note)));
+}
+renderGantt();
 
 // ================= 앱 연결 (Claude 없이 Todoist·구글 캘린더에 직접) =================
 // 열쇠(토큰)는 이 기기 안에만 저장한다. 다른 곳으로 보내지 않는다.
