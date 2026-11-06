@@ -189,7 +189,7 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .skeleton { color: var(--muted); padding: 14px; font-size: 14px; }
 
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
-:root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
+:root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; --gt-dayline: color-mix(in srgb, var(--line) 55%, transparent); }
 .gt-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .gt-tabs button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
 .gt-tabs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
@@ -199,10 +199,14 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .gt-lab.grp { font-weight: 700; min-height: 34px; }
 .gt-lab.it { color: var(--muted); padding-left: 22px; }
 .gt-lab.head { border-top: 0; }
-.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
+.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 63 - 1px), var(--gt-dayline) calc(100% / 63 - 1px) calc(100% / 63)), repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
+/* 요일 칸 (2026-11-06 요청): 주 칸을 7칸으로 쪼갠 아주 옅은 선 + 머리줄의 작은 요일 글씨 */
+.gt-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 3px; font-size: 8.5px; line-height: 1.2; color: var(--muted); opacity: .75; }
+.gt-days i { font-style: normal; text-align: center; }
+.gt-days i.we { color: var(--accent); }
 .gt-track.grp { min-height: 34px; }
 .gt-head { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-top: 0; }
-.gt-head span { padding: 6px 2px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
+.gt-head span { padding: 6px 0 4px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
 .gt-head b { display: block; font-size: 12px; color: var(--fg); font-weight: 700; min-height: 1.3em; }
 .gt-bar { position: absolute; top: 50%; height: 10px; transform: translateY(-50%); border-radius: 5px; }
 .gt-dot { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; }
@@ -1127,7 +1131,7 @@ function renderGantt() {
   const nowPct = (dayDiff(ymd(new Date()), GT_START) + 0.5) / GT_DAYS * 100;
   const nowLine = () => (nowPct >= 0 && nowPct <= 100 ? h("div", { class: "gt-now", style: `left:${nowPct}%` }) : null);
   const grid = h("div", { class: "gt-grid" });
-  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w))));
+  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w, h("div", { class: "gt-days", "aria-hidden": "true" }, WD.map((x, i) => h("i", { class: i === 0 || i === 6 ? "we" : null }, x)))))));
   for (const [gname, color, items] of g.groups) {
     grid.append(h("div", { class: "gt-lab grp" }, "• " + gname), h("div", { class: "gt-track grp" }, nowLine()));
     for (const [label, spans] of items) {
