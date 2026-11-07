@@ -4,7 +4,7 @@
 <text x="1008" y="70.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="600" fill="#6B6B6B" text-anchor="end">2 / 3</text>
 <line x1="72" y1="88" x2="1008" y2="88" stroke="#151515" stroke-width="2"/>
 <text x="72" y="150.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">04  SWOT</text>
-<rect x="72" y="182.0" width="458" height="744.0" rx="14" fill="#E8E2D6" stroke="#D9D5CC" stroke-width="1.5"/>
+<rect x="72" y="182.0" width="458" height="709.2" rx="14" fill="#E8E2D6" stroke="#D9D5CC" stroke-width="1.5"/>
 <text x="100" y="234.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">S</text>
 <text x="131.125" y="234.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">강점</text>
 <text x="100" y="292.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
@@ -25,7 +25,7 @@
 <text x="118" y="704.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">확장 중</text>
 <text x="100" y="762.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
 <text x="118" y="762.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">중화권 진출 준비(중국 1호점 계획)</text>
-<rect x="550" y="182.0" width="458" height="744.0" rx="14" fill="#FFFFFF" stroke="#D9D5CC" stroke-width="1.5"/>
+<rect x="550" y="182.0" width="458" height="709.2" rx="14" fill="#FFFFFF" stroke="#D9D5CC" stroke-width="1.5"/>
 <text x="578" y="234.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">W</text>
 <text x="620.828125" y="234.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">약점</text>
 <text x="578" y="292.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
@@ -43,20 +43,22 @@
 <text x="596" y="614.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">국내 인기가 식는 중, 길에서 점점 안 보임</text>
 <text x="578" y="672.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
 <text x="596" y="672.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">오프라인 매출은 내국인보다 외국인이 많음</text>
-<rect x="72" y="946.0" width="458" height="324.0" rx="14" fill="#FFFFFF" stroke="#D9D5CC" stroke-width="1.5"/>
-<text x="100" y="998.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">O</text>
-<text x="134.859375" y="998.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">기회</text>
-<text x="100" y="1056.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="118" y="1056.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">한국 이미지가 좋아져 외국인 관광객이</text>
-<text x="118" y="1088.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">계속 늘어남</text>
-<text x="100" y="1146.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="118" y="1146.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">요즘은 가격·기능보다 ‘브랜드 이미지’로 산다</text>
-<rect x="550" y="946.0" width="458" height="324.0" rx="14" fill="#E8E2D6" stroke="#D9D5CC" stroke-width="1.5"/>
-<text x="578" y="998.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">T</text>
-<text x="609.59375" y="998.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">위협</text>
-<text x="578" y="1056.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="596" y="1056.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">‘3마’로 로고가 비슷함</text>
-<text x="578" y="1114.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="596" y="1114.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">패션 브랜드가 모두 ‘탈패션’(카페·뷰티)으로</text>
-<text x="596" y="1146.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">가는 중</text>
+<rect x="72" y="911.2" width="458" height="358.8" rx="14" fill="#FFFFFF" stroke="#D9D5CC" stroke-width="1.5"/>
+<text x="100" y="963.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">O</text>
+<text x="134.859375" y="963.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">기회</text>
+<text x="100" y="1021.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="118" y="1021.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">한국 이미지가 좋아져 외국인 관광객이</text>
+<text x="118" y="1053.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">계속 늘어남</text>
+<text x="100" y="1111.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="118" y="1111.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">국내외 여행객이 계속 증가하고 있음</text>
+<text x="100" y="1169.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="118" y="1169.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">요즘은 가격·기능보다 ‘브랜드 이미지’로 산다</text>
+<rect x="550" y="911.2" width="458" height="358.8" rx="14" fill="#E8E2D6" stroke="#D9D5CC" stroke-width="1.5"/>
+<text x="578" y="963.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="30" font-weight="800" fill="#1F3A5F" text-anchor="start">T</text>
+<text x="609.59375" y="963.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">위협</text>
+<text x="578" y="1021.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="596" y="1021.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">‘3마’로 로고가 비슷함</text>
+<text x="578" y="1079.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="596" y="1079.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">패션 브랜드가 모두 ‘탈패션’(카페·뷰티)으로</text>
+<text x="596" y="1111.2" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="21" font-weight="500" fill="#151515" text-anchor="start">가는 중</text>
 </svg>
