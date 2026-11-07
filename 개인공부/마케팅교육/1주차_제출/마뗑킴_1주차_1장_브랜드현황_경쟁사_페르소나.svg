@@ -26,12 +26,14 @@
 <text x="416.6666666666667" y="632.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="700" fill="#3A5A80" text-anchor="start">문구 경쟁자</text>
 <text x="416.6666666666667" y="678.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="28" font-weight="800" fill="#1F2A37" text-anchor="start">아날로그키퍼</text>
 <line x1="416.6666666666667" y1="728" x2="663.3333333333334" y2="728" stroke="#DCE3EB" stroke-width="1"/>
-<text x="416.6666666666667" y="766.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#6B7785" text-anchor="start">—</text>
+<text x="416.6666666666667" y="766.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#1F2A37" text-anchor="start">문구류에서 앞으로 추구해야 할</text>
+<text x="416.6666666666667" y="794.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#1F2A37" text-anchor="start">이미지가 겹친다.</text>
 <rect x="709.3333333333334" y="582.0" width="298.6666666666667" height="262.0" rx="14" fill="#FFFFFF" stroke="#DCE3EB" stroke-width="1.5"/>
 <text x="735.3333333333334" y="632.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="700" fill="#3A5A80" text-anchor="start">문구 경쟁자</text>
 <text x="735.3333333333334" y="678.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="28" font-weight="800" fill="#1F2A37" text-anchor="start">이나피스퀘어</text>
 <line x1="735.3333333333334" y1="728" x2="982.0" y2="728" stroke="#DCE3EB" stroke-width="1"/>
-<text x="735.3333333333334" y="766.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#6B7785" text-anchor="start">—</text>
+<text x="735.3333333333334" y="766.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#1F2A37" text-anchor="start">블랙 앤 화이트로 브랜드 색이</text>
+<text x="735.3333333333334" y="794.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#1F2A37" text-anchor="start">겹친다.</text>
 <text x="72" y="928.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#3A5A80" text-anchor="start">03  페르소나 1명</text>
 <rect x="72" y="956.0" width="936" height="314.0" rx="14" fill="#4A6A8F"/>
 <text x="112" y="1020.0" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="34" font-weight="800" fill="#FFFFFF" text-anchor="start">강정준 · 28세 여성</text>
