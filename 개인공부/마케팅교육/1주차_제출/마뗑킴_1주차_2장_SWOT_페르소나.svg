@@ -50,15 +50,11 @@
 <rect x="550.0" y="530" width="458.0" height="340" rx="14" fill="#E8E2D6" stroke="#D9D5CC" stroke-width="1.5"/>
 <text x="574.0" y="572" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="22" font-weight="800" fill="#1F3A5F" text-anchor="start">T  위협</text>
 <text x="574.0" y="612" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="592.0" y="612" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="500" fill="#151515" text-anchor="start">패션 브랜드끼리 ‘3마’로 많이 엮이는데, 좋은 현상은</text>
-<text x="592.0" y="635.8" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="500" fill="#151515" text-anchor="start">아닌 것 같다</text>
-<text x="574.0" y="663.5999999999999" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="700" fill="#151515" text-anchor="start">·</text>
-<text x="592.0" y="663.5999999999999" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="500" fill="#151515" text-anchor="start">패션 브랜드가 모두 ‘탈패션’(카페·뷰티)으로 가는 중</text>
+<text x="592.0" y="612" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="500" fill="#151515" text-anchor="start">‘3마’로 로고가 비슷함</text>
+<text x="574.0" y="639.8" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="700" fill="#151515" text-anchor="start">·</text>
+<text x="592.0" y="639.8" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="17" font-weight="500" fill="#151515" text-anchor="start">패션 브랜드가 모두 ‘탈패션’(카페·뷰티)으로 가는 중</text>
 <text x="72" y="910" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="24" font-weight="800" fill="#151515" text-anchor="start">페르소나 1명</text>
-<rect x="72" y="934" width="936" height="240" rx="14" fill="#151515"/>
-<text x="102" y="984" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="28" font-weight="800" fill="#FFFFFF" text-anchor="start">강정준 · 30세 남성 · 직장인</text>
-<text x="102" y="1026" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="19" font-weight="500" fill="#EDEDED" text-anchor="start">옷에 관심이 많고 여러 브랜드를 경험해 보는 걸 좋아한다. 마뗑킴을 알지만 로고에서 느껴지는 여성스러움 때문에</text>
-<text x="102" y="1053.55" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="19" font-weight="500" fill="#EDEDED" text-anchor="start">아직 한 번도 못 사 봤다. 남의 눈치를 보는 편이고, ‘3마’가 뭐가 다른지 잘 모른다.</text>
-<text x="102" y="1089.1" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="19" font-weight="600" fill="#BFD0E6" text-anchor="start">여자친구(32세 직장인)는 마뗑킴 손님. 남자친구 옷차림을 무난하게 챙겨 주는 편 → 구매를 도와주는 사람.</text>
-<text x="72" y="1214" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="18" font-weight="500" fill="#6B6B6B" text-anchor="start">왜 이 사람? WHY(여성 → 남성·중성 이미지)에 딱 맞고, 여자친구라는 ‘이미 있는 팬’을 통해 다가갈 수 있다.</text>
+<rect x="72" y="934" width="936" height="150" rx="14" fill="#151515"/>
+<text x="102" y="984" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="28" font-weight="800" fill="#FFFFFF" text-anchor="start">강정준 · 28세 여성</text>
+<text x="102" y="1032" font-family="Pretendard, 'Noto Sans KR', sans-serif" font-size="20" font-weight="500" fill="#EDEDED" text-anchor="start">SNS 활동을 자주 하고, 본인의 것을 보여 주는 걸 좋아한다.</text>
 </svg>
