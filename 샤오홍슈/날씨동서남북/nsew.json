@@ -1,0 +1,9 @@
+{"date_label":"11月11日 周三 · 明天",
+ "note":"明天全岛晴转多云，南边最暖",
+ "source":"数据：济州地方气象厅 · 11.10 17:00发布",
+ "stations":[
+  {"dir":"N","dir_zh":"北","zh":"济州市","ko":"북_제주시","lon":126.5297,"lat":33.5141,"color":"#3E7CB1","icon":"partly","tmin":10,"tmax":17,"wf_zh":"晴转多云","pop":20},
+  {"dir":"E","dir_zh":"东","zh":"城山","ko":"동_성산","lon":126.8802,"lat":33.3868,"color":"#E8803C","icon":"partly","tmin":9,"tmax":17,"wf_zh":"晴转多云","pop":20},
+  {"dir":"S","dir_zh":"南","zh":"西归浦","ko":"남_서귀포","lon":126.5653,"lat":33.2462,"color":"#D9534F","icon":"partly","tmin":12,"tmax":19,"wf_zh":"晴转多云","pop":20},
+  {"dir":"W","dir_zh":"西","zh":"高山","ko":"서_고산","lon":126.1628,"lat":33.2938,"color":"#5E9A5A","icon":"partly","tmin":11,"tmax":17,"wf_zh":"晴转多云","pop":20}
+ ]}
