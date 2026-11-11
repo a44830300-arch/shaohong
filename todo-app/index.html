@@ -733,7 +733,7 @@ function drawTimeline() {
     for (const d of days) grid.append(h("div", { class: "tl-ad" }, allday[d].map((b) => h("div", { class: `tl-b lvl${b.level}` + (b.done ? " done" : ""), title: b.title, onclick: () => toast(`종일 · ${b.title}`) }, h("span", { class: "n" }, b.title)))));
   }
   const hours = h("div", { class: "tl-hours", style: `height:${height}px` });
-  for (let hr = hStart; hr < hEnd; hr++) if (!compact || hr % 2 === 0) hours.append(h("span", { style: `top:${(hr - hStart) * hourPx}px` }, compact ? hr : `${hr}시`));
+  for (let hr = hStart; hr < hEnd; hr++) hours.append(h("span", { style: `top:${(hr - hStart) * hourPx}px` }, compact ? hr : `${hr}시`));
   grid.append(hours);
 
   for (const d of days) {
