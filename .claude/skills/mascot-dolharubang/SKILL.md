@@ -49,3 +49,4 @@ Cute hand-drawn children's doodle illustration in colored pencil / crayon style,
 - 르방 느낌(색연필·SD·점 눈·분홍 볼·삐뚤한 테두리)으로 만든 감귤 캐릭터. 피그마 `783:2` "감귤 캐릭터 ① 색연필 - 손 흔들기 (르방 친구)" — 르방 페이지(<작업중>바닷길, 마을소개(구좌))의 빈 캔버스에 둠.
 - 모양: 살짝 납작한 귤 머리 = 몸만큼 큼, 주황 빗금 칠 + 진한 주황 점(귤껍질 구멍), 머리 위 갈색 꼭지 + 초록 잎 2장(르방 모자 자리), 손 흔들기 + 노란 반짝 선.
 - 이름·확정 여부는 아직 안 정함. 새 포즈는 위 생성 문장에서 캐릭터 부분을 "chibi Jeju tangerine (gamgyul mandarin) ... short brown stem with two green leaves on top like a little hat, orange hatched strokes, darker orange dots for peel pores"로 바꿔 쓴다.
+- 샘플 6개 (2026-11-11), 첫 시안 오른쪽에 2줄로 둠. 윗줄은 강정준비준이 "이런 느낌"이라고 준 **검은 선화 르방(`780:4`)** 스타일(색 없음, 얇은 검은 선, 네 꼭지 반짝이 별): `785:5` 귤+잎 손 흔들기 · `785:6` 한라봉 만세 · `785:7` 귤껍질 모자. 아랫줄은 색연필: `785:2` 한라봉 만세 · `785:3` 반쯤 깐 귤 · `785:4` 아기 귤 바구니. 고를 때까지 확정 아님.
