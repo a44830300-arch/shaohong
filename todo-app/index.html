@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* 한 줄 세로 흐름: 오늘 목록 → 이번 주 달력 → 일주일 시간표 → 체험단 표 → 날짜 미정. 감귤색은 강조 하나에만. 휴대폰에서는 위 머리줄 고정 + 큰 체크 버튼 + 체험단 카드 */
+/* 컴퓨터: 오늘 목록 → 이번 주 달력 → 일주일 시간표 → 막대 일정표 → 체험단 표 → 날짜 미정. 휴대폰 세로: 일주일 시간표 + 오늘(한 화면) → 막대 일정표 → 체험단 → 나머지. 감귤색은 강조 하나에만. 휴대폰에서는 위 머리줄 고정 + 큰 체크 버튼 + 체험단 카드 */
 :root {
   --bg: #f6f7f5;
   --surface: #ffffff;
@@ -274,6 +274,63 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
   td[colspan] { grid-column: 1 / -1; padding: 0; }
   td[data-label]::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 500; color: var(--muted); font-family: var(--font-body); }
 }
+/* ---------- 휴대폰 세로 화면 (2026-11-11 요청) ----------
+   순서: 일주일 시간표 → 오늘 → 막대 일정표 → 체험단 현황 → (명령 칸 · 이번 주 · 날짜 미정).
+   시간표와 오늘 목록은 한 화면에: 시간표는 7일이 옆으로 밀지 않고 다 보이게 작게, 오늘 목록은 남은 높이 안에서 따로 밀어 봄.
+   타이머·스톱워치는 자리 그대로, 크기만 작게 */
+@media (max-width: 760px) {
+  .wrap { gap: 0; }
+  .wrap > section { margin-top: 22px; }
+  #notices:not(:empty) { margin-top: 8px; }
+  #sec-tl { order: 1; margin-top: 8px; }
+  #sec-today { order: 2; margin-top: 10px; }
+  #sec-gantt { order: 3; }
+  #sec-blog { order: 4; }
+  #cmd-sec { order: 5; }
+  #sec-week { order: 6; }
+  #sec-undated { order: 7; }
+
+  header { padding-block: 6px 6px; row-gap: 5px; column-gap: 8px; }
+  h1 { font-size: 17px; line-height: 1.2; }
+  h1 small { display: inline; font-size: 11px; margin-right: 6px; }
+  h1 .total { font-size: 11px; margin-left: 6px; }
+  header .btn { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+  .tools { gap: 4px; }
+  .timer { flex-wrap: nowrap; gap: 5px; padding: 3px 6px 5px; border-radius: 10px; }
+  .t-time { font-size: 18px; min-width: 6ch; margin-right: 0; }
+  .t-go { min-width: 46px; flex: none; }
+  .t-presets { flex: 1 1 0; min-width: 0; }
+  .t-presets button { padding: 3px 8px; font-size: 11px; }
+  .swm { padding: 2px; }
+  .swm .l { font-size: 10px; line-height: 1.2; }
+  .swm .v { font-size: 13px; line-height: 1.2; }
+  .swr, .swe { font-size: 11px; padding: 2px 4px; }
+
+  #sec-tl h2, #sec-today h2 { font-size: 14px; margin-bottom: 4px; }
+  #sec-tl h2 .sub, #sec-today h2 .sub { display: none; }
+  .tl { overflow: hidden; border-radius: 10px; }
+  .tl-grid { grid-template-columns: 22px repeat(7, minmax(0, 1fr)); min-width: 0; }
+  .tl-dh { padding: 2px 0; font-size: 10px; line-height: 1.3; white-space: nowrap; overflow: hidden; }
+  .tl-dh b { display: inline; font-size: 11px; margin-right: 2px; }
+  .tl-lab { font-size: 9px; padding: 2px; }
+  .tl-ad { padding: 1px; gap: 1px; }
+  .tl-hours span { right: 3px; font-size: 9px; margin-top: 1px; }
+  .tl-b { font-size: 9.5px; line-height: 1.15; padding: 1px 2px; border-radius: 4px; border-left-width: 2px; word-break: break-all; letter-spacing: -.03em; }
+  .tl-b .time, .tl-b.short .time, .tl-b .loc { display: none; }
+
+  #today { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #today .row { grid-template-columns: 26px 1fr; padding: 7px 10px; gap: 9px; }
+  #today .check { width: 25px; height: 25px; font-size: 14px; margin-top: 0; }
+  #today .title { font-size: 14.5px; line-height: 1.35; }
+  #today .row .meta { font-size: 12px; }
+  #today .subs { margin-top: 3px; }
+  #today .subs .row { grid-template-columns: 24px 1fr; padding: 3px 0; }
+  #today .subs .check { width: 22px; height: 22px; font-size: 12px; }
+  #today .subs .title { font-size: 13.5px; }
+  #today .chips { padding: 8px 10px; gap: 6px; }
+  #today .chip { padding: 3px 10px 3px 4px; font-size: 13px; }
+  #today .chip .check { width: 22px; height: 22px; font-size: 12px; }
+}
 /* ---------- 앱 설정 창 ---------- */
 .gear { font-size: 15px; padding: 6px 10px; }
 dialog.settings { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 18px; width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; }
@@ -317,28 +374,28 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
 
   <div id="notices" style="display:grid;gap:8px"></div>
 
-  <section>
+  <section id="sec-today">
     <h2>오늘 <span class="sub">번호 = 크리링 추천 순서(주황 = 지금 할 것) · 동그라미 = Todoist 할 일 · 네모 = 캘린더 일정(체크하면 제목 앞에 ✅가 붙어요)</span></h2>
     <div class="list" id="today"><div class="skeleton">Todoist와 구글 캘린더에서 오늘 할 일을 가져오고 있어요.</div></div>
   </section>
 
-  <section>
+  <section id="sec-week">
     <h2>이번 주 <span class="sub">샤오홍슈·블로그 일만 · 🟢 샤오홍슈 · 🟡 블로그</span></h2>
     <div class="week" id="week"></div>
   </section>
 
-  <section>
+  <section id="sec-tl">
     <h2>⏰ 일주일 시간표 <span class="sub">오늘부터 7일 · 시간이 정해진 일정 전부 · 빨강 = 꼭 · 노랑 = 중요 · 파랑 = 수업</span></h2>
     <div class="tl" id="timeline"><div class="tl-empty">불러오는 중…</div></div>
   </section>
 
-  <section>
+  <section id="sec-gantt">
     <h2>📊 막대 일정표 <span class="sub">11월 1주차 ~ 12월 5주차 · 주황 세로줄 = 오늘</span></h2>
     <div class="gt-tabs" id="gt-tabs" role="group" aria-label="막대 일정표 고르기"></div>
     <div class="gt" id="gantt"></div>
   </section>
 
-  <section>
+  <section id="sec-blog">
     <h2>📝 블로그 체험단 현황</h2>
     <div class="tablebox"><table>
       <thead><tr><th>가게</th><th>마감</th><th>예약</th><th>같이 갈 사람</th><th>업로드</th></tr></thead>
@@ -346,7 +403,7 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
     </table></div>
   </section>
 
-  <section>
+  <section id="sec-undated">
     <h2>📌 날짜 미정</h2>
     <div class="list" id="undated"><div class="skeleton">불러오는 중…</div></div>
   </section>
@@ -572,6 +629,19 @@ function renderChip(row) {
 
 // ---------- 일주일 시간표 (오늘부터 7일, 시간이 정해진 것 전부) ----------
 const HOUR_PX = 40;
+// 휴대폰 세로 화면 (2026-11-11 요청): 시간표 + 오늘 목록이 한 화면에 들어오게 시간표를 작게 그림
+const phoneMq = window.matchMedia("(max-width: 760px)");
+const isPhone = () => phoneMq.matches;
+const rootPad = (side) => parseFloat(getComputedStyle(document.documentElement)["padding" + side]) || 0;
+// 머리줄(타이머) 아래로 남는 화면 높이
+const screenH = () => window.innerHeight - document.querySelector("header").getBoundingClientRect().height - rootPad("Top") - rootPad("Bottom");
+// 오늘 목록은 화면 아래 끝까지만 차지하고, 넘치는 할 일은 목록 안에서 밀어 봄
+function fitToday() {
+  const list = $("today");
+  if (!isPhone()) { list.style.maxHeight = ""; return; }
+  const top = list.getBoundingClientRect().top + window.scrollY;
+  list.style.maxHeight = Math.max(150, Math.floor(window.innerHeight - rootPad("Bottom") - top - 8)) + "px";
+}
 // 공무원 공부 할 일 (📚 학업 > 공무원 구역, 또는 과목 이름) — 일주일 시간표에서 빼는 데 씀
 const GONG_SECTION = "6hvm37HXmvpXrPjv";
 const GONG_WORDS = /공무원|행정법|행정학|국어·영어|국어 ·영어|국어\/영어/;
@@ -600,7 +670,8 @@ function durMin(t) {
   const mins = m ? Math.round(parseFloat(m[1] || 0) * 60 + Number(m[2] || 0)) : 0;
   return mins || 60;
 }
-function renderTimeline() {
+function renderTimeline() { drawTimeline(); fitToday(); }
+function drawTimeline() {
   const box = $("timeline");
   const days = [...Array(7)].map((_, i) => ymd(addDays(parseYmd(TODAY), i)));
   const blocks = Object.fromEntries(days.map((d) => [d, []]));
@@ -645,25 +716,28 @@ function renderTimeline() {
   }
   const hStart = Math.min(8, ...all.map((b) => Math.floor(b.start / 60)));
   const hEnd = Math.max(22, ...all.map((b) => Math.ceil(b.end / 60)));
-  const height = (hEnd - hStart) * HOUR_PX;
-  const y = (m) => (m - hStart * 60) * HOUR_PX / 60;
+  // 휴대폰: 시간표가 화면 높이의 절반쯤만 차지하게 한 시간 높이를 줄임
+  const compact = isPhone();
+  const hourPx = compact ? Math.max(11, Math.min(26, (screenH() * 0.5 - 56) / (hEnd - hStart))) : HOUR_PX;
+  const height = (hEnd - hStart) * hourPx;
+  const y = (m) => (m - hStart * 60) * hourPx / 60;
 
   const grid = h("div", { class: "tl-grid" });
   grid.append(h("div", { class: "tl-corner" }));
   for (const d of days) {
     const wd = parseYmd(d).getDay();
-    grid.append(h("div", { class: "tl-dh" + (wd === 0 || wd === 6 ? " wkend" : "") + (d === TODAY ? " today" : "") }, h("b", null, md(d)), d === TODAY ? "오늘" : WD[wd]));
+    grid.append(h("div", { class: "tl-dh" + (wd === 0 || wd === 6 ? " wkend" : "") + (d === TODAY ? " today" : "") }, h("b", null, compact ? parseYmd(d).getDate() : md(d)), d === TODAY ? "오늘" : WD[wd]));
   }
   if (hasAllDay) {
     grid.append(h("div", { class: "tl-lab" }, "종일"));
-    for (const d of days) grid.append(h("div", { class: "tl-ad" }, allday[d].map((b) => h("div", { class: `tl-b lvl${b.level}` + (b.done ? " done" : ""), title: b.title }, h("span", { class: "n" }, b.title)))));
+    for (const d of days) grid.append(h("div", { class: "tl-ad" }, allday[d].map((b) => h("div", { class: `tl-b lvl${b.level}` + (b.done ? " done" : ""), title: b.title, onclick: () => toast(`종일 · ${b.title}`) }, h("span", { class: "n" }, b.title)))));
   }
   const hours = h("div", { class: "tl-hours", style: `height:${height}px` });
-  for (let hr = hStart; hr < hEnd; hr++) hours.append(h("span", { style: `top:${(hr - hStart) * HOUR_PX}px` }, `${hr}시`));
+  for (let hr = hStart; hr < hEnd; hr++) if (!compact || hr % 2 === 0) hours.append(h("span", { style: `top:${(hr - hStart) * hourPx}px` }, compact ? hr : `${hr}시`));
   grid.append(hours);
 
   for (const d of days) {
-    const col = h("div", { class: "tl-col" + (d === TODAY ? " today" : ""), style: `height:${height}px;background-size:100% ${HOUR_PX}px` });
+    const col = h("div", { class: "tl-col" + (d === TODAY ? " today" : ""), style: `height:${height}px;background-size:100% ${hourPx}px` });
     // 겹치는 일정은 칸을 나눠 나란히 놓음
     const list = blocks[d].sort((a, b) => a.start - b.start || b.end - a.end);
     let group = [], groupEnd = -1;
@@ -683,12 +757,14 @@ function renderTimeline() {
     }
     if (group.length) flush();
     for (const b of list) {
-      const top = y(b.start), hgt = Math.max(20, y(b.end) - top - 2);
+      const top = y(b.start), hgt = Math.max(compact ? 10 : 20, y(b.end) - top - (compact ? 1 : 2));
       const w = 100 / b.lanes;
       col.append(h("div", {
         class: `tl-b lvl${b.level}` + (b.school ? " school" : "") + (b.done ? " done" : "") + (hgt < 34 ? " short" : ""),
-        style: `top:${top + 1}px;height:${hgt}px;left:calc(${b.lane * w}% + 2px);width:calc(${w}% - 4px)`,
+        style: `top:${top + 1}px;height:${hgt}px;left:calc(${b.lane * w}% + ${compact ? 1 : 2}px);width:calc(${w}% - ${compact ? 2 : 4}px)`,
         title: `${hm(b.start)}–${hm(b.end)} ${b.title}`,
+        // 작은 칸은 글자가 잘리니, 누르면 시간·이름을 아래 말풍선으로 보여 줌
+        onclick: () => toast(`${hm(b.start)}–${hm(b.end)} ${b.title}${b.loc ? " · " + b.loc : ""}`),
       }, h("span", { class: "time" }, hm(b.start)), h("span", { class: "n" }, b.title), b.loc && hgt >= 50 ? h("span", { class: "loc" }, b.loc) : null));
     }
     if (d === TODAY) {
@@ -1042,6 +1118,10 @@ function swEdit(k) {
   hIn.focus();
 }
 
+// 화면 크기·방향이 바뀌거나 글꼴이 늦게 뜨면 시간표 높이를 다시 맞춤
+let fitTimer = null;
+window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(renderTimeline, 150); });
+document.fonts?.ready?.then(() => fitToday()).catch(() => {});
 if (timer.run) tTick = setInterval(tDraw, 250);
 if (sw.run) swTick = setInterval(swDraw, 250);
 tDraw(); swDraw();
