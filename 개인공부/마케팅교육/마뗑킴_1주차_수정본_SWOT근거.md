@@ -45,3 +45,9 @@
 - 디지털데일리, 다이소 매출 4조5000억 돌파 (2026-04-14): https://www.ddaily.co.kr/page/view/2026041414110260617
 - 스마트투데이, 메가커피 협업 굿즈 재고 (2025-11): https://www.smarttoday.co.kr/ko-kr/articles/96223
 - 다음 뉴스, 박물관 굿즈 매출 역대 최대 (2026-07-08): https://v.daum.net/v/20260708170911638
+
+## 2차 수정본 (2026-11-13)
+- PPT·PDF: `1주차_제출/마뗑킴2팀_1주차_분석및방향_2차수정본.pptx` / `.pdf` (12장)
+- 더한 것: '매출 상승 vs 국내 인기'를 숫자로 나눈 장, SO/WO/ST/WT 전략(크리링 초안) → 캠페인 방향은 SO에서, 문구 브랜드 기획안 2장(강정준비준 기획안 그대로)
+- 새 출처: Matin Kim, Musinsa and other trendsetting Korean fashion brands are going global (다음 영문 기사, 2025 상반기 국내 매장 외국인 매출 +132%, 날짜 확인 필요): https://v.daum.net/v/fnIn1trNTt
+- 국내 2030 인기 하락을 직접 보여 주는 기사·데이터는 이번에도 못 찾음 → 확인할 지표로 둠
