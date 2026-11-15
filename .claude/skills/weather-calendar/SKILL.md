@@ -68,5 +68,5 @@ description: 샤오홍슈 "제주 날씨달력" 카드(14일, 피그마용 SVG)�
 - 기간: 오늘~3일 뒤(4일). 날씨는 날씨달력과 같은 **기상청 동네예보**에서 가져온다(사용자 지시).
 - 실행: `bash .claude/skills/weather-calendar/kma_4days.sh` → JSON을 `figma_daily_update.js`의 `__DATA__`, 오늘 요일을 `__WEEKDAY__`에 넣어 use_figma로 실행.
 - 아이콘은 같은 페이지의 `아이콘 모음`(tpl_sun·tpl_partly·tpl_cloudy·tpl_rain)에서 복제한다. 이 프레임은 지우지 않는다.
-- **컴퓨터 폴더에도 저장 (2026-11-15 요청):** 매일 새 장을 PNG(1080×1350)로 `C:SERSWJDWNONEDRIVE̝�̊�̓�̃�̘�͙�̊�˶�̋�ˬ�˂�̔�˂�̔�̧�ˏ�_MMDD(̚�̝�).PNG` ̗� ̠�̞�͕�ˋ�(DOWNLOAD_ASSETS PNG � CURL).
-- ̞�ˏ� ̞�̗�: CLAUDE ̕� ̘�̕� ̞�̗� `DAILY-WEATHER-MAP`(매일 08:00, 앱이 켜져 있을 때).
+- **컴퓨터 폴더에도 저장 (2026-11-15 요청):** 매일 새 장을 PNG(1080×1350)로 `C:/Users/wjdwn/OneDrive/인스타/샤오홍슈/분실물/날씨/날씨지도_MMDD(요일).png` 에 저장한다(download_assets png → curl).
+- 자동 작업: Claude 앱 예약 작업 `daily-weather-map`(매일 08:00, 앱이 켜져 있을 때).
