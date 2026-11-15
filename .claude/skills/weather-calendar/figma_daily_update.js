@@ -4,7 +4,7 @@
 //  - 틀: 이름에 "칸_북_" 칸이 들어 있는 프레임(처음엔 샤오홍슈 파일 899:2를 붙여 넣은 것)
 //  - 아이콘 모음: 이름이 "아이콘 모음"으로 시작하는 프레임(tpl_sun·tpl_partly·tpl_cloudy·tpl_rain)
 // 동작: 맨 아래(최신) 줄의 세트 [날씨지도 + 오른쪽 분실물 안내]를 복제해 아래 새 줄로 두고
-//       이름을 "날씨지도 MM/DD (요일)" / "분실물 안내 MM/DD (요일)"로 바꾼 뒤 날씨지도에 4구역 × 4일 값을 넣는다.
+//       이름을 "날씨지도 MM/DD (요일)" / "분실물 안내 MM/DD (요일)"로 바꾼 뒤 날씨지도에 3곳(북=제주시·남=서귀포시·산=한라산) × 4일 값을 넣는다.
 //       같은 날짜 이름의 프레임이 이미 있으면 새로 만들지 않고 그것을 고친다. 결과 첫 두 줄: MAP id, GUIDE id.
 const DATA = __DATA__;
 const WEEKDAY = '__WEEKDAY__';
@@ -37,7 +37,7 @@ async function setText(t, s) {
   for (const f of fonts) await figma.loadFontAsync(f); t.characters = s;
 }
 const log = ['MAP ' + post.id + ' ' + post.name, 'GUIDE ' + (guide ? guide.id + ' ' + guide.name : '없음')];
-for (const key of ['북', '서', '동', '남']) {
+for (const key of ['북', '남', '산']) {
   const cells = post.findAll(n => (n.type === 'FRAME' || n.type === 'GROUP') && new RegExp('^칸_' + key + '_').test(n.name))
     .sort((a, b) => (Math.round(a.absoluteTransform[1][2] / 20) - Math.round(b.absoluteTransform[1][2] / 20)) || (a.absoluteTransform[0][2] - b.absoluteTransform[0][2]));
   const rows = DATA[key];
