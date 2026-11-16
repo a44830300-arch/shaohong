@@ -47,17 +47,31 @@ for (const key of ['북', '남', '산']) {
     await setText(cell.findOne(n => n.type === 'TEXT' && n.name === '최저기온'), tmin === '--' ? '--' : tmin + '°');
     await setText(cell.findOne(n => n.type === 'TEXT' && n.name === '최고기온'), tmax === '--' ? '--' : tmax + '°');
     await setText(cell.findOne(n => n.type === 'TEXT' && n.name === '강수확률'), pop);
-    const old = cell.children.find(n => n.name.startsWith('아이콘_') && n.name !== '아이콘_물방울');
+    // 새 디자인(2026-11-16): 아이콘은 칸 안 '아이콘자리' 프레임(64×54) 가운데에, 긴 변 52px로 넣는다.
+    let old = cell.findOne(n => n.name.startsWith('아이콘_') && n.name !== '아이콘_물방울');
     if (old && tpl[icon] && old.name !== '아이콘_' + KO[icon]) {
-      const cx = old.x + old.width / 2, cy = old.y + old.height / 2;
-      const c = tpl[icon].clone(); const idx = cell.children.indexOf(old);
-      cell.insertChild(idx, c); c.name = '아이콘_' + KO[icon];
-      c.x = cx - c.width / 2; c.y = cy - c.height / 2; old.remove();
+      const box = old.parent; const cx = old.x + old.width / 2, cy = old.y + old.height / 2;
+      const c = tpl[icon].clone(); const idx = box.children.indexOf(old);
+      box.insertChild(idx, c); c.name = '아이콘_' + KO[icon];
+      if (box.name === '아이콘자리') { c.rescale(52 / Math.max(c.width, c.height)); c.x = (box.width - c.width) / 2; c.y = (box.height - c.height) / 2; }
+      else { c.x = cx - c.width / 2; c.y = cy - c.height / 2; }
+      old.remove(); old = c;
     }
+    if (old) old.visible = tmin !== '--'; // 예보가 없는 날(--)은 아이콘을 숨긴다
     cell.name = `칸_${key}_${md[i]}`;
     if (cell.parent.name.startsWith('날짜칸_')) cell.parent.name = `날짜칸_${key}_${md[i]}`;
     log.push(`${key} ${md[i]} ${icon} ${tmin}/${tmax} ${pop}`);
   }
+}
+// 새 디자인 표 머리줄: 머리_1~4 안의 '머리날짜'(11.16) · '머리요일'(첫날 今天, 나머지 周一…)
+const WK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+for (let i = 0; i < DATA.dates.length; i++) {
+  const col = post.findOne(n => n.name === `머리_${i + 1}`); if (!col) continue;
+  const [y, m, d] = DATA.dates[i].split('-').map(Number);
+  await setText(col.findOne(n => n.type === 'TEXT' && n.name === '머리날짜'), md[i]);
+  const wk = col.findOne(n => n.type === 'TEXT' && n.name === '머리요일');
+  await setText(wk, i === 0 ? '今天' : WK[new Date(y, m - 1, d).getDay()]);
+  if (wk) wk.fills = [{ type: 'SOLID', color: i === 0 ? { r: 0.9, g: 0.28, b: 0.3 } : { r: 0.45, g: 0.5, b: 0.58 } }];
 }
 const range = post.findOne(n => n.type === 'TEXT' && /^\d+\.\d+-\d+\.\d+$/.test(n.characters));
 await setText(range, `${md[0]}-${md[md.length - 1]}`); if (range) range.name = `${md[0]}-${md[md.length - 1]}`;
