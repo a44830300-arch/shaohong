@@ -188,6 +188,17 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .toast button { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 0; }
 .skeleton { color: var(--muted); padding: 14px; font-size: 14px; }
 
+/* 📋 게시물 후보 (2026-11-17 요청): 계정별 목록, 체크 = 'Todoist 라벨 고름' (완료 아님) */
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.pk-acc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.pk-acc h3 { margin: 0; padding: 10px 14px; font-size: 15px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pk-acc h3 span { font-size: 12px; font-weight: 500; color: var(--muted); }
+.pk-acc .row .check { border-radius: 5px; }
+.pk-acc .row.picked { background: var(--green-soft); }
+.pk-acc .row.picked .check { background: var(--green); border-color: var(--green); color: #fff; }
+.pk-acc .row .meta { white-space: pre-line; }
+.pk-acc .empty { padding: 12px 14px; color: var(--muted); font-size: 14px; }
+
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
 :root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
 .gt-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -284,11 +295,12 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
   #notices:not(:empty) { margin-top: 8px; }
   #sec-tl { order: 1; margin-top: 8px; }
   #sec-today { order: 2; margin-top: 10px; }
-  #sec-gantt { order: 3; }
-  #sec-blog { order: 4; }
-  #cmd-sec { order: 5; }
-  #sec-week { order: 6; }
-  #sec-undated { order: 7; }
+  #sec-picks { order: 3; }
+  #sec-gantt { order: 4; }
+  #sec-blog { order: 5; }
+  #cmd-sec { order: 6; }
+  #sec-week { order: 7; }
+  #sec-undated { order: 8; }
 
   header { padding-block: 6px 6px; row-gap: 5px; column-gap: 8px; }
   h1 { font-size: 17px; line-height: 1.2; }
@@ -377,6 +389,11 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
   <section id="sec-today">
     <h2>오늘 <span class="sub">번호 = 크리링 추천 순서(주황 = 지금 할 것) · 동그라미 = Todoist 할 일 · 네모 = 캘린더 일정(체크하면 제목 앞에 ✅가 붙어요)</span></h2>
     <div class="list" id="today"><div class="skeleton">Todoist와 구글 캘린더에서 오늘 할 일을 가져오고 있어요.</div></div>
+  </section>
+
+  <section id="sec-picks">
+    <h2>📋 게시물 후보 <span class="sub">계정별 · 하고 싶은 걸 체크하면 '고름'으로 표시돼요(완료가 아니에요) · 고른 건 크리링이 일정에 넣어요</span></h2>
+    <div class="picks" id="picks"><div class="skeleton">불러오는 중…</div></div>
   </section>
 
   <section id="sec-week">
@@ -892,6 +909,56 @@ function render() {
   for (const t of undated) ud.append(renderRow({ key: "t" + t.id, title: t.content, time: null, level: 3, todo: [t.id], events: [], note: null }));
 }
 
+// ---------- 📋 게시물 후보 (2026-11-17 요청) ----------
+// Todoist "💼 일 > 샤오홍슈 아이디어"의 "📋 ○○ 게시물 후보" 묶음 밑 할 일을 계정별로 보여 줌.
+// 체크하면 완료가 아니라 '고름' 라벨을 붙였다 뗌 → 크리링이 고른 것만 일정에 넣음
+const IDEA_SECTION = "6hqfQg4Q9MMprpjc";
+const PICK_LABEL = "고름";
+state.picks = [];
+const isPicked = (t) => (t.labels || []).includes(PICK_LABEL);
+async function loadPicks() {
+  const all = (await mcp.callTool(TD, "find-tasks", { sectionId: IDEA_SECTION, limit: 100 }, { cache: false })).payload?.tasks || [];
+  const heads = all.filter((t) => !t.parentId && /게시물 후보/.test(t.content));
+  state.picks = await Promise.all(heads.map(async (hd) => {
+    const kids = (await mcp.callTool(TD, "find-tasks", { parentId: hd.id, limit: 50 }, { cache: false })).payload?.tasks || [];
+    return { head: hd, items: kids.filter((k) => k.parentId === hd.id) };
+  }));
+}
+async function togglePick(t, el) {
+  if (!mcp) return;
+  const on = !isPicked(t);
+  const labels = on ? [...(t.labels || []), PICK_LABEL] : (t.labels || []).filter((l) => l !== PICK_LABEL);
+  el.classList.add("busy");
+  try {
+    await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
+    t.labels = labels;
+    renderPicks();
+    toast(on ? "골랐어요. 크리링에게 '고른 거 넣어줘'라고 하면 일정에 넣어요" : "고르기를 풀었어요");
+  } catch (err) {
+    el.classList.remove("busy");
+    toast(errText(err, TD));
+  }
+}
+function renderPicks() {
+  const box = $("picks"); box.replaceChildren();
+  if (!state.picks.length) { box.append(h("div", { class: "skeleton" }, state.errors[TD] ? "Todoist를 불러오지 못했어요." : "게시물 후보가 없어요.")); return; }
+  for (const { head, items } of state.picks) {
+    const name = head.content.replace(/^\*\s*/, "").replace(/^📋\s*/, "").replace(/\s*게시물 후보\s*$/, "");
+    const n = items.filter(isPicked).length;
+    const acc = h("div", { class: "pk-acc" }, h("h3", null, name, h("span", null, `${items.length}개 중 ${n}개 고름`)));
+    if (!items.length) acc.append(h("div", { class: "empty" }, "후보가 없어요."));
+    for (const t of items) {
+      const el = h("div", { class: "row" + (isPicked(t) ? " picked" : "") });
+      const why = (t.description || "").split("\n")[0];
+      el.append(
+        h("button", { class: "check", type: "button", "aria-pressed": String(isPicked(t)), "aria-label": `${t.content} 고르기`, onclick: () => togglePick(t, el) }, "✓"),
+        h("div", { class: "main" }, h("div", { class: "title" }, t.content), why ? h("div", { class: "meta" }, why) : null));
+      acc.append(el);
+    }
+    box.append(acc);
+  }
+}
+
 // ---------- 불러오기 ----------
 async function load() {
   TODAY = ymd(new Date());
@@ -931,8 +998,10 @@ async function load() {
   } catch (err) { /* 하위 할 일만 못 불러오면 나머지는 그대로 보여줌 */ }
   const weekly = state.tasks.find((x) => /주간 계획/.test(x.content));
   if (weekly) state.subs = state.subsBy[weekly.id] || [];
+  try { await loadPicks(); } catch (err) { state.picks = []; }
   doneKeys.clear();
   render();
+  renderPicks();
   lastLoad = Date.now();
   const now = new Date();
   $("status").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}에 불러옴`;
@@ -1305,6 +1374,7 @@ function tdTask(x) {
     priority: "p" + (5 - (x.priority || 1)), dueDate,
     sectionId: x.section_id || null, parentId: x.parent_id || null, projectId: x.project_id || null,
     duration: x.duration ? { amount: x.duration.amount, unit: x.duration.unit } : null,
+    labels: x.labels || [],
   };
 }
 
@@ -1356,7 +1426,9 @@ const api = {
         case "find-tasks-by-date": return { payload: { tasks: await tdList("/tasks/filter", { query: "overdue | today | next 8 days" }) } };
         case "find-tasks":
           if (args.filter) return { payload: { tasks: await tdList("/tasks/filter", { query: args.filter }) } };
+          if (args.parentId) return { payload: { tasks: await tdList("/tasks", { parent_id: args.parentId }) } };
           return { payload: { tasks: await tdList("/tasks", args.sectionId ? { section_id: args.sectionId } : { project_id: args.projectId }) } };
+        case "update-tasks": for (const t of args.tasks) await tdFetch(`/tasks/${t.id}`, { method: "POST", body: JSON.stringify({ labels: t.labels }) }); return { payload: {} };
         case "complete-tasks": for (const id of args.ids) await tdFetch(`/tasks/${id}/close`, { method: "POST" }); return { payload: {} };
         case "uncomplete-tasks": for (const id of args.ids) await tdFetch(`/tasks/${id}/reopen`, { method: "POST" }); return { payload: {} };
       }
