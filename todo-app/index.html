@@ -198,6 +198,21 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .pk-acc .row.picked .check { background: var(--green); border-color: var(--green); color: #fff; }
 .pk-acc .row .meta { white-space: pre-line; }
 .pk-acc .empty { padding: 12px 14px; color: var(--muted); font-size: 14px; }
+/* 이번 주 7개 고르기 (2026-11-18 요청): 두 계정 합쳐 7개 → 그 주에 올림 */
+.pk-goal { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; }
+.pk-goal.full { border-color: var(--green); background: var(--green-soft); }
+.pk-goal.over { border-color: var(--red); background: var(--red-soft); }
+.pk-goal .big { font-size: 15px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.pk-goal .big b { font-family: var(--font-num); font-size: 24px; font-weight: 500; color: var(--green); }
+.pk-goal.over .big b { color: var(--red); }
+.pk-dots { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.pk-dots i { height: 8px; border-radius: 4px; background: var(--line); }
+.pk-dots i.on { background: var(--green); }
+.pk-chosen { display: flex; flex-wrap: wrap; gap: 6px; }
+.pk-chosen span { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--green); overflow-wrap: anywhere; }
+.pk-goal .hint { font-size: 13px; color: var(--muted); }
+.pk-goal.full .hint { color: var(--green); font-weight: 600; }
+.pk-acc h3 span b { color: var(--green); font-weight: 700; }
 
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
 :root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
@@ -392,7 +407,7 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
   </section>
 
   <section id="sec-picks">
-    <h2>📋 게시물 후보 <span class="sub">계정별 · 하고 싶은 걸 체크하면 '고름'으로 표시돼요(완료가 아니에요) · 고른 건 크리링이 일정에 넣어요</span></h2>
+    <h2>📋 게시물 후보 <span class="sub">두 계정 합쳐 7개를 고르면 그 주에 올려요 · 네모를 누르면 '고름'(완료 아님)</span></h2>
     <div class="picks" id="picks"><div class="skeleton">불러오는 중…</div></div>
   </section>
 
@@ -933,26 +948,41 @@ async function togglePick(t, el) {
     await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
     t.labels = labels;
     renderPicks();
-    toast(on ? "골랐어요. 크리링에게 '고른 거 넣어줘'라고 하면 일정에 넣어요" : "고르기를 풀었어요");
+    const n = pickedCount();
+    toast(!on ? "고르기를 풀었어요" : n === PICK_GOAL ? "7개 다 골랐어요! 크리링에게 '고른 거 넣어줘'라고 하면 이번 주에 넣어요" : n > PICK_GOAL ? `${n - PICK_GOAL}개 많아요. 7개만 남겨 주세요` : `골랐어요 (${n}/${PICK_GOAL})`);
   } catch (err) {
     el.classList.remove("busy");
     toast(errText(err, TD));
   }
 }
+// 이번 주 7개 고르기 (2026-11-18 요청): 나들로그·제주라이브 합쳐 7개를 고르면 그 주에 올림
+const PICK_GOAL = 7;
+const pickedCount = () => state.picks.reduce((n, p) => n + p.items.filter(isPicked).length, 0);
+const accOf = (head) => head.content.replace(/^\*\s*/, "").replace(/^📋\s*/, "").replace(/\s*게시물 후보\s*$/, "");
+const accIcon = (name) => (/제주라이브/.test(name) ? "🆘" : "🗿");
+// 후보 이름에서 앞 계정 표시와 끝 "(2시간 30분)"을 빼서 짧게
+const pickName = (t) => t.content.replace(/^\S+\s*(나들로그|제주라이브)\s*:\s*/, "").replace(/\s*\((?:\d+시간)?\s*(?:\d+분)?\)\s*$/, "");
 function renderPicks() {
   const box = $("picks"); box.replaceChildren();
   if (!state.picks.length) { box.append(h("div", { class: "skeleton" }, state.errors[TD] ? "Todoist를 불러오지 못했어요." : "게시물 후보가 없어요.")); return; }
+  const chosen = state.picks.flatMap(({ head, items }) => items.filter(isPicked).map((t) => `${accIcon(accOf(head))} ${pickName(t)}`));
+  const n = chosen.length;
+  box.append(h("div", { class: "pk-goal" + (n === PICK_GOAL ? " full" : n > PICK_GOAL ? " over" : "") },
+    h("div", { class: "big" }, "이번 주에 올릴 게시물", h("span", null, h("b", null, n), ` / ${PICK_GOAL}개`)),
+    h("div", { class: "pk-dots", "aria-hidden": "true" }, [...Array(PICK_GOAL)].map((_, i) => h("i", { class: i < n ? "on" : null }))),
+    n ? h("div", { class: "pk-chosen" }, chosen.map((c) => h("span", null, c))) : null,
+    h("div", { class: "hint" }, n < PICK_GOAL ? `아래에서 두 계정 합쳐 ${PICK_GOAL - n}개 더 골라 주세요` : n === PICK_GOAL ? "다 골랐어요! 크리링에게 '고른 거 넣어줘'라고 하면 이번 주에 넣어요" : `${n - PICK_GOAL}개 많아요. ${PICK_GOAL}개만 남겨 주세요`)));
   for (const { head, items } of state.picks) {
-    const name = head.content.replace(/^\*\s*/, "").replace(/^📋\s*/, "").replace(/\s*게시물 후보\s*$/, "");
-    const n = items.filter(isPicked).length;
-    const acc = h("div", { class: "pk-acc" }, h("h3", null, name, h("span", null, `${items.length}개 중 ${n}개 고름`)));
+    const name = accOf(head);
+    const k = items.filter(isPicked).length;
+    const acc = h("div", { class: "pk-acc" }, h("h3", null, `${accIcon(name)} ${name}`, h("span", null, h("b", null, `${k}개 고름`), ` · 후보 ${items.length}개`)));
     if (!items.length) acc.append(h("div", { class: "empty" }, "후보가 없어요."));
     for (const t of items) {
       const el = h("div", { class: "row" + (isPicked(t) ? " picked" : "") });
-      const why = (t.description || "").split("\n")[0];
+      const why = (t.description || "").split("\n")[0].replace(/^왜:\s*/, "");
       el.append(
         h("button", { class: "check", type: "button", "aria-pressed": String(isPicked(t)), "aria-label": `${t.content} 고르기`, onclick: () => togglePick(t, el) }, "✓"),
-        h("div", { class: "main" }, h("div", { class: "title" }, t.content), why ? h("div", { class: "meta" }, why) : null));
+        h("div", { class: "main" }, h("div", { class: "title" }, pickName(t)), why ? h("div", { class: "meta" }, why) : null));
       acc.append(el);
     }
     box.append(acc);
