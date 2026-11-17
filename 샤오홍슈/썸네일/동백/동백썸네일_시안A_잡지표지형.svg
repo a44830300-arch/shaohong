@@ -1,0 +1,27 @@
+<svg width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&amp;family=ZCOOL+KuaiLe&amp;family=Noto+Sans+SC:wght@500;700&amp;display=swap');</style><defs>
+<linearGradient id="ph" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8283E"/><stop offset="0.55" stop-color="#7E1426"/><stop offset="1" stop-color="#2E5E36"/></linearGradient>
+<linearGradient id="shadeTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+<linearGradient id="shadeBot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.65"/></linearGradient>
+<filter id="ts" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/></filter>
+</defs>
+<g id="A 배경사진 (사진 넣는 칸)">
+<rect x="0" y="0" width="1080" height="1350" fill="url(#ph)"/>
+<text x="540.0" y="675.0" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.55" font-size="90" font-family="'Noto Sans KR', sans-serif" font-weight="700">📷 동백 사진 넣기</text>
+</g>
+<rect width="1080" height="420" fill="url(#shadeTop)"/>
+<rect y="780" width="1080" height="570" fill="url(#shadeBot)"/>
+<g id="시리즈 머리글">
+<text x="60" y="92" fill="#FFFFFF" font-size="34" font-family="'ZCOOL KuaiLe', sans-serif" letter-spacing="4">冬日济州图鉴</text>
+<text x="1020" y="92" text-anchor="end" fill="#FFFFFF" font-size="34" font-family="'Noto Serif SC', serif" font-weight="900" letter-spacing="2">VOL.01</text>
+<rect x="60" y="114" width="960" height="3" fill="#FFFFFF"/>
+</g>
+<g id="제목" filter="url(#ts)">
+<text x="56" y="390" fill="#FFFFFF" font-size="250" font-family="'Noto Serif SC', serif" font-weight="900" letter-spacing="-6">山茶花</text>
+<text x="64" y="470" fill="#FFE359" font-size="58" font-family="'ZCOOL KuaiLe', sans-serif">济州 12处赏花地</text>
+</g>
+<g id="아래 정보">
+<text x="60" y="1140" fill="#FFFFFF" font-size="44" font-family="'Noto Sans SC', sans-serif" font-weight="700">11月中旬—2月 · 一篇看完</text>
+<rect x="60" y="1186" width="300" height="84" rx="42" fill="#FFE359"/>
+<text x="210" y="1242" text-anchor="middle" fill="#7E1426" font-size="44" font-family="'ZCOOL KuaiLe', sans-serif">有免费的！</text>
+<text x="1020" y="1255" text-anchor="end" fill="#FFFFFF" fill-opacity="0.85" font-size="30" font-family="'Noto Sans SC', sans-serif" font-weight="500">@nadllog</text>
+</g></svg>
