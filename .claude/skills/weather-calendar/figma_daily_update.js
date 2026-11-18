@@ -73,9 +73,16 @@ for (let i = 0; i < DATA.dates.length; i++) {
   await setText(wk, i === 0 ? '今天' : WK[new Date(y, m - 1, d).getDay()]);
   if (wk) wk.fills = [{ type: 'SOLID', color: i === 0 ? { r: 0.9, g: 0.28, b: 0.3 } : { r: 0.45, g: 0.5, b: 0.58 } }];
 }
-const range = post.findOne(n => n.type === 'TEXT' && /^\d+\.\d+-\d+\.\d+$/.test(n.characters));
-await setText(range, `${md[0]}-${md[md.length - 1]}`); if (range) range.name = `${md[0]}-${md[md.length - 1]}`;
-const title = post.findOne(n => n.type === 'TEXT' && /^\d+月济州(岛|每日)分区域天气/.test(n.characters));
-if (title) { const m = +DATA.dates[0].split('-')[1]; await setText(title, m + '月济州每日分区域天气'); title.name = title.characters; }
+// 작은 제목(날짜 범위): 11月18日-21日 / 달이 바뀌면 11月29日-12月2日 (2026-11-18 요청)
+const ymd = DATA.dates.map(d => d.split('-').map(Number));
+const [, m1, d1] = ymd[0], [, m2, d2] = ymd[ymd.length - 1];
+const rangeText = m1 === m2 ? `${m1}月${d1}日-${d2}日` : `${m1}月${d1}日-${m2}月${d2}日`;
+const range = post.findOne(n => n.type === 'TEXT' && (n.name === '날짜범위' || /^\d+\.\d+-\d+\.\d+$/.test(n.characters)));
+if (range) { await setText(range, rangeText); range.name = '날짜범위'; }
+const src = post.findOne(n => n.type === 'TEXT' && n.name === '출처');
+if (range && src) src.x = range.x + range.width + 14;
+// 큰 제목: 每日济州天气 (매일 제주 날씨, 2026-11-18 요청)
+const title = post.findOne(n => n.type === 'TEXT' && (n.name === '제목' || /济州.*天气$/.test(n.characters)) && n.fontSize >= 60);
+if (title) { await setText(title, '每日济州天气'); title.name = '제목'; }
 figma.viewport.scrollAndZoomIntoView([post]);
 return log;
