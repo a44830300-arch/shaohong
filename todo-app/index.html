@@ -1055,7 +1055,7 @@ function renderPicks() {
   // 계정별 카드: ✍️ 내가 적은 후보 → 💡 아이디어 칸(그 계정 것) 순서로 나눠 보여 줌 (2026-11-18 요청)
   const sub = (label, count) => h("div", { class: "pk-sub" }, label, h("span", null, `${count}개`));
   const card = (name, mine, ideas) => {
-    const all = [...mine, ...ideas];
+    const all = [...(mine || []), ...ideas];
     const k = all.filter(isPicked).length;
     const acc = h("div", { class: "pk-acc" }, h("h3", null, `${accIcon(name)} ${name}`, h("span", null, h("b", null, `${k}개 고름`), ` · 전체 ${all.length}개`)));
     if (mine) { acc.append(sub("✍️ 내가 적은 후보", mine.length)); if (!mine.length) acc.append(h("div", { class: "empty" }, "후보가 없어요.")); mine.slice().sort(byRank).forEach((t) => acc.append(pickRow(t))); }
@@ -1117,7 +1117,8 @@ async function load() {
   try { await loadPicks(); } catch (err) { state.picks = []; }
   doneKeys.clear();
   render();
-  renderPicks();
+  // 게시물 후보 칸에서 오류가 나도 나머지 화면은 그대로 보이게
+  try { renderPicks(); } catch (err) { $("picks").replaceChildren(h("div", { class: "skeleton" }, "게시물 후보를 그리지 못했어요. 크리링에게 알려 주세요.")); }
   lastLoad = Date.now();
   const now = new Date();
   $("status").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}에 불러옴`;
