@@ -75,7 +75,7 @@ for (let i = 0; i < DATA.dates.length; i++) {
 }
 const range = post.findOne(n => n.type === 'TEXT' && /^\d+\.\d+-\d+\.\d+$/.test(n.characters));
 await setText(range, `${md[0]}-${md[md.length - 1]}`); if (range) range.name = `${md[0]}-${md[md.length - 1]}`;
-const title = post.findOne(n => n.type === 'TEXT' && /^\d+月济州岛分区域天气/.test(n.characters));
-if (title) { const m = +DATA.dates[0].split('-')[1]; await setText(title, title.characters.replace(/^\d+月/, m + '月')); title.name = title.characters; }
+const title = post.findOne(n => n.type === 'TEXT' && /^\d+月济州(岛|每日)分区域天气/.test(n.characters));
+if (title) { const m = +DATA.dates[0].split('-')[1]; await setText(title, m + '月济州每日分区域天气'); title.name = title.characters; }
 figma.viewport.scrollAndZoomIntoView([post]);
 return log;
