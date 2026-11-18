@@ -1,0 +1,60 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>RL 직렬회로 위상차</title>
+<style>
+@page{size:A4;margin:18mm}
+body{font-family:"WenQuanYi Zen Hei",sans-serif;font-size:11.5pt;line-height:1.7;color:#111}
+h1{font-size:17pt;border-bottom:2px solid #333;padding-bottom:4px}
+h2{font-size:13.5pt;margin-top:20px;color:#1a3d7c}
+.eq{background:#f3f5f9;border-left:4px solid #1a3d7c;padding:8px 12px;margin:8px 0;font-family:"DejaVu Serif","WenQuanYi Zen Hei",serif}
+.ans{border:2px solid #c0392b;padding:8px 12px;margin:10px 0;font-weight:bold}
+table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #888;padding:5px 8px;text-align:center}th{background:#e8ecf3}
+.fig{text-align:center;margin:10px 0}
+</style></head><body>
+<h1>RL 직렬회로에서 출력전압과 입력전압의 위상 차이</h1>
+<p>회로: 입력전압 v<sub>in</sub> = V<sub>m</sub> sin ωt 에 저항 R과 인덕터 L이 직렬로 연결된 회로. L 양단, R 양단을 각각 출력으로 본다.</p>
+
+<h2>0. 기본 해석 (전류 구하기)</h2>
+<div class="eq">임피던스 &nbsp; Z = R + jωL, &nbsp;&nbsp; |Z| = √(R² + (ωL)²), &nbsp;&nbsp; θ = tan⁻¹(ωL / R)</div>
+<div class="eq">전류 &nbsp; I = V<sub>in</sub> / Z = (V<sub>m</sub> / |Z|) ∠ −θ &nbsp;&nbsp;→ 전류는 입력전압보다 θ 만큼 <b>뒤진다(지상)</b></div>
+
+<h2>1) L 단자의 출력전압과 입력전압의 위상 차이</h2>
+<div class="eq">V<sub>L</sub> = jωL · I = (ωL·V<sub>m</sub> / |Z|) ∠ (90° − θ)</div>
+<p>인덕터 전압은 전류보다 90° 앞서고, 전류는 입력보다 θ 뒤지므로 입력전압 기준으로는 (90° − θ) 만큼 앞선다.</p>
+<div class="ans">V<sub>L</sub>은 입력전압보다 φ<sub>L</sub> = 90° − tan⁻¹(ωL/R) = tan⁻¹(R / ωL) 만큼 <u>앞선다(진상, lead)</u>.<br>
+(0° &lt; φ<sub>L</sub> &lt; 90°, 크기비 |V<sub>L</sub>/V<sub>in</sub>| = ωL / √(R² + ω²L²))</div>
+
+<h2>2) R 단자의 출력전압과 입력전압의 위상 차이</h2>
+<div class="eq">V<sub>R</sub> = R · I = (R·V<sub>m</sub> / |Z|) ∠ −θ</div>
+<p>저항 전압은 전류와 위상이 같으므로 입력전압보다 θ 만큼 뒤진다.</p>
+<div class="ans">V<sub>R</sub>은 입력전압보다 φ<sub>R</sub> = tan⁻¹(ωL / R) 만큼 <u>뒤진다(지상, lag)</u>.<br>
+(0° &lt; φ<sub>R</sub> &lt; 90°, 크기비 |V<sub>R</sub>/V<sub>in</sub>| = R / √(R² + ω²L²))</div>
+
+<h2>3) 페이저도</h2>
+<div class="fig"><svg width="360" height="230" viewBox="0 0 360 230" font-family="WenQuanYi Zen Hei" font-size="13">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#111"/></marker></defs>
+<line x1="40" y1="190" x2="340" y2="190" stroke="#aaa"/>
+<line x1="40" y1="190" x2="40" y2="20" stroke="#aaa"/>
+<!-- V_R along reference (current) axis rotated: draw with current as horizontal -->
+<line x1="40" y1="190" x2="250" y2="190" stroke="#1a3d7c" stroke-width="3" marker-end="url(#a)"/>
+<text x="150" y="210" fill="#1a3d7c">V_R (전류 I와 같은 방향)</text>
+<line x1="40" y1="190" x2="40" y2="50" stroke="#c0392b" stroke-width="3" marker-end="url(#a)"/>
+<text x="48" y="45" fill="#c0392b">V_L (I보다 90° 앞섬)</text>
+<line x1="40" y1="190" x2="250" y2="50" stroke="#111" stroke-width="3" marker-end="url(#a)"/>
+<text x="255" y="48">V_in = V_R + V_L</text>
+<line x1="250" y1="190" x2="250" y2="50" stroke="#999" stroke-dasharray="4 3"/>
+<path d="M95,190 A55,55 0 0 0 86,160" fill="none" stroke="#111"/><text x="100" y="178">θ</text>
+<path d="M40,130 A60,60 0 0 0 90,157" fill="none" stroke="#c0392b"/><text x="62" y="128" fill="#c0392b">90°−θ</text>
+</svg></div>
+<p>V<sub>R</sub>과 V<sub>L</sub>은 항상 서로 90° 차이이고, 두 전압을 더하면(벡터합) 입력전압이 된다 (KVL).</p>
+
+<h2>4) 주파수에 따른 변화 (정리)</h2>
+<table><tr><th>주파수</th><th>θ = tan⁻¹(ωL/R)</th><th>V<sub>L</sub> 위상 (입력 기준)</th><th>V<sub>R</sub> 위상 (입력 기준)</th></tr>
+<tr><td>ω → 0 (저주파)</td><td>0°</td><td>+90° (앞섬), 크기 → 0</td><td>0° (같은 위상), 크기 → V<sub>in</sub></td></tr>
+<tr><td>ω = R/L (차단주파수 f<sub>c</sub> = R/2πL)</td><td>45°</td><td>+45°, 크기 = V<sub>in</sub>/√2</td><td>−45°, 크기 = V<sub>in</sub>/√2</td></tr>
+<tr><td>ω → ∞ (고주파)</td><td>90°</td><td>0° (같은 위상), 크기 → V<sub>in</sub></td><td>−90° (뒤짐), 크기 → 0</td></tr></table>
+<p>→ L 단자 출력은 <b>고역통과 필터(HPF)</b>, R 단자 출력은 <b>저역통과 필터(LPF)</b>처럼 동작한다.</p>
+
+<h2>결론</h2>
+<div class="ans">1) L 단자: 출력이 입력보다 tan⁻¹(R/ωL) = 90° − tan⁻¹(ωL/R) 만큼 앞선다.<br>
+2) R 단자: 출력이 입력보다 tan⁻¹(ωL/R) 만큼 뒤진다.<br>
+두 출력전압끼리는 항상 90° 차이가 난다.</div>
+</body></html>
