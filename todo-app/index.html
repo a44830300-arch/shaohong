@@ -213,6 +213,13 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .pk-goal .hint { font-size: 13px; color: var(--muted); }
 .pk-goal.full .hint { color: var(--green); font-weight: 600; }
 .pk-acc h3 span b { color: var(--green); font-weight: 700; }
+/* 💡 아이디어 칸 전체 (2026-11-18 요청): 카드 안을 ✍️ 내가 적은 후보 / 💡 아이디어 칸으로 나눔 */
+.pk-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-top: 1px solid var(--line); }
+.pk-acc h3 + .pk-sub { border-top: 0; }
+.pk-sub span { font-weight: 500; }
+.pk-sub + .row { border-top: 0; }
+.pk-tag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--school); background: var(--school-soft); border-radius: 999px; padding: 0 7px; margin-right: 6px; vertical-align: 1px; }
+.pk-acc.wide { grid-column: 1 / -1; }
 
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
 :root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
@@ -407,7 +414,7 @@ dialog.settings::backdrop { background: rgba(0,0,0,.4); }
   </section>
 
   <section id="sec-picks">
-    <h2>📋 게시물 후보 <span class="sub">두 계정 합쳐 7개를 고르면 그 주에 올려요 · 네모를 누르면 '고름'(완료 아님)</span></h2>
+    <h2>📋 게시물 후보 <span class="sub">두 계정 합쳐 7개를 고르면 그 주에 올려요 · 번호 = 크리링 추천 순서(주황 1~7 = 이번 주 추천) · ✍️ 내가 적은 후보 / 💡 아이디어 칸 · 네모를 누르면 '고름'(완료 아님)</span></h2>
     <div class="picks" id="picks"><div class="skeleton">불러오는 중…</div></div>
   </section>
 
@@ -938,6 +945,8 @@ async function loadPicks() {
     const kids = (await mcp.callTool(TD, "find-tasks", { parentId: hd.id, limit: 50 }, { cache: false })).payload?.tasks || [];
     return { head: hd, items: kids.filter((k) => k.parentId === hd.id) };
   }));
+  // 💡 아이디어 칸 전체 (2026-11-18 요청): 후보 묶음 밖에 있는 "샤오홍슈 아이디어" 할 일도 전부 (하위 단계 ①②③은 빼고)
+  state.ideas = all.filter((t) => !t.parentId && !/게시물 후보/.test(t.content));
 }
 async function togglePick(t, el) {
   if (!mcp) return;
@@ -957,35 +966,110 @@ async function togglePick(t, el) {
 }
 // 이번 주 7개 고르기 (2026-11-18 요청): 나들로그·제주라이브 합쳐 7개를 고르면 그 주에 올림
 const PICK_GOAL = 7;
-const pickedCount = () => state.picks.reduce((n, p) => n + p.items.filter(isPicked).length, 0);
+state.ideas = [];
 const accOf = (head) => head.content.replace(/^\*\s*/, "").replace(/^📋\s*/, "").replace(/\s*게시물 후보\s*$/, "");
-const accIcon = (name) => (/제주라이브/.test(name) ? "🆘" : "🗿");
+const accIcon = (name) => (/제주라이브/.test(name) ? "🆘" : /나들로그/.test(name) ? "🗿" : "💡");
+// 아이디어가 어느 계정 것인지: 이름 앞 🗿/🆘 또는 계정 이름. 없으면 null(계정 미정)
+const ideaAcc = (t) => (/^🆘|제주라이브/.test(t.content) ? "제주라이브" : /^🗿|나들로그/.test(t.content) ? "나들로그" : null);
+const isKrillin = (t) => /크리링 판단/.test(t.description || "");
+// 고를 수 있는 것 전부: [계정 이름, 할 일]
+const pickables = () => [
+  ...state.picks.flatMap(({ head, items }) => items.map((t) => [accOf(head), t])),
+  ...state.ideas.map((t) => [ideaAcc(t) || "", t]),
+];
+const pickedCount = () => pickables().filter(([, t]) => isPicked(t)).length;
 // 후보 이름에서 앞 계정 표시와 끝 "(2시간 30분)"을 빼서 짧게
 const pickName = (t) => t.content.replace(/^\S+\s*(나들로그|제주라이브)\s*:\s*/, "").replace(/\s*\((?:\d+시간)?\s*(?:\d+분)?\)\s*$/, "");
+// 크리링 추천 순서 (2026-11-18 요청, "순서만 너가 추천하는 순서로"): [할 일 id, 이유]. 1~7 = 이번 주 추천(주황 번호).
+// 기준(크리링 판단): 제철·마감이 가까운 것 → 강정준비준이 직접 고른 것 → 두 계정 번갈아 → 바로 만들 수 있는 것. 목록에 없는 새 후보는 맨 뒤
+const PICK_ORDER = [
+  ["6hqrXmF6Xqm9GHrc", "이미 고름 · VOL.01 썸네일 완성 · 동백 제철"],
+  ["6j34Qwx4HjQqF826", "제주라이브 기본 글 · 다른 글이 모두 이 글로 이어짐"],
+  ["6j34cRH7Q4xGXXhc", "11월 월간 목표(휴애리 홍보 디자인) · 11월 안에"],
+  ["6j34fQRGhHM8Qpx6", "1번 동백 글과 짝 · 같은 시기에 올려야 함"],
+  ["6j34Qwwqv7CvWMC6", "구좌 캡션이 이미 있어 바로 만들 수 있음"],
+  ["6hhV33JRwmjRfPVf", "직접 적은 후보 · 모든 여행객의 첫 관문"],
+  ["6hhV346g43FR9rrf", "직접 고른 후보"],
+  ["6hhRm2C2QXv4f5Ff", "직접 적은 후보 · 대리예약으로 넓히는 첫걸음"],
+  ["6hqrXmCRFQr5hqc6", "12월 초 전에 올려야 연말 계획에 들어감"],
+  ["6j34Qx2f5QJ6q5W6", "8번 예약 글과 이어지는 시리즈 첫 편"],
+  ["6hqrXmGVhM2mx4W6", "눈꽃 제철 12~2월 · 12월 초에 올리기"],
+  ["6j34fQQg74Wg6Gxc", "연말 예약 몰림 · 12월 초"],
+  ["6hpFh9RWP5w26WH7", "직접 고른 후보 · 계절 안 타서 언제든 가능"],
+  ["6j37Pgh8JJ2gCjm6", "막히는 순간 시리즈 둘째 편"],
+  ["6hqrXmHc6r4MHwjc", "12월 중순에 올려야 새해 계획에 들어감"],
+  ["6j389pf7Rr6Rf846", "11번 한라산 글과 짝 · 12월"],
+  ["6hqrcggvVJrPQh9c", "중국 겨울방학 전 12월에"],
+  ["6hqrXmMmGVpF7Wv6", "춘절 2월 초 → 1월 초에 올리기"],
+  ["6hhV35P8m9VJ2VPf", "직접 적은 후보 · 7번 칠성로 다음 코스"],
+  ["6hhRjxhvv6XCCRff", "직접 적은 후보 · 여행계획 짜 주기로 이어짐"],
+  ["6j34fQR54P2JMhP6", "1번 동백 총정리와 많이 겹쳐서 뒤로"],
+  ["6j34fQRfVvfC5Fpc", "9번 연말 명소와 겹쳐서 뒤로"],
+  ["6j34fQRf6QvF6pw6", "분실물 본업 · 2번 다음에"],
+  ["6j389ph3xx726CFc", "필요한 글이지만 급한 시기는 없음"],
+  ["6hhV376pxVwXRjPf", "19번 동문시장 다음에"],
+  ["6hhRm4XhvjhM3gvf", "직접 적은 후보 · 범위가 커서 지역별로 쪼개야 함"],
+  ["6hpFh9JHp5h9WG67", "직접 적은 후보 · 계절마다 한 편씩"],
+  ["6hqrXmPGCcMvMxc6", "꽃이 1월 말부터라 1월에"],
+  ["6hhV332h2W82RGpf", "직접 적은 후보 · 영상이라 시간이 더 듦"],
+  ["6j34Qwx5VxVcHwFc", "실제 찾아 준 사례가 생기면"],
+  ["6hmPVMfvgc45j2Vf", "직접 적은 후보"],
+  ["6hmPF9cxmMxxRfwf", "직접 적은 후보"],
+  ["6hmPF8fmM65964pf", "범위가 너무 커서 다른 글이 쌓인 뒤 모음 글로"],
+  ["6hpFW4PJ94GGXq7f", "직접 적은 후보"],
+  ["6hrWjwv8rXgv7wW6", "팔로워 댓글이 쌓인 뒤에"],
+  ["6hrHMv2HjH283prc", "급한 시기 없음"],
+  ["6hwjFrrMpjQF7fm6", "AI 영상이라 심사 확인이 먼저"],
+  ["6hqrWxrFGc52x37c", "3D 작업이 커서 나중에"],
+  ["6hwCGjjg25HxvMwc", "게시물이 아니라 마을소개 규칙"],
+  ["6hwCGxC9Mp38j7W6", "게시물이 아니라 마을소개 규칙"],
+  ["6hpCjPcW87PQwHMf", "게시물이 아니라 준비 작업"],
+  ["6hpCjR3hjWw8Gxv7", "게시물이 아니라 준비 작업"],
+  ["6hmPc6qf3rGh8Q5f", "메모(문장이 끊겨 있음)"],
+  ["6hqrcghCxwCrxg36", "방어축제가 11/19 시작이라 지금 만들면 늦음"],
+  ["6j34QwqrJ6JJPQ6c", "전문 사진가 섭외한 뒤에"],
+];
+const RANK = new Map(PICK_ORDER.map(([id, why], i) => [id, { n: i + 1, why }]));
+const byRank = (a, b) => (RANK.get(a.id)?.n ?? 999) - (RANK.get(b.id)?.n ?? 999);
+function pickRow(t) {
+  const el = h("div", { class: "row" + (isPicked(t) ? " picked" : "") });
+  const r = RANK.get(t.id);
+  const why = r ? r.why : (t.description || "").split("\n")[0].replace(/^왜:\s*/, "");
+  el.append(
+    h("button", { class: "check", type: "button", "aria-pressed": String(isPicked(t)), "aria-label": `${t.content} 고르기`, onclick: () => togglePick(t, el) }, "✓"),
+    h("div", { class: "main" }, h("div", { class: "title" }, r ? h("span", { class: "order" + (r.n <= PICK_GOAL ? " next" : ""), "aria-label": `추천 ${r.n}번` }, r.n) : null, isKrillin(t) ? h("span", { class: "pk-tag" }, "크리링 추천") : null, pickName(t)), why ? h("div", { class: "meta" }, why) : null));
+  return el;
+}
 function renderPicks() {
   const box = $("picks"); box.replaceChildren();
-  if (!state.picks.length) { box.append(h("div", { class: "skeleton" }, state.errors[TD] ? "Todoist를 불러오지 못했어요." : "게시물 후보가 없어요.")); return; }
-  const chosen = state.picks.flatMap(({ head, items }) => items.filter(isPicked).map((t) => `${accIcon(accOf(head))} ${pickName(t)}`));
+  if (!state.picks.length && !state.ideas.length) { box.append(h("div", { class: "skeleton" }, state.errors[TD] ? "Todoist를 불러오지 못했어요." : "게시물 후보가 없어요.")); return; }
+  const chosen = pickables().filter(([, t]) => isPicked(t)).sort(([, x], [, y]) => byRank(x, y)).map(([acc, t]) => `${accIcon(acc)} ${pickName(t)}`);
   const n = chosen.length;
   box.append(h("div", { class: "pk-goal" + (n === PICK_GOAL ? " full" : n > PICK_GOAL ? " over" : "") },
     h("div", { class: "big" }, "이번 주에 올릴 게시물", h("span", null, h("b", null, n), ` / ${PICK_GOAL}개`)),
     h("div", { class: "pk-dots", "aria-hidden": "true" }, [...Array(PICK_GOAL)].map((_, i) => h("i", { class: i < n ? "on" : null }))),
     n ? h("div", { class: "pk-chosen" }, chosen.map((c) => h("span", null, c))) : null,
     h("div", { class: "hint" }, n < PICK_GOAL ? `아래에서 두 계정 합쳐 ${PICK_GOAL - n}개 더 골라 주세요` : n === PICK_GOAL ? "다 골랐어요! 크리링에게 '고른 거 넣어줘'라고 하면 이번 주에 넣어요" : `${n - PICK_GOAL}개 많아요. ${PICK_GOAL}개만 남겨 주세요`)));
+  // 계정별 카드: ✍️ 내가 적은 후보 → 💡 아이디어 칸(그 계정 것) 순서로 나눠 보여 줌 (2026-11-18 요청)
+  const sub = (label, count) => h("div", { class: "pk-sub" }, label, h("span", null, `${count}개`));
+  const card = (name, mine, ideas) => {
+    const all = [...mine, ...ideas];
+    const k = all.filter(isPicked).length;
+    const acc = h("div", { class: "pk-acc" }, h("h3", null, `${accIcon(name)} ${name}`, h("span", null, h("b", null, `${k}개 고름`), ` · 전체 ${all.length}개`)));
+    if (mine) { acc.append(sub("✍️ 내가 적은 후보", mine.length)); if (!mine.length) acc.append(h("div", { class: "empty" }, "후보가 없어요.")); mine.slice().sort(byRank).forEach((t) => acc.append(pickRow(t))); }
+    if (ideas.length) { acc.append(sub("💡 아이디어 칸", ideas.length)); ideas.slice().sort(byRank).forEach((t) => acc.append(pickRow(t))); }
+    return acc;
+  };
+  const names = state.picks.map(({ head }) => accOf(head));
   for (const { head, items } of state.picks) {
     const name = accOf(head);
-    const k = items.filter(isPicked).length;
-    const acc = h("div", { class: "pk-acc" }, h("h3", null, `${accIcon(name)} ${name}`, h("span", null, h("b", null, `${k}개 고름`), ` · 후보 ${items.length}개`)));
-    if (!items.length) acc.append(h("div", { class: "empty" }, "후보가 없어요."));
-    for (const t of items) {
-      const el = h("div", { class: "row" + (isPicked(t) ? " picked" : "") });
-      const why = (t.description || "").split("\n")[0].replace(/^왜:\s*/, "");
-      el.append(
-        h("button", { class: "check", type: "button", "aria-pressed": String(isPicked(t)), "aria-label": `${t.content} 고르기`, onclick: () => togglePick(t, el) }, "✓"),
-        h("div", { class: "main" }, h("div", { class: "title" }, pickName(t)), why ? h("div", { class: "meta" }, why) : null));
-      acc.append(el);
-    }
-    box.append(acc);
+    box.append(card(name, items, state.ideas.filter((t) => ideaAcc(t) === name)));
+  }
+  const rest = state.ideas.filter((t) => !names.includes(ideaAcc(t)));
+  if (rest.length) {
+    const c = card("계정 안 정한 아이디어", null, rest);
+    c.classList.add("wide");
+    box.append(c);
   }
 }
 
