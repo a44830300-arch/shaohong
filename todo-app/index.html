@@ -219,7 +219,9 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .pk-sub span { font-weight: 500; }
 .pk-sub + .row { border-top: 0; }
 .pk-tag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--school); background: var(--school-soft); border-radius: 999px; padding: 0 7px; margin-right: 6px; vertical-align: 1px; }
-.pk-acc.wide { grid-column: 1 / -1; }
+.pk-cols { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.pk-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.pk-col:empty { display: none; }
 
 /* 📊 막대 일정표(간트 차트): 수업 화면 모양. 가로 = 11월 1주차~12월 5주차(9주), 주마다 번갈아 연회색. 2026-11-06 요청 */
 :root { --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3; }
@@ -1061,16 +1063,16 @@ function renderPicks() {
     return acc;
   };
   const names = state.picks.map(({ head }) => accOf(head));
-  for (const { head, items } of state.picks) {
-    const name = accOf(head);
-    box.append(card(name, items, state.ideas.filter((t) => ideaAcc(t) === name)));
-  }
+  const cards = state.picks.map(({ head, items }) => {
+    const name = accOf(head), ideas = state.ideas.filter((t) => ideaAcc(t) === name);
+    return [card(name, items, ideas), items.length + ideas.length];
+  });
   const rest = state.ideas.filter((t) => !names.includes(ideaAcc(t)));
-  if (rest.length) {
-    const c = card("계정 안 정한 아이디어", null, rest);
-    c.classList.add("wide");
-    box.append(c);
-  }
+  if (rest.length) cards.push([card("계정 안 정한 아이디어", null, rest), rest.length]);
+  // 카드를 왼쪽·오른쪽 두 기둥에 나눠 쌓음: 더 짧은 기둥에 넣어서 한쪽만 비지 않게 (2026-11-18 요청)
+  const cols = [h("div", { class: "pk-col" }), h("div", { class: "pk-col" })], len = [0, 0];
+  for (const [c, n] of cards) { const i = len[0] <= len[1] ? 0 : 1; cols[i].append(c); len[i] += n + 3; }
+  box.append(h("div", { class: "pk-cols" }, cols));
 }
 
 // ---------- 불러오기 ----------
