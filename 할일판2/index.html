@@ -1,0 +1,380 @@
+<title>할일판 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 할일판 2 — 노트 옮겨적기 모드 (2026-11-21 요청, 기존 할 일판과 따로)
+   강정준비준 노트 한 장 = 3일. 날짜 → 10분 눈금 → 7~24시 칸(형광펜: 노랑 = 수업·교육, 파랑 = 전공 복습) → 빨간 메모(★ 오늘 할 일 · 다음날 준비) */
+:root {
+  --paper: #fbfbf7;
+  --grid: #d9e1e6;
+  --grid-strong: #b9c6ce;
+  --ink: #232323;
+  --muted: #7a8288;
+  --red: #c8321f;
+  --hl-yellow: rgba(255, 214, 10, .62);
+  --hl-blue: rgba(120, 196, 232, .55);
+  --chip: #ffffff;
+  --done: #a3a9ad;
+  --hand: "Gaegu", "Nanum Pen Script", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --chip: #24292c; --done: #646b70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --chip: #24292c; --done: #646b70; color-scheme: dark }
+
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.4; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 48px; display: grid; gap: 14px; }
+
+/* 위 막대: 제목 · 날짜 넘기기 · 새로고침 */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+h1 { margin: 0; font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; }
+h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.nav { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--grid-strong); background: var(--chip); color: var(--ink); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+.btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.status { font-size: 12px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 22px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); }
+.legend .r { color: var(--red); font-weight: 600; }
+.banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+
+/* 노트 한 장: 3일 나란히 (휴대폰은 위아래로) */
+.page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.day { min-width: 0; }
+.dh { font-family: var(--hand); font-size: 26px; font-weight: 700; line-height: 1.1; padding: 0 0 2px 46px; display: flex; align-items: baseline; gap: 8px; }
+.dh .today { font-family: var(--body); font-size: 11px; font-weight: 600; color: var(--red); border: 1px solid var(--red); border-radius: 999px; padding: 0 7px; }
+.dh.sun { color: var(--red); }
+.scale { display: grid; grid-template-columns: 46px repeat(6, minmax(0, 1fr)); font-family: var(--num); font-size: 10px; color: var(--muted); }
+.scale span { text-align: right; padding-right: 2px; }
+
+.grid { position: relative; }
+.hr { display: grid; grid-template-columns: 46px 1fr; height: 30px; }
+.hr .lab { font-family: var(--hand); font-size: 18px; font-weight: 700; line-height: 30px; text-align: right; padding-right: 6px; }
+.trk { position: relative; border-top: 1px solid var(--grid); border-right: 1px solid var(--grid);
+  background-image: repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px calc(100% / 6)); }
+.hr:last-child .trk { border-bottom: 1px solid var(--grid); }
+/* 형광펜: 칸마다 따로 칠한 것처럼 살짝 비뚤게 */
+.hl { position: absolute; top: 5px; bottom: 5px; border-radius: 3px 6px 4px 7px; transform: skewX(-6deg); }
+.hl.class { background: var(--hl-yellow); }
+.hl.review { background: var(--hl-blue); }
+.hl span { position: absolute; inset: 0 4px; font-size: 10px; line-height: 20px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: skewX(6deg); opacity: .8; }
+/* 검은 글씨 일정: 시작 자리에 점, 글씨 아래로 줄을 칸 끝까지 */
+.tx { position: absolute; bottom: 3px; right: 0; display: flex; align-items: flex-end; gap: 10px; font-family: var(--hand); font-size: 17px; font-weight: 700; line-height: 1; padding-bottom: 2px; border-bottom: 1.5px solid currentColor; white-space: nowrap; overflow: hidden; z-index: 2; }
+.it { display: inline-flex; align-items: flex-end; gap: 3px; cursor: pointer; }
+.it::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; margin-bottom: 1px; flex: none; }
+.it.red { color: var(--red); }
+.it .imp { color: var(--red); }
+.it.copied, .todo.copied { color: var(--done); text-decoration: line-through; }
+.it.done { color: var(--done); }
+.tx.memo { border-bottom: 0; }
+.tx.memo .it::before { display: none; }
+/* 절대 폰X: 빨간 꺾쇠 */
+.brk { position: absolute; left: 18px; width: 6px; border: 2px solid var(--red); border-right: 0; border-radius: 3px 0 0 3px; z-index: 3; pointer-events: none; }
+.brk b { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: var(--hand); font-size: 13px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: -1px; }
+.nowl { position: absolute; left: 46px; right: 0; height: 0; border-top: 2px dashed var(--red); z-index: 4; pointer-events: none; opacity: .7; }
+
+/* 빨간 메모 */
+.memo-box { margin-top: 12px; color: var(--red); font-family: var(--hand); font-size: 18px; font-weight: 700; line-height: 1.3; display: grid; gap: 6px; }
+.memo-box h3 { margin: 0; font-size: 19px; }
+.memo-box ul { margin: 0; padding: 0 0 0 18px; list-style: none; display: grid; gap: 2px; }
+.todo { cursor: pointer; }
+.todo::before { content: "□ "; margin-left: -16px; }
+.todo .why { font-family: var(--body); font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 4px; }
+.star::before { content: "★ "; }
+.memo-box .ink { color: var(--ink); }
+.empty { color: var(--muted); font-family: var(--body); font-size: 12px; font-weight: 400; }
+
+@media (hover: hover) { .btn:hover { border-color: var(--red); } .it:hover, .todo:hover { opacity: .7; } }
+@media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); gap: 30px; } .nav { margin-left: 0; } }
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <h1>할일판 2<small>노트 옮겨적기</small></h1>
+    <div class="nav">
+      <button class="btn" id="prev" type="button" aria-label="하루 앞으로">◀</button>
+      <button class="btn" id="today" type="button">오늘</button>
+      <button class="btn" id="next" type="button" aria-label="하루 뒤로">▶</button>
+      <button class="btn" id="reload" type="button">새로고침</button>
+      <span class="status" id="status">불러오는 중…</span>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="y"></i>수업·교육 (노랑 형광펜)</span>
+    <span><i class="b"></i>전공 복습 (파랑 형광펜)</span>
+    <span>● 검은 글씨 = 일정·할 일 (점 = 시작 시각)</span>
+    <span class="r">빨간 글씨 = 메모</span>
+    <span>옮겨 적은 건 눌러서 줄 긋기</span>
+  </div>
+  <div id="notice"></div>
+  <div class="page" id="page"></div>
+</div>
+
+<script>
+const TD = "Todoist", GC = "Google Calendar";
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+const H0 = 7, H1 = 25; // 7시 줄 ~ 24시 줄 (노트와 같음)
+const BLOG_SECTION = "6hqfPfX2XVqVFGCc";
+const GONG_SECTION = "6hvm37HXmvpXrPjv";
+const IMPORTANT = /과제|업로드|올리기/;
+
+// 학교 수업 (12/18까지 매주) — 노랑 형광펜
+const SCHOOL_END = "2026-12-18";
+const SCHOOL = [
+  [1, "13:30", "14:45", "전기자기학II"], [1, "16:00", "17:45", "유럽문학산책"],
+  [2, "10:30", "11:45", "회로이론II"], [2, "13:30", "14:45", "전기자기학II"], [2, "16:00", "17:45", "아시아 속의 제주문화"],
+  [3, "09:00", "10:15", "공업수학II"], [3, "10:30", "11:45", "회로이론II"],
+  [4, "09:00", "10:15", "공업수학II"],
+];
+// 평일 고정 스케줄 (노트의 검은 글씨). "major" = 전공 복습(파랑 형광펜)
+const EVE = [["18:00", "운동 + 저녁"], ["20:40", "샤오홍슈 ①"], ["21:40", "샤오홍슈 ②"], ["22:40", "공무원 ①"], ["23:40", "공무원 ②"], ["24:40", "→ 내일 일정"]];
+const UP = ["07:00", "일어나서 · 청소 · 계획 쓰기"];
+const FIXED = {
+  1: [UP, ["08:30", "국어 비문학"], ["09:00", "영어 독해"], ["12:00", "점심"], ["12:40", "→ 이동"], ["14:50", "15:50", "major"], ...EVE],
+  2: [UP, ["08:30", "국어 비문학"], ["09:00", "영어 독해"], ["09:45", "→ 이동"], ["11:45", "12:30", "major"], ["12:30", "점심"], ["14:50", "15:50", "major"], ...EVE],
+  3: [UP, ["08:00", "→ 이동"], ["11:45", "12:00", "major"], ["12:00", "점심"], ["12:30", "13:20", "major"], ...EVE],
+  4: [UP, ["08:00", "→ 이동"], ["10:15", "11:00", "major"], ["11:00", "국어 비문학 + 영어 독해"], ["12:00", "점심"], ...EVE],
+  5: [UP, ["08:00", "국어 비문학 + 영어 독해"], ["09:00", "→ 이동"], ["12:00", "점심"], ...EVE],
+};
+
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const x = parseYmd(s); x.setDate(x.getDate() + n); return ymd(x); };
+const toMin = (t) => { const [a, b] = t.split(":").map(Number); return a * 60 + b; };
+const hm = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+const cleanSummary = (s) => (s || "(제목 없음)").split("\n")[0].trim().replace(/^✅\s*/, "");
+const isChecked = (e) => /^✅/.test((e.summary || "").trim());
+const taskDate = (t) => (t.dueDate ? t.dueDate.slice(0, 10) : null);
+const taskTime = (t) => (t.dueDate && t.dueDate.length > 10 ? t.dueDate.slice(11, 16) : null);
+function nameMin(t) { const m = (t.content || "").match(/\((?:(\d+)시간)?\s*(?:(\d+)분)?\)\s*$/); return m && (m[1] || m[2]) ? Number(m[1] || 0) * 60 + Number(m[2] || 0) : 0; }
+function durMin(t) {
+  const v = t.duration;
+  if (!v) return nameMin(t) || 60;
+  if (typeof v === "number") return v;
+  if (typeof v === "object") return v.unit === "day" ? 1440 : (v.amount || 60);
+  const m = String(v).match(/^(?:(\d+(?:\.\d+)?)h)?(?:(\d+)m)?$/);
+  return (m ? Math.round(parseFloat(m[1] || 0) * 60 + Number(m[2] || 0)) : 0) || 60;
+}
+function taskLevel(t) {
+  if (t.sectionId === BLOG_SECTION || IMPORTANT.test(t.content) || t.priority === "p1") return 3;
+  return t.priority === "p2" ? 2 : 0;
+}
+const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
+const isGong = (t) => t.sectionId === GONG_SECTION || /공무원|행정법|행정학/.test(t.content);
+
+// 옮겨 적은 것 줄 긋기 (이 기기에만 기억)
+const CKEY = "nb2-copied";
+let copied = {};
+try { copied = JSON.parse(localStorage.getItem(CKEY)) || {}; } catch {}
+function toggleCopied(id, el) {
+  copied[id] ? delete copied[id] : (copied[id] = 1);
+  try { localStorage.setItem(CKEY, JSON.stringify(copied)); } catch {}
+  el.classList.toggle("copied", !!copied[id]);
+}
+
+let mcp = null;
+const TODAY = () => ymd(new Date());
+let start = TODAY();
+let data = { tasks: [], events: [], errors: [] };
+
+// 하루치를 노트 모양 자료로 정리
+function buildDay(d) {
+  const wd = parseYmd(d).getDay();
+  const bars = [], texts = [];
+  const events = data.events.filter((e) => (e.start?.dateTime ? ymd(new Date(e.start.dateTime)) : e.start?.date?.slice(0, 10)) === d);
+  const allday = [];
+  for (const e of events) {
+    const title = cleanSummary(e.summary);
+    if (!e.start?.dateTime) { allday.push({ title, done: isChecked(e), lvl: e.colorId === "11" ? 3 : 0 }); continue; }
+    const s = new Date(e.start.dateTime), en = e.end?.dateTime ? new Date(e.end.dateTime) : new Date(s.getTime() + 3600000);
+    const sm = s.getHours() * 60 + s.getMinutes();
+    let em = ymd(en) === d ? en.getHours() * 60 + en.getMinutes() : 1440 + en.getHours() * 60 + en.getMinutes();
+    if (em <= sm) em = sm + 30;
+    if (isClassTitle(title)) bars.push({ s: sm, e: em, kind: "class", name: title });
+    else texts.push({ s: sm, text: title, done: isChecked(e), lvl: e.colorId === "11" || IMPORTANT.test(title) ? 3 : 0, real: true, tip: `${hm(sm)}–${hm(em)} ${title}` });
+  }
+  if (d <= SCHOOL_END) for (const [w, s, e, n] of SCHOOL) {
+    if (w !== wd) continue;
+    const key = n.replace(/II$/, "");
+    if (bars.some((b) => b.name.includes(key))) continue;
+    bars.push({ s: toMin(s), e: toMin(e), kind: "class", name: n });
+  }
+  const dayTasks = data.tasks.filter((t) => {
+    const td = taskDate(t);
+    return td === d || (d === TODAY() && td && td < d);
+  });
+  const todos = [];
+  for (const t of dayTasks) {
+    const tm = taskTime(t);
+    if (tm && taskDate(t) === d) {
+      const key = t.content.split(" ")[0];
+      if (key.length >= 2 && texts.some((x) => x.real && x.text.includes(key))) continue;
+      const sm = toMin(tm);
+      texts.push({ s: sm, text: t.content, lvl: taskLevel(t), real: true, tip: `${tm}–${hm(sm + durMin(t))} ${t.content}` });
+    } else todos.push({ text: t.content, lvl: taskLevel(t), late: taskDate(t) < d, id: t.id });
+  }
+  // 평일 고정 스케줄: 실제 일정이 그 자리에 있으면 고정 글씨는 뺌
+  for (const f of FIXED[wd] || []) {
+    if (f[2] === "major") { bars.push({ s: toMin(f[0]), e: toMin(f[1]), kind: "review", name: "전공 복습" }); continue; }
+    const s = toMin(f[0]);
+    if (texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
+    texts.push({ s, text: f[1], tip: `고정 · ${hm(s)} ${f[1]}` });
+  }
+  if (FIXED[wd]) texts.push({ s: 19 * 60 + 40, text: "날씨 ↓", red: true, memo: true, tip: "샤오홍슈 ① = 날씨지도" });
+  // 절대 폰X: 7시부터 (첫 수업 1시간 전, 늦어도 10시)까지
+  const first = Math.min(...bars.filter((b) => b.kind === "class").map((b) => b.s), 99 * 60);
+  const brkEnd = Math.max(8 * 60, Math.min(10 * 60, first - 60));
+
+  todos.sort((a, b) => (/계획 옮겨적기/.test(b.text) - /계획 옮겨적기/.test(a.text)) || b.lvl - a.lvl || a.text.localeCompare(b.text, "ko"));
+  // 다음날 준비: 내일 Todoist에 있는 운동·공무원 공부를 같이 적어 줌
+  const nd = addDays(d, 1), ndw = parseYmd(nd).getDay();
+  const nTasks = data.tasks.filter((t) => taskDate(t) === nd);
+  const workout = nTasks.filter((t) => /^운동:/.test(t.content)).map((t) => t.content.replace(/^운동:\s*/, ""));
+  const gong = nTasks.filter(isGong).map((t) => t.content);
+  const prep = [
+    ["점심 뭐 먹을지"], ["저녁 뭐 먹을지"],
+    ["운동 뭐 할지", workout.length ? `내일: ${workout.join(", ")}` : ""],
+    ["공무원 공부 뭐 할지", gong.length ? `내일: ${gong.slice(0, 3).join(", ")}` : ""],
+    ["공부 어디서 할지"], ["뭐 입을지"], ["오전에 뭐 할지"], ["내일 가방 싸기", ndw >= 1 && ndw <= 5 ? "노트북·마우스·충전기" : ""],
+  ];
+  const notes = [];
+  if (wd >= 1 && wd <= 5) notes.push("오전 시간은 최대한 비워 두기 (변수 대비)");
+  if (wd === 3 || wd === 4) notes.push("블로그(체험단)는 수요일 아니면 목요일");
+  if (wd === 5) notes.push("금요일 저녁은 약속 OK → 토요일 4시간 확보");
+  return { d, wd, bars, texts, todos, allday, prep, notes, brkEnd, nd };
+}
+
+function renderDay(day) {
+  const { d, wd } = day;
+  const dt = parseYmd(d);
+  const col = h("section", { class: "day", "aria-label": `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${WD[wd]}요일` });
+  col.append(h("div", { class: "dh" + (wd === 0 ? " sun" : "") }, `${dt.getMonth() + 1}.${dt.getDate()} ${WD[wd]}`, d === TODAY() ? h("span", { class: "today" }, "오늘") : null));
+  col.append(h("div", { class: "scale", "aria-hidden": "true" }, h("span"), [10, 20, 30, 40, 50, 60].map((n) => h("span", null, n))));
+  const grid = h("div", { class: "grid" });
+  const ROW = 30;
+  for (let hr = H0; hr < H1; hr++) {
+    const a = hr * 60, b = a + 60;
+    const trk = h("div", { class: "trk" });
+    for (const bar of day.bars) {
+      const s = Math.max(bar.s, a), e = Math.min(bar.e, b);
+      if (e <= s) continue;
+      trk.append(h("div", { class: `hl ${bar.kind}`, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}` }, bar.s >= a && e - s >= 30 ? h("span", null, bar.name) : null));
+    }
+    const inRow = day.texts.filter((t) => (hr === H0 ? t.s < b : hr === H1 - 1 ? t.s >= a : t.s >= a && t.s < b)).sort((x, y) => x.s - y.s);
+    for (const grp of [inRow.filter((t) => !t.memo), inRow.filter((t) => t.memo)]) {
+      if (!grp.length) continue;
+      const left = Math.max(0, Math.min(55, (grp[0].s - a) / 60 * 100));
+      trk.append(h("div", { class: "tx" + (grp[0].memo ? " memo" : ""), style: `left:${left}%` }, grp.map((t) => {
+        const id = `${d}|${t.s}|${t.text}`;
+        const el = h("span", { class: "it" + (t.red ? " red" : "") + (t.done ? " done" : "") + (copied[id] ? " copied" : ""), title: t.tip, onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { class: "imp" }, "!") : null, t.text);
+        return el;
+      })));
+    }
+    grid.append(h("div", { class: "hr" }, h("div", { class: "lab" }, hr), trk));
+  }
+  const top = (7 * 60 - H0 * 60) / 60 * ROW;
+  grid.append(h("div", { class: "brk", style: `top:${top + 3}px;height:${(day.brkEnd - 7 * 60) / 60 * ROW - 6}px` }, h("b", null, "절대 폰X")));
+  if (d === TODAY()) {
+    const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+    if (m >= H0 * 60 && m < H1 * 60) grid.append(h("div", { class: "nowl", style: `top:${(m - H0 * 60) / 60 * ROW}px` }));
+  }
+  col.append(grid);
+
+  // 빨간 메모
+  const memo = h("div", { class: "memo-box" });
+  for (const n of day.notes) memo.append(h("div", { class: "star" }, n));
+  if (day.allday.length) memo.append(h("div", { class: "star" }, "종일: ", day.allday.map((a) => a.title).join(" · ")));
+  memo.append(h("h3", { class: "star" }, "오늘 할 일"));
+  const ul = h("ul");
+  if (!day.todos.length) ul.append(h("li", { class: "empty" }, "시간 없는 할 일이 없어요"));
+  for (const t of day.todos) {
+    const id = `${d}|todo|${t.id}`;
+    const el = h("li", { class: "todo ink" + (copied[id] ? " copied" : ""), onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { style: "color:var(--red)" }, "! ") : t.lvl === 2 ? h("span", { style: "color:var(--red)" }, "· ") : null, t.text, t.late ? h("span", { class: "why" }, "밀린 일") : null);
+    ul.append(el);
+  }
+  memo.append(ul);
+  const nd = parseYmd(day.nd);
+  memo.append(h("h3", { class: "star" }, `다음날(${nd.getMonth() + 1}.${nd.getDate()} ${WD[nd.getDay()]}) 준비할 것`));
+  const pl = h("ul");
+  for (const [p, why] of day.prep) {
+    const id = `${d}|prep|${p}`;
+    const el = h("li", { class: "todo" + (copied[id] ? " copied" : ""), onclick: () => toggleCopied(id, el) }, p, why ? h("span", { class: "why" }, why) : null);
+    pl.append(el);
+  }
+  memo.append(pl);
+  col.append(memo);
+  return col;
+}
+
+// 긴 글씨가 칸 오른쪽 끝에서 잘리면 왼쪽으로 당겨서 다 보이게
+function fitTexts() {
+  for (const tx of document.querySelectorAll(".tx")) {
+    tx.style.removeProperty("transform");
+    const over = tx.scrollWidth - tx.clientWidth;
+    if (over > 0) {
+      const room = tx.offsetLeft;
+      tx.style.left = Math.max(0, room - over - 2) + "px";
+    }
+  }
+}
+
+function render() {
+  const page = $("page");
+  page.replaceChildren(...[0, 1, 2].map((i) => renderDay(buildDay(addDays(start, i)))));
+  requestAnimationFrame(fitTexts);
+}
+
+async function load() {
+  $("status").textContent = "불러오는 중…";
+  $("notice").replaceChildren();
+  const today = TODAY();
+  const base = start <= today ? today : start;
+  const last = addDays(start, 3);
+  const days = Math.min(30, Math.max(1, Math.round((parseYmd(last) - parseYmd(base)) / 86400000) + 1));
+  const [tk, ev] = await Promise.allSettled([
+    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 100 }, { cache: false }),
+    mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, 4)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+  ]);
+  const errs = [];
+  data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
+  data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled") : (errs.push("구글 캘린더"), []);
+  if (errs.length) $("notice").append(h("div", { class: "banner" }, `${errs.join("·")}를 불러오지 못했어요. 처음이면 연결 허용을 눌러 주시고, 아니면 새로고침해 보세요. (평일 고정표·수업은 그대로 보여요)`));
+  render();
+  const n = new Date();
+  $("status").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
+}
+
+function go(n) { start = n === 0 ? TODAY() : addDays(start, n); mcp ? load().catch(() => render()) : render(); }
+$("prev").addEventListener("click", () => go(-1));
+$("next").addEventListener("click", () => go(1));
+$("today").addEventListener("click", () => go(0));
+$("reload").addEventListener("click", () => (mcp ? load().catch(() => render()) : render()));
+window.addEventListener("resize", () => requestAnimationFrame(fitTexts));
+document.fonts?.ready?.then(fitTexts).catch(() => {});
+
+render(); // 불러오기 전에도 수업·고정표가 있는 노트 모양을 먼저 보여 줌
+(async () => {
+  try { mcp = window.claude ? await window.claude.use("mcp") : null; } catch { mcp = null; }
+  if (!mcp) { $("status").textContent = "Todoist·캘린더 연결 안 됨 (claude.ai에서 열어 주세요)"; return; }
+  load().catch(() => { $("status").textContent = "불러오지 못했어요"; });
+})();
+</script>
