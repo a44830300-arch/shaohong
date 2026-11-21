@@ -329,7 +329,7 @@ function buildDay(d) {
   const hitsYellow = (s, e) => yellow.some((y) => s < y.e && e > y.s);
   // 학교 가는 시간: 그날 첫 수업(노랑 수업·교육)에서 거꾸로
   const first = bars.filter((b) => b.kind === "class").sort((a, b) => a.s - b.s)[0];
-  const go = first ? [[first.s - LEAVE, "→ 출발"]] : []; // 씻기는 아침 7시 루틴으로 옮김 (2026-11-21)
+  const go = first ? [[first.s - LEAVE, `→ 출발 ${hm(first.s - LEAVE)}`]] : []; // 출발에도 시간 (2026-11-21 요청) // 씻기는 아침 7시 루틴으로 옮김 (2026-11-21)
   for (const [s, text] of go) texts.push({ s, text, tip: `${hm(s)} ${text} (첫 수업 ${hm(first.s)} ${first.name})` });
   const goBusy = first ? [first.s - LEAVE, first.s] : null;
   for (const f of [...(FIXED[wd] ? [] : DAILY), ...(FIXED[wd] || [])]) {
