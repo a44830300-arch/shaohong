@@ -45,7 +45,9 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
 /* 노트 한 장: 3일 나란히 (휴대폰은 위아래로) */
-.page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 46px; }
+.day { padding-right: 0; }
+@media (max-width: 900px) { .day { padding-right: 40px; } }
 .day { min-width: 0; }
 .dh { font-family: var(--hand); font-size: 26px; font-weight: 700; line-height: 1.1; padding: 0 0 2px 46px; display: flex; align-items: baseline; gap: 8px; }
 .dh .today { font-family: var(--body); font-size: 11px; font-weight: 600; color: var(--red); border: 1px solid var(--red); border-radius: 999px; padding: 0 7px; }
@@ -77,6 +79,11 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 /* 절대 폰X: 빨간 꺾쇠 */
 .brk { position: absolute; left: 18px; width: 6px; border: 2px solid var(--red); border-right: 0; border-radius: 3px 0 0 3px; z-index: 3; pointer-events: none; }
 .brk b { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: var(--hand); font-size: 13px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: -1px; }
+/* 금요일 저녁 → 토요일: 오른쪽 둥근 괄호 */
+.rbrk { position: absolute; right: -14px; width: 12px; border: 1.5px solid var(--ink); border-left: 0; border-radius: 0 50% 50% 0 / 0 50% 50% 0; z-index: 3; pointer-events: none; }
+.rbrk b { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: var(--hand); font-size: 15px; font-weight: 700; white-space: nowrap; }
+/* □ 밑에 [ 로 묶은 작은 목록 (가방, 도시락 등) */
+.sub { margin: 2px 0 2px 6px; padding-left: 10px; border-left: 2px solid var(--red); font-size: 16px; line-height: 1.25; }
 .nowl { position: absolute; left: 46px; right: 0; height: 0; border-top: 2px dashed var(--red); z-index: 4; pointer-events: none; opacity: .7; }
 
 /* 빨간 메모 */
@@ -141,6 +148,21 @@ const FIXED = {
   3: [UP, ["08:00", "→ 이동"], ["11:45", "12:00", "major"], ["12:00", "점심"], ["12:30", "13:20", "major"], ...EVE],
   4: [UP, ["08:00", "→ 이동"], ["10:15", "11:00", "major"], ["11:00", "국어 비문학 + 영어 독해"], ["12:00", "점심"], ...EVE],
   5: [UP, ["08:00", "국어 비문학 + 영어 독해"], ["09:00", "→ 이동"], ["12:00", "점심"], ...EVE],
+};
+// 절대 폰X 꺾쇠가 끝나는 시각 (노트 그대로: 월 10시 줄까지, 화 10:30 수업 전까지, 수·목·금 8시 줄까지). 주말은 없음
+const BRK = { 1: 11 * 60, 2: 10 * 60 + 30, 3: 9 * 60, 4: 9 * 60, 5: 9 * 60 };
+// 내일 가방 (11/23 노트)
+const BAG = ["노트북 · 마우스 · 충전기", "태블릿", "빅노트 · 작은 노트", "지갑", "휴대폰 충전기", "핸드크림 · 선크림"];
+// 요일별 빨간 메모 (11/23~11/28 노트). notes = ★ 한 줄 메모, prep = ★ 내일 스케줄 □ 목록, extra = 따로 묶은 □ 목록
+const PREP_WD = ["운동 뭐 할지", "공무원 공부 뭐 할지", "샤오홍슈 · 공부 어디서 할지", "뭐 입을지", "내일 가방 싸기"];
+const MEMO = {
+  0: { notes: [], prep: PREP_WD },
+  1: { notes: ["오전 시간은 최대한 비워 두기 (변수 대비)"], prep: PREP_WD },
+  2: { notes: [], prep: ["점심 뭐 먹을지", "저녁 뭐 먹을지", "운동 뭐 할지", "공부 어디서 할지", "뭐 입을지", "오전에 뭐 할지", "내일 가방 싸기"] },
+  3: { notes: ["블로그는 수 or 목", "블로그도 갔다 온 날 바로"], prep: ["오후에 뭐 할지", "운동 뭐 할지", "저녁 뭐 먹을지", "공부 어디서 할지", "뭐 입을지", "내일 가방 싸기"] },
+  4: { notes: ["블로그는 수 or 목", "블로그도 갔다 온 날 바로"], prep: ["공부 어디서 할지", "공부 뭐 할지", "저녁 뭐 먹을지", "운동 뭐 할지", "뭐 입을지", "내일 가방 싸기"] },
+  5: { notes: ["금요일 저녁은 술약속으로 비워도 됨 → 토요일 4시간 확보"], extra: ["주말에 어디 갈지 정하기", ["축제 or 관광지"], ["도시락, 텀블러", "버스 시간표"]], prep: [] },
+  6: { notes: ["미루는 일은 없도록 토요일에 마무리 짓기!", "일요일은 최대한 빈 시간으로 놔두기", "토요일 저녁은 항상 술약속으로 비워 두기"], prep: ["청소 뭐 할지"] },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -239,10 +261,10 @@ function buildDay(d) {
     if (texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
     texts.push({ s, text: f[1], tip: `고정 · ${hm(s)} ${f[1]}` });
   }
-  if (FIXED[wd]) texts.push({ s: 19 * 60 + 40, text: "날씨 ↓", red: true, memo: true, tip: "샤오홍슈 ① = 날씨지도" });
-  // 절대 폰X: 7시부터 (첫 수업 1시간 전, 늦어도 10시)까지
-  const first = Math.min(...bars.filter((b) => b.kind === "class").map((b) => b.s), 99 * 60);
-  const brkEnd = Math.max(8 * 60, Math.min(10 * 60, first - 60));
+  // 날씨지도(매일 20:30)는 요일 없이 매일 빨간 글씨로
+  texts.push({ s: 19 * 60 + 40, text: "날씨 ↓", red: true, memo: true, tip: "샤오홍슈 ① = 날씨지도" });
+  // 절대 폰X 꺾쇠: 노트처럼 요일마다 끝나는 시각이 정해져 있음. 주말은 없음
+  const brkEnd = BRK[wd] || 0;
 
   todos.sort((a, b) => (/계획 옮겨적기/.test(b.text) - /계획 옮겨적기/.test(a.text)) || b.lvl - a.lvl || a.text.localeCompare(b.text, "ko"));
   // 다음날 준비: 내일 Todoist에 있는 운동·공무원 공부를 같이 적어 줌
@@ -250,17 +272,15 @@ function buildDay(d) {
   const nTasks = data.tasks.filter((t) => taskDate(t) === nd);
   const workout = nTasks.filter((t) => /^운동:/.test(t.content)).map((t) => t.content.replace(/^운동:\s*/, ""));
   const gong = nTasks.filter(isGong).map((t) => t.content);
-  const prep = [
-    ["점심 뭐 먹을지"], ["저녁 뭐 먹을지"],
-    ["운동 뭐 할지", workout.length ? `내일: ${workout.join(", ")}` : ""],
-    ["공무원 공부 뭐 할지", gong.length ? `내일: ${gong.slice(0, 3).join(", ")}` : ""],
-    ["공부 어디서 할지"], ["뭐 입을지"], ["오전에 뭐 할지"], ["내일 가방 싸기", ndw >= 1 && ndw <= 5 ? "노트북·마우스·충전기" : ""],
-  ];
-  const notes = [];
-  if (wd >= 1 && wd <= 5) notes.push("오전 시간은 최대한 비워 두기 (변수 대비)");
-  if (wd === 3 || wd === 4) notes.push("블로그(체험단)는 수요일 아니면 목요일");
-  if (wd === 5) notes.push("금요일 저녁은 약속 OK → 토요일 4시간 확보");
-  return { d, wd, bars, texts, todos, allday, prep, notes, brkEnd, nd };
+  // 요일별 빨간 메모 (2026-11-21, 강정준비준 노트 11/23~11/28 그대로)
+  const M = MEMO[wd];
+  const why = {
+    "운동 뭐 할지": workout.length ? `내일 Todoist: ${workout.join(", ")}` : "맨몸 / 러닝",
+    "공무원 공부 뭐 할지": gong.length ? `내일 Todoist: ${gong.slice(0, 3).join(", ")}` : "행정법 / 행정학",
+    "공부 뭐 할지": gong.length ? `내일 Todoist: ${gong.slice(0, 3).join(", ")}` : "",
+  };
+  const prep = M.prep.map((p) => [p, why[p] || "", p === "내일 가방 싸기" && ndw >= 1 && ndw <= 5 ? BAG : null]);
+  return { d, wd, bars, texts, todos, allday, prep, notes: M.notes, extra: M.extra || null, prepTitle: M.title || "내일 스케줄", brkEnd, nd, friArrow: wd === 5 };
 }
 
 function renderDay(day) {
@@ -292,7 +312,9 @@ function renderDay(day) {
     grid.append(h("div", { class: "hr" }, h("div", { class: "lab" }, hr), trk));
   }
   const top = (7 * 60 - H0 * 60) / 60 * ROW;
-  grid.append(h("div", { class: "brk", style: `top:${top + 3}px;height:${(day.brkEnd - 7 * 60) / 60 * ROW - 6}px` }, h("b", null, "절대 폰X")));
+  if (day.brkEnd) grid.append(h("div", { class: "brk", style: `top:${top + 3}px;height:${(day.brkEnd - 7 * 60) / 60 * ROW - 6}px` }, h("b", null, "절대 폰X")));
+  // 금요일 저녁(19~24시)은 토요일로 옮겨도 됨: 오른쪽 둥근 괄호 + ↔ 토
+  if (day.friArrow) grid.append(h("div", { class: "rbrk", style: `top:${(19 - H0) * ROW + 4}px;height:${6 * ROW - 8}px`, title: "금요일 저녁은 비워도 됨 → 토요일로" }, h("b", null, "↔ 토")));
   if (d === TODAY()) {
     const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
     if (m >= H0 * 60 && m < H1 * 60) grid.append(h("div", { class: "nowl", style: `top:${(m - H0 * 60) / 60 * ROW}px` }));
@@ -303,24 +325,29 @@ function renderDay(day) {
   const memo = h("div", { class: "memo-box" });
   for (const n of day.notes) memo.append(h("div", { class: "star" }, n));
   if (day.allday.length) memo.append(h("div", { class: "star" }, "종일: ", day.allday.map((a) => a.title).join(" · ")));
-  memo.append(h("h3", { class: "star" }, "오늘 할 일"));
+  const li = (id, cls, ...kids) => { const el = h("li", { class: cls + (copied[id] ? " copied" : ""), onclick: (ev) => { ev.stopPropagation(); toggleCopied(id, el); } }, ...kids); return el; };
+  // 금요일: ★ 주말에 어디 갈지 정하기 □ 축제 or 관광지 [도시락, 텀블러 / 버스 시간표]
+  if (day.extra) {
+    const [title, boxes, sub] = day.extra;
+    memo.append(h("h3", { class: "star" }, title));
+    const ul = h("ul");
+    for (const b of boxes) ul.append(li(`${d}|ex|${b}`, "todo", b, h("div", { class: "sub" }, sub.map((s) => h("div", null, s)))));
+    memo.append(ul);
+  }
+  // ★ 내일 스케줄 □ ...
+  if (day.prep.length) {
+    const nd = parseYmd(day.nd);
+    memo.append(h("h3", { class: "star" }, `${day.prepTitle} (${nd.getMonth() + 1}.${nd.getDate()} ${WD[nd.getDay()]})`));
+    const pl = h("ul");
+    for (const [p, why, bag] of day.prep) pl.append(li(`${d}|prep|${p}`, "todo", p, why ? h("span", { class: "why" }, why) : null, bag ? h("div", { class: "sub" }, bag.map((s) => h("div", null, s))) : null));
+    memo.append(pl);
+  }
+  // Todoist에서 온 시간 없는 할 일 (노트에 같이 적을 것)
+  memo.append(h("h3", { class: "star" }, "오늘 할 일 (Todoist)"));
   const ul = h("ul");
   if (!day.todos.length) ul.append(h("li", { class: "empty" }, "시간 없는 할 일이 없어요"));
-  for (const t of day.todos) {
-    const id = `${d}|todo|${t.id}`;
-    const el = h("li", { class: "todo ink" + (copied[id] ? " copied" : ""), onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { style: "color:var(--red)" }, "! ") : t.lvl === 2 ? h("span", { style: "color:var(--red)" }, "· ") : null, t.text, t.late ? h("span", { class: "why" }, "밀린 일") : null);
-    ul.append(el);
-  }
+  for (const t of day.todos) ul.append(li(`${d}|todo|${t.id}`, "todo ink", t.lvl === 3 ? h("span", { style: "color:var(--red)" }, "! ") : t.lvl === 2 ? h("span", { style: "color:var(--red)" }, "· ") : null, t.text, t.late ? h("span", { class: "why" }, "밀린 일") : null));
   memo.append(ul);
-  const nd = parseYmd(day.nd);
-  memo.append(h("h3", { class: "star" }, `다음날(${nd.getMonth() + 1}.${nd.getDate()} ${WD[nd.getDay()]}) 준비할 것`));
-  const pl = h("ul");
-  for (const [p, why] of day.prep) {
-    const id = `${d}|prep|${p}`;
-    const el = h("li", { class: "todo" + (copied[id] ? " copied" : ""), onclick: () => toggleCopied(id, el) }, p, why ? h("span", { class: "why" }, why) : null);
-    pl.append(el);
-  }
-  memo.append(pl);
   col.append(memo);
   return col;
 }
