@@ -118,6 +118,35 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 
 @media (hover: hover) { .btn:hover { border-color: var(--red); } .it:hover, .todo:hover { opacity: .7; } }
 @media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); gap: 30px; } .nav { margin-left: 0; } }
+
+/* 일주일 보기 (2026-11-21 요청): 월~일 7일을 한 화면에. 좁은 화면은 표 안에서만 옆으로 밀기 */
+.wrap.wk { max-width: none; }
+.page.week { grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 20px; overflow-x: auto; padding-bottom: 6px; }
+.page.week .day { padding-right: 0; }
+.week .dh { font-size: 19px; padding-left: 22px; }
+.week .scale { grid-template-columns: 22px repeat(6, minmax(0, 1fr)); font-size: 8px; }
+.week .hr { grid-template-columns: 22px 1fr; height: 26px; }
+.week .hr .lab { font-size: 13px; line-height: 26px; padding-right: 3px; }
+.week .hl { top: 3px; bottom: 3px; }
+.week .hl span { font-size: 12px; line-height: 20px; gap: 3px; }
+.week .hl span.tight { font-size: 10px; gap: 2px; }
+.week .hl span small, .week .hl span.items small { font-size: 8px; }
+.week .hl span.tight small { font-size: 7px; }
+.week .hl span.items { font-size: 9.5px; gap: 2px; }
+.week .hl span.items.tight { font-size: 8.5px; }
+.week .tx { font-size: 12px; bottom: 2px; }
+.week .tx.dense { font-size: 10px; }
+.week .it::before { width: 4px; height: 4px; }
+.week .brk { left: 2px; width: 4px; }
+.week .brk b { font-size: 10px; right: 6px; }
+.week .rbrk { right: -12px; width: 9px; }
+.week .rbrk b { font-size: 11px; left: 10px; }
+.week .nowl { left: 22px; }
+.week .memo-box { font-size: 13px; gap: 3px; margin-top: 8px; }
+.week .memo-box h3 { font-size: 14px; }
+.week .memo-box ul { padding-left: 13px; }
+.week .todo::before { margin-left: -12px; }
+.week .sub { font-size: 12px; padding-left: 7px; margin-left: 3px; }
 </style>
 
 <div class="wrap">
@@ -127,6 +156,7 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
       <button class="btn" id="prev" type="button" aria-label="하루 앞으로">◀</button>
       <button class="btn" id="today" type="button">오늘</button>
       <button class="btn" id="next" type="button" aria-label="하루 뒤로">▶</button>
+      <button class="btn" id="mode" type="button">3일 보기</button>
       <button class="btn" id="reload" type="button">새로고침</button>
       <span class="status" id="status">불러오는 중…</span>
     </div>
@@ -171,7 +201,7 @@ const DAILY = [["07:30", "제주라이브 날씨 올리기"]];
 // 국어 비문학 + 영어 독해는 50분 한 세트 (2026-11-21 요청)
 const KE = "국어 비문학 + 영어 독해";
 const FIXED = {
-  1: [...UP, ["08:30", KE, "b"], ["12:00", "점심"], ["14:50", "전공 복습", "b"], ...EVE0, ["24:40", "→ 내일 일정"]], // 월요일 공무원 뺌 (2026-11-21)
+  1: [...UP, ["08:30", KE, "b"], ["12:00", "점심"], ["14:50", "전공 복습", "b"], ...EVE], // 월요일도 공무원 ①② 다시 넣음 (2026-11-21)
   2: [...UP, ["08:00", KE, "b"], ["11:45", "전공 복습", "b"], ["12:40", "점심"], ["14:50", "전공 복습", "b"], ...EVE],
   3: [...UP, ["12:00", "점심"], ["12:30", "전공 복습", "b"], ...EVE],
   4: [...UP, ["10:15", "전공 복습", "b"], ["11:15", KE, "b"], ["12:10", "점심"], ...EVE],
@@ -246,7 +276,13 @@ function toggleCopied(id, el) {
 
 let mcp = null;
 const TODAY = () => ymd(new Date());
-let start = TODAY();
+// 보기: "week" = 월~일 일주일 (기본), "3" = 노트 한 장(3일)
+let mode = "week";
+try { mode = localStorage.getItem("nb2-mode") || "week"; } catch {}
+const NDAYS = () => (mode === "week" ? 7 : 3);
+const monday = (s) => { const w = parseYmd(s).getDay(); return addDays(s, w === 0 ? -6 : 1 - w); };
+const home = () => (mode === "week" ? monday(TODAY()) : TODAY());
+let start = home();
 let data = { tasks: [], events: [], errors: [] };
 
 // 하루치를 노트 모양 자료로 정리
@@ -331,7 +367,7 @@ function renderDay(day) {
   col.append(h("div", { class: "dh" + (wd === 0 ? " sun" : "") }, `${dt.getMonth() + 1}.${dt.getDate()} ${WD[wd]}`, d === TODAY() ? h("span", { class: "today" }, "오늘") : null));
   col.append(h("div", { class: "scale", "aria-hidden": "true" }, h("span"), [10, 20, 30, 40, 50, 60].map((n) => h("span", null, n))));
   const grid = h("div", { class: "grid" });
-  const ROW = 30;
+  const ROW = mode === "week" ? 26 : 30; // CSS .hr 높이와 같게
   for (let hr = H0; hr < H1; hr++) {
     const a = hr * 60, b = a + 60;
     const trk = h("div", { class: "trk" });
@@ -344,7 +380,7 @@ function renderDay(day) {
         onclick: () => { toggleCopied(id, el); document.querySelectorAll(`.hl[data-id="${CSS.escape(id)}"]`).forEach((x) => x.classList.toggle("copied", !!copied[id])); } },
         // 글씨 조각(제목 낱말·시간)은 첫 칸에 다 넣고, fitTexts가 칸 길이에 맞춰 조각째 다음 줄 칸으로 옮긴다
         h("span", { class: bar.items ? "items" : null }, s === bar.s ? [
-          ...(bar.items ? bar.items.map((t) => { const iid = `${d}|up|${t}`; const ie = h("i", { class: copied[iid] ? "copied" : null, onclick: (ev) => { ev.stopPropagation(); toggleCopied(iid, ie); } }, t); return ie; }) : bar.name.split(" ").map((w) => h("b", null, w))),
+          ...(bar.items ? bar.items.map((t) => { const iid = `${d}|up|${t}`; const ie = h("i", { class: copied[iid] ? "copied" : null, onclick: (ev) => { ev.stopPropagation(); toggleCopied(iid, ie); } }, t); return ie; }) : [h("b", null, bar.name)]), // 제목은 한 덩어리 (낱말끼리 떨어지지 않게, 2026-11-21 요청)
           h("small", null, `${hm(bar.s)}~${hm(bar.e)}`)].map((x, i) => (x.dataset.tok = i, x)) : null));
       trk.append(el);
     }
@@ -416,29 +452,46 @@ function fitTexts() {
   for (const segs of Object.values(groups)) {
     const spans = segs.map((hl) => hl.querySelector("span"));
     const toks = spans.flatMap((sp) => [...sp.children]).sort((x, y) => x.dataset.tok - y.dataset.tok);
+    // 제목 = 한 덩어리, 시간 = 한 덩어리 (2026-11-21 요청: 제목 글자끼리·시간 글자끼리 이어지게)
     const fill = () => {
       toks.forEach((t) => { t.hidden = false; t.remove(); });
-      let k = 0, lost = false;
+      let k = 0, lost = false, moved = false;
       for (const t of toks) {
         while (true) {
           const sp = spans[k], room = segs[k].offsetWidth - 6;
           sp.append(t);
           if (sp.scrollWidth <= room) break;
-          if (k < spans.length - 1) { k++; continue; } // 다음 줄 칸으로
-          if (sp.children.length > 1 || t.tagName === "SMALL") { t.hidden = true; lost = true; } // 마지막 칸에도 안 들어가면 그 조각은 숨김
+          if (k < spans.length - 1) { k++; continue; } // 다음 줄 칸으로 덩어리째
+          lost = true;
+          if (sp.children.length > 1 || t.tagName === "SMALL") t.hidden = true; // 마지막 칸에도 안 들어가면 그 덩어리는 숨김
           break;
         }
+        if (t.dataset.tok === "0" && k > 0) moved = true; // 제목이 시작 칸에 못 들어감
       }
-      return lost;
+      return { lost, moved };
     };
-    spans.forEach((sp) => sp.classList.remove("tight"));
-    if (fill()) { spans.forEach((sp) => sp.classList.add("tight")); fill(); } // 안 들어가면 글씨를 한 단계 작게 해서 다시
+    const tight = (on) => spans.forEach((sp) => sp.classList.toggle("tight", on));
+    // 1) 보통 글씨로 시작 칸에 제목이 들어가면 끝 → 2) 글씨를 줄여서 시작 칸에 넣기 → 3) 안 숨겨지는 쪽 → 4) 작은 글씨
+    tight(false); const a = fill();
+    if (a.lost || a.moved) {
+      tight(true); const b = fill();
+      // 작은 글씨가 실제로 나아질 때만 작게 둠 (숨김이 사라지거나, 제목이 시작 칸에 들어감)
+      const better = (!b.lost && !b.moved) || (a.lost && !b.lost) || (a.lost === b.lost && a.moved && !b.moved) || (a.lost && b.lost);
+      if (!better) { tight(false); fill(); }
+    }
   }
 }
 
 function render() {
   const page = $("page");
-  page.replaceChildren(...[0, 1, 2].map((i) => renderDay(buildDay(addDays(start, i)))));
+  page.classList.toggle("week", mode === "week");
+  document.querySelector(".wrap").classList.toggle("wk", mode === "week");
+  $("mode").textContent = mode === "week" ? "3일 보기" : "일주일 보기";
+  $("prev").setAttribute("aria-label", mode === "week" ? "지난주" : "하루 앞으로");
+  $("next").setAttribute("aria-label", mode === "week" ? "다음 주" : "하루 뒤로");
+  page.replaceChildren(...Array.from({ length: NDAYS() }, (_, i) => renderDay(buildDay(addDays(start, i)))));
+  // 일주일 보기를 옆으로 밀어야 하는 좁은 화면이면 오늘 칸이 보이게
+  if (mode === "week") { const t = page.querySelector(".today")?.closest(".day"); if (t && page.scrollWidth > page.clientWidth) page.scrollLeft = t.offsetLeft - page.offsetLeft - 8; }
   requestAnimationFrame(fitTexts);
 }
 
@@ -447,11 +500,11 @@ async function load() {
   $("notice").replaceChildren();
   const today = TODAY();
   const base = start <= today ? today : start;
-  const last = addDays(start, 3);
+  const last = addDays(start, NDAYS()); // 마지막 날 + 다음날(내일 스케줄 메모용)
   const days = Math.min(30, Math.max(1, Math.round((parseYmd(last) - parseYmd(base)) / 86400000) + 1));
   const [tk, ev] = await Promise.allSettled([
-    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 100 }, { cache: false }),
-    mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, 4)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 200 }, { cache: false }),
+    mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, NDAYS() + 1)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
   ]);
   const errs = [];
   data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
@@ -462,7 +515,12 @@ async function load() {
   $("status").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
 }
 
-function go(n) { start = n === 0 ? TODAY() : addDays(start, n); mcp ? load().catch(() => render()) : render(); }
+function go(n) { start = n === 0 ? home() : addDays(start, mode === "week" ? n * 7 : n); mcp ? load().catch(() => render()) : render(); }
+$("mode").addEventListener("click", () => {
+  mode = mode === "week" ? "3" : "week";
+  try { localStorage.setItem("nb2-mode", mode); } catch {}
+  go(0);
+});
 $("prev").addEventListener("click", () => go(-1));
 $("next").addEventListener("click", () => go(1));
 $("today").addEventListener("click", () => go(0));
