@@ -163,15 +163,8 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
       <span class="status" id="status">불러오는 중…</span>
     </div>
   </div>
-  <div class="legend">
-    <span><i class="y"></i>노랑 = 절대 못 바꾸는 일정 (수업·교육)</span>
-    <span><i class="p"></i>빨강 = 개인 약속</span>
-    <span><i class="b"></i>파랑 = 고정이지만 바꿀 수 있는 일정 (전공 복습·개인공부, 50분)</span>
-    <span>● 검은 글씨 = 그 밖의 일정 (점 = 시작 시각)</span>
-    <span class="r">빨간 글씨 = 메모</span>
-    <span>옮겨 적은 건 눌러서 줄 긋기</span>
-  </div>
-  <div id="notice"></div>
+  <!-- 색 설명·안내 글씨는 없앰 (2026-11-21 요청) -->
+  <div id="notice" hidden></div>
   <div class="page" id="page"></div>
 </div>
 
@@ -506,16 +499,16 @@ async function load() {
   const last = addDays(start, NDAYS()); // 마지막 날 + 다음날(내일 스케줄 메모용)
   const days = Math.min(30, Math.max(1, Math.round((parseYmd(last) - parseYmd(base)) / 86400000) + 1));
   const [tk, ev] = await Promise.allSettled([
-    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 200 }, { cache: false }),
+    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 100 }, { cache: false }),
     mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, NDAYS() + 1)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
   ]);
   const errs = [];
   data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
   data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled") : (errs.push("구글 캘린더"), []);
-  if (errs.length) $("notice").append(h("div", { class: "banner" }, `${errs.join("·")}를 불러오지 못했어요. 처음이면 연결 허용을 눌러 주시고, 아니면 새로고침해 보세요. (평일 고정표·수업은 그대로 보여요)`));
   render();
   const n = new Date();
-  $("status").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
+  // 긴 안내 글씨 대신 위 막대에 짧게만 (2026-11-21 요청)
+  $("status").textContent = errs.length ? `${errs.join("·")} 못 불러옴` : `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
 }
 
 function go(n) { start = n === 0 ? home() : addDays(start, mode === "week" ? n * 7 : n); mcp ? load().catch(() => render()) : render(); }
