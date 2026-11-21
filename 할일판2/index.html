@@ -45,6 +45,7 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
 /* 노트 한 장: 3일 나란히 (휴대폰은 위아래로) */
+.day { overflow: clip; overflow-clip-margin: 40px; }
 .page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 46px; }
 .day { padding-right: 0; }
 @media (max-width: 900px) { .day { padding-right: 40px; } }
@@ -69,6 +70,15 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .hl { cursor: pointer; }
 .hl span { position: absolute; inset: 0 3px; display: flex; align-items: baseline; gap: 4px; font-family: var(--hand); font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); white-space: nowrap; overflow: visible; transform: skewX(6deg); z-index: 2; pointer-events: none; }
 .hl span b { font-weight: 700; }
+.hl span i { font-style: normal; pointer-events: auto; cursor: pointer; }
+.hl span i::before { content: "□"; font-size: .8em; margin-right: 1px; }
+.hl span i.copied { color: var(--done); text-decoration: line-through; }
+.hl.tall { top: 1px; bottom: 1px; }
+.hl span.items { gap: 0 4px; flex-wrap: wrap; align-content: center; align-items: center; font-size: 11.5px; line-height: 13px; white-space: nowrap; right: 0; overflow: hidden; }
+.hl span.items small { font-size: 9px; }
+.hl span.stack { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; font-size: 12px; line-height: 11px; }
+.hl span.stack small { font-size: 9px; line-height: 9px; }
+.it.arrow::before { display: none; }
 .hl span small { font-family: var(--num); font-size: 10px; font-weight: 500; color: var(--muted); flex: none; }
 .hl.copied { opacity: .35; }
 .hl.copied span { text-decoration: line-through; }
@@ -154,7 +164,8 @@ const BLOCK = 50;
 const EVE0 = [["18:00", "운동 + 저녁"], ["20:40", "샤오홍슈 ①", "b"], ["21:40", "샤오홍슈 ②", "b"]]; // 샤오홍슈도 파랑 (2026-11-21)
 const EVE = [...EVE0, ["22:40", "공무원 ①", "b"], ["23:40", "공무원 ②", "b"], ["24:40", "→ 내일 일정"]];
 // 7시: 기상·철봉·스케줄 확인·씻기를 하나씩 눌러 체크 (2026-11-21 요청)
-const UP = [["07:00", "기상"], ["07:00", "철봉"], ["07:00", "스케줄 확인"], ["07:00", "씻기"]];
+// 7시도 파랑 형광펜(07:00~07:50), 안의 할 일은 하나씩 눌러 체크. 07:30 제주라이브 날씨 올리기도 여기 안에
+const UP = [["07:00", "아침", "b", 50, ["기상", "철봉", "스케줄 확인", "씻기", "날씨 올리기 7:30"]]];
 // 매일(주말 포함) 07:30 제주라이브 날씨 올리기 (2026-11-21, 전에는 20:30)
 const DAILY = [["07:30", "제주라이브 날씨 올리기"]];
 // 국어 비문학 + 영어 독해는 50분 한 세트 (2026-11-21 요청)
@@ -282,12 +293,12 @@ function buildDay(d) {
   const go = first ? [[first.s - LEAVE, "→ 출발"]] : []; // 씻기는 아침 7시 루틴으로 옮김 (2026-11-21)
   for (const [s, text] of go) texts.push({ s, text, tip: `${hm(s)} ${text} (첫 수업 ${hm(first.s)} ${first.name})` });
   const goBusy = first ? [first.s - LEAVE, first.s] : null;
-  for (const f of [...DAILY, ...(FIXED[wd] || [])]) {
+  for (const f of [...(FIXED[wd] ? [] : DAILY), ...(FIXED[wd] || [])]) {
     const s = toMin(f[0]);
     if (f[2] === "b") {
-      const e = s + BLOCK;
+      const e = s + (f[3] || BLOCK);
       if (hitsYellow(s, e) || (goBusy && s < goBusy[1] && e > goBusy[0])) continue;
-      bars.push({ s, e, kind: "review", name: f[1] });
+      bars.push({ s, e, kind: "review", name: f[1], items: f[4] || null });
       continue;
     }
     if (hitsYellow(s, s + 1) || texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
@@ -327,13 +338,14 @@ function renderDay(day) {
     for (const bar of day.bars) {
       const s = Math.max(bar.s, a), e = Math.min(bar.e, b);
       if (e <= s) continue;
-      // 형광펜 안 글씨: 오른쪽 자리가 가장 넓은 칸(두 줄에 걸치면 왼쪽 끝부터 시작하는 줄)에 한 번만
-      let bestRoom = -1, bestH = 0;
-      for (let x = Math.floor(bar.s / 60); x * 60 < bar.e; x++) { const len = Math.min(bar.e, x * 60 + 60) - Math.max(bar.s, x * 60); const room = len >= 10 ? 60 - (Math.max(bar.s, x * 60) - x * 60) : -1; if (room > bestRoom) { bestRoom = room; bestH = x; } }
+      // 형광펜 안 글씨는 형광펜 시작 자리에서 시작 (2026-11-21 요청)
+      const bestH = Math.floor(bar.s / 60);
       const id = `${d}|bar|${bar.s}|${bar.name}`;
-      const el = h("div", { class: `hl ${bar.kind}` + (bar.done ? " done" : "") + (copied[id] ? " copied" : ""), "data-id": id, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}`,
+      const el = h("div", { class: `hl ${bar.kind}` + (bar.items ? " tall" : "") + (bar.done ? " done" : "") + (copied[id] ? " copied" : ""), "data-id": id, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}`,
         onclick: () => { toggleCopied(id, el); document.querySelectorAll(`.hl[data-id="${CSS.escape(id)}"]`).forEach((x) => x.classList.toggle("copied", !!copied[id])); } },
-        hr === bestH ? h("span", null, h("b", null, bar.name), h("small", null, `${hm(bar.s)}~${hm(bar.e)}`)) : null);
+        hr === bestH ? h("span", { class: bar.items ? "items" : null },
+          bar.items ? bar.items.map((t) => { const iid = `${d}|up|${t}`; const ie = h("i", { class: copied[iid] ? "copied" : null, onclick: (ev) => { ev.stopPropagation(); toggleCopied(iid, ie); } }, t); return ie; }) : h("b", null, bar.name),
+          h("small", null, `${hm(bar.s)}~${hm(bar.e)}`)) : null);
       trk.append(el);
     }
     const inRow = day.texts.filter((t) => (hr === H0 ? t.s < b : hr === H1 - 1 ? t.s >= a : t.s >= a && t.s < b)).sort((x, y) => x.s - y.s);
@@ -342,7 +354,7 @@ function renderDay(day) {
       const left = Math.max(0, Math.min(55, (grp[0].s - a) / 60 * 100));
       trk.append(h("div", { class: "tx" + (grp[0].memo ? " memo" : ""), style: `left:${left}%` }, grp.map((t) => {
         const id = `${d}|${t.s}|${t.text}`;
-        const el = h("span", { class: "it" + (t.red ? " red" : "") + (t.done ? " done" : "") + (copied[id] ? " copied" : ""), title: t.tip, onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { class: "imp" }, "!") : null, t.text);
+        const el = h("span", { class: "it" + (/^→/.test(t.text) ? " arrow" : "") + (t.red ? " red" : "") + (t.done ? " done" : "") + (copied[id] ? " copied" : ""), title: t.tip, onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { class: "imp" }, "!") : null, t.text);
         return el;
       })));
     }
@@ -397,6 +409,12 @@ function fitTexts() {
     // 그래도 넘치면(7시 줄처럼 할 일이 많을 때) 글씨를 줄이고 두 줄로
     tx.classList.remove("dense");
     if (tx.scrollWidth > tx.clientWidth) tx.classList.add("dense");
+  }
+  // 형광펜 글씨가 칸 오른쪽 밖으로 나가면 작게 두 줄로 (이름 / 시간)
+  for (const sp of document.querySelectorAll(".hl span:not(.items)")) {
+    sp.classList.remove("stack");
+    const g = sp.closest(".grid").getBoundingClientRect();
+    if (sp.getBoundingClientRect().left + sp.scrollWidth > g.right + 4) sp.classList.add("stack");
   }
 }
 
