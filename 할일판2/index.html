@@ -14,6 +14,7 @@
   --red: #c8321f;
   --hl-yellow: rgba(255, 214, 10, .62);
   --hl-blue: rgba(120, 196, 232, .55);
+  --hl-red: rgba(255, 99, 99, .5);
   --chip: #ffffff;
   --done: #a3a9ad;
   --hand: "Gaegu", "Nanum Pen Script", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
@@ -22,10 +23,10 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
-  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --chip: #24292c; --done: #646b70; color-scheme: dark } }
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --chip: #24292c; --done: #646b70; color-scheme: dark } }
 :root[data-theme="dark"] {
   --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
-  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --chip: #24292c; --done: #646b70; color-scheme: dark }
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --chip: #24292c; --done: #646b70; color-scheme: dark }
 
 body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.4; }
 .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 48px; display: grid; gap: 14px; }
@@ -40,7 +41,7 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .status { font-size: 12px; color: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 22px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
-.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); }
+.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); } .legend .p { background: var(--hl-red); }
 .legend .r { color: var(--red); font-weight: 600; }
 .banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
@@ -65,7 +66,8 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 /* 형광펜: 칸마다 따로 칠한 것처럼 살짝 비뚤게 */
 .hl { position: absolute; top: 5px; bottom: 5px; border-radius: 3px 6px 4px 7px; transform: skewX(-6deg); }
 /* 노랑 = 절대 못 바꾸는 일정(수업·교육·약속), 파랑 = 고정이지만 바꿀 수 있는 일정(전공 복습·개인공부) */
-.hl.class, .hl.appt { background: var(--hl-yellow); }
+.hl.class { background: var(--hl-yellow); }
+.hl.appt { background: var(--hl-red); } /* 개인 약속 = 빨간 형광펜 (2026-11-21 요청) */
 .hl.review { background: var(--hl-blue); }
 .hl { cursor: pointer; overflow: hidden; }
 .hl span { position: absolute; top: 0; bottom: 0; left: 3px; display: flex; align-items: baseline; gap: 4px; font-family: var(--hand); font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); white-space: nowrap; overflow: visible; transform: skewX(6deg); z-index: 2; pointer-events: none; }
@@ -162,7 +164,8 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
     </div>
   </div>
   <div class="legend">
-    <span><i class="y"></i>노랑 = 절대 못 바꾸는 일정 (수업·교육·약속)</span>
+    <span><i class="y"></i>노랑 = 절대 못 바꾸는 일정 (수업·교육)</span>
+    <span><i class="p"></i>빨강 = 개인 약속</span>
     <span><i class="b"></i>파랑 = 고정이지만 바꿀 수 있는 일정 (전공 복습·개인공부, 50분)</span>
     <span>● 검은 글씨 = 그 밖의 일정 (점 = 시작 시각)</span>
     <span class="r">빨간 글씨 = 메모</span>
