@@ -63,12 +63,17 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .hr:last-child .trk { border-bottom: 1px solid var(--grid); }
 /* 형광펜: 칸마다 따로 칠한 것처럼 살짝 비뚤게 */
 .hl { position: absolute; top: 5px; bottom: 5px; border-radius: 3px 6px 4px 7px; transform: skewX(-6deg); }
-.hl.class { background: var(--hl-yellow); }
+/* 노랑 = 절대 못 바꾸는 일정(수업·교육·약속), 파랑 = 고정이지만 바꿀 수 있는 일정(전공 복습·개인공부) */
+.hl.class, .hl.appt { background: var(--hl-yellow); }
 .hl.review { background: var(--hl-blue); }
-.hl span { position: absolute; inset: 0 4px; font-size: 10px; line-height: 20px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: skewX(6deg); opacity: .8; }
+.hl { cursor: pointer; }
+.hl span { position: absolute; inset: 0 3px; font-family: var(--hand); font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: skewX(6deg); }
+.hl.copied { opacity: .35; }
+.hl.copied span { text-decoration: line-through; }
+.hl.done span { color: var(--done); }
 /* 검은 글씨 일정: 시작 자리에 점, 글씨 아래로 줄을 칸 끝까지 */
 .tx { position: absolute; bottom: 3px; right: 0; display: flex; align-items: flex-end; gap: 10px; font-family: var(--hand); font-size: 17px; font-weight: 700; line-height: 1; padding-bottom: 2px; border-bottom: 1.5px solid currentColor; white-space: nowrap; overflow: hidden; z-index: 2; }
-.it { display: inline-flex; align-items: flex-end; gap: 3px; cursor: pointer; }
+.it { display: inline-flex; align-items: flex-end; gap: 3px; cursor: pointer; background: var(--paper); padding: 0 2px; border-radius: 3px; }
 .it::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; margin-bottom: 1px; flex: none; }
 .it.red { color: var(--red); }
 .it .imp { color: var(--red); }
@@ -113,9 +118,9 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
     </div>
   </div>
   <div class="legend">
-    <span><i class="y"></i>수업·교육 (노랑 형광펜)</span>
-    <span><i class="b"></i>전공 복습 (파랑 형광펜)</span>
-    <span>● 검은 글씨 = 일정·할 일 (점 = 시작 시각)</span>
+    <span><i class="y"></i>노랑 = 절대 못 바꾸는 일정 (수업·교육·약속)</span>
+    <span><i class="b"></i>파랑 = 고정이지만 바꿀 수 있는 일정 (전공 복습·개인공부, 50분)</span>
+    <span>● 검은 글씨 = 그 밖의 일정 (점 = 시작 시각)</span>
     <span class="r">빨간 글씨 = 메모</span>
     <span>옮겨 적은 건 눌러서 줄 긋기</span>
   </div>
@@ -139,16 +144,21 @@ const SCHOOL = [
   [3, "09:00", "10:15", "공업수학II"], [3, "10:30", "11:45", "회로이론II"],
   [4, "09:00", "10:15", "공업수학II"],
 ];
-// 평일 고정 스케줄 (노트의 검은 글씨). "major" = 전공 복습(파랑 형광펜)
-const EVE = [["18:00", "운동 + 저녁"], ["20:40", "샤오홍슈 ①"], ["21:40", "샤오홍슈 ②"], ["22:40", "공무원 ①"], ["23:40", "공무원 ②"], ["24:40", "→ 내일 일정"]];
-const UP = ["07:00", "일어나서 · 청소 · 계획 쓰기"];
+// 평일 고정 스케줄. [시각, 이름, "b"] = 파랑 형광펜(개인공부·전공 복습, 50분 고정, 이어지면 50분 + 쉬는 10분)
+// [시각, 이름] = 검은 점 글씨. 학교 가는 시간(씻기·출발)은 그날 첫 수업에서 거꾸로 계산 (2026-11-21 요청)
+const BLOCK = 50;
+const EVE = [["18:00", "운동 + 저녁"], ["20:40", "샤오홍슈 ①"], ["21:40", "샤오홍슈 ②"], ["22:40", "공무원 ①", "b"], ["23:40", "공무원 ②", "b"], ["24:40", "→ 내일 일정"]];
+const UP = ["07:00", "기상 · 철봉 · 계획 쓰기", "b"];
+const KE = "국어 비문학 + 영어 독해";
 const FIXED = {
-  1: [UP, ["08:30", "국어 비문학"], ["09:00", "영어 독해"], ["12:00", "점심"], ["12:40", "→ 이동"], ["14:50", "15:50", "major"], ...EVE],
-  2: [UP, ["08:30", "국어 비문학"], ["09:00", "영어 독해"], ["09:45", "→ 이동"], ["11:45", "12:30", "major"], ["12:30", "점심"], ["14:50", "15:50", "major"], ...EVE],
-  3: [UP, ["08:00", "→ 이동"], ["11:45", "12:00", "major"], ["12:00", "점심"], ["12:30", "13:20", "major"], ...EVE],
-  4: [UP, ["08:00", "→ 이동"], ["10:15", "11:00", "major"], ["11:00", "국어 비문학 + 영어 독해"], ["12:00", "점심"], ...EVE],
-  5: [UP, ["08:00", "국어 비문학 + 영어 독해"], ["09:00", "→ 이동"], ["12:00", "점심"], ...EVE],
+  1: [UP, ["08:30", "국어 비문학", "b"], ["09:30", "영어 독해", "b"], ["12:00", "점심"], ["14:50", "전공 복습", "b"], ...EVE],
+  2: [UP, ["08:00", KE, "b"], ["11:45", "전공 복습", "b"], ["12:40", "점심"], ["14:50", "전공 복습", "b"], ...EVE],
+  3: [UP, ["12:00", "점심"], ["12:30", "전공 복습", "b"], ...EVE],
+  4: [UP, ["10:15", "전공 복습", "b"], ["11:15", KE, "b"], ["12:10", "점심"], ...EVE],
+  5: [UP, ["08:00", KE, "b"], ["12:00", "점심"], ...EVE],
 };
+// 첫 수업 전: 40분 전 출발, 출발 30분 전(= 수업 70분 전) 씻기
+const LEAVE = 40, WASH = 30;
 // 절대 폰X 꺾쇠가 끝나는 시각 (노트 그대로: 월 10시 줄까지, 화 10:30 수업 전까지, 수·목·금 8시 줄까지). 주말은 없음
 const BRK = { 1: 11 * 60, 2: 10 * 60 + 30, 3: 9 * 60, 4: 9 * 60, 5: 9 * 60 };
 // 내일 가방 (11/23 노트)
@@ -232,8 +242,8 @@ function buildDay(d) {
     const sm = s.getHours() * 60 + s.getMinutes();
     let em = ymd(en) === d ? en.getHours() * 60 + en.getMinutes() : 1440 + en.getHours() * 60 + en.getMinutes();
     if (em <= sm) em = sm + 30;
-    if (isClassTitle(title)) bars.push({ s: sm, e: em, kind: "class", name: title });
-    else texts.push({ s: sm, text: title, done: isChecked(e), lvl: e.colorId === "11" || IMPORTANT.test(title) ? 3 : 0, real: true, tip: `${hm(sm)}–${hm(em)} ${title}` });
+    // 캘린더의 시간 있는 일정 = 수업·교육·약속 → 모두 노랑 (2026-11-21 요청)
+    bars.push({ s: sm, e: em, kind: isClassTitle(title) ? "class" : "appt", name: title, done: isChecked(e) });
   }
   if (d <= SCHOOL_END) for (const [w, s, e, n] of SCHOOL) {
     if (w !== wd) continue;
@@ -255,11 +265,23 @@ function buildDay(d) {
       texts.push({ s: sm, text: t.content, lvl: taskLevel(t), real: true, tip: `${tm}–${hm(sm + durMin(t))} ${t.content}` });
     } else todos.push({ text: t.content, lvl: taskLevel(t), late: taskDate(t) < d, id: t.id });
   }
-  // 평일 고정 스케줄: 실제 일정이 그 자리에 있으면 고정 글씨는 뺌
+  // 평일 고정 스케줄: 노랑(못 바꾸는 일정)과 겹치거나 실제 일정이 그 자리에 있으면 고정 칸은 뺌
+  const yellow = bars.filter((b) => b.kind === "class" || b.kind === "appt");
+  const hitsYellow = (s, e) => yellow.some((y) => s < y.e && e > y.s);
+  // 학교 가는 시간: 그날 첫 수업(노랑 수업·교육)에서 거꾸로
+  const first = bars.filter((b) => b.kind === "class").sort((a, b) => a.s - b.s)[0];
+  const go = first ? [[first.s - LEAVE - WASH, "씻기"], [first.s - LEAVE, "→ 출발"]] : [];
+  for (const [s, text] of go) texts.push({ s, text, tip: `${hm(s)} ${text} (첫 수업 ${hm(first.s)} ${first.name})` });
+  const goBusy = first ? [first.s - LEAVE - WASH, first.s] : null;
   for (const f of FIXED[wd] || []) {
-    if (f[2] === "major") { bars.push({ s: toMin(f[0]), e: toMin(f[1]), kind: "review", name: "전공 복습" }); continue; }
     const s = toMin(f[0]);
-    if (texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
+    if (f[2] === "b") {
+      const e = s + BLOCK;
+      if (hitsYellow(s, e) || (goBusy && s < goBusy[1] && e > goBusy[0])) continue;
+      bars.push({ s, e, kind: "review", name: f[1] });
+      continue;
+    }
+    if (hitsYellow(s, s + 1) || texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
     texts.push({ s, text: f[1], tip: `고정 · ${hm(s)} ${f[1]}` });
   }
   // 날씨지도(20:30) 빨간 글씨는 평일만 (주말 빨간 글씨 없앰, 2026-11-21)
@@ -298,7 +320,14 @@ function renderDay(day) {
     for (const bar of day.bars) {
       const s = Math.max(bar.s, a), e = Math.min(bar.e, b);
       if (e <= s) continue;
-      trk.append(h("div", { class: `hl ${bar.kind}`, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}` }, bar.s >= a && e - s >= 30 ? h("span", null, bar.name) : null));
+      // 형광펜 안 글씨: 형광펜이 가장 길게 칠해진 칸에 한 번만
+      let best = -1, bestH = 0;
+      for (let x = Math.floor(bar.s / 60); x * 60 < bar.e; x++) { const len = Math.min(bar.e, x * 60 + 60) - Math.max(bar.s, x * 60); if (len > best) { best = len; bestH = x; } }
+      const id = `${d}|bar|${bar.s}|${bar.name}`;
+      const el = h("div", { class: `hl ${bar.kind}` + (bar.done ? " done" : "") + (copied[id] ? " copied" : ""), "data-id": id, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}`,
+        onclick: () => { toggleCopied(id, el); document.querySelectorAll(`.hl[data-id="${CSS.escape(id)}"]`).forEach((x) => x.classList.toggle("copied", !!copied[id])); } },
+        hr === bestH ? h("span", null, bar.name) : null);
+      trk.append(el);
     }
     const inRow = day.texts.filter((t) => (hr === H0 ? t.s < b : hr === H1 - 1 ? t.s >= a : t.s >= a && t.s < b)).sort((x, y) => x.s - y.s);
     for (const grp of [inRow.filter((t) => !t.memo), inRow.filter((t) => t.memo)]) {
