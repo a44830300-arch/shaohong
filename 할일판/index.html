@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>샤오홍슈 작업목록</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 할 일판 1 = 샤오홍슈 작업목록 전용 (2026-11-24 요청, "할일판2가 스케줄 관리표고 할일판 1은 오로지 샤오홍슈 작업목록만").
+   일주일 시간표·학교/공무원/마케팅 할 일·블로그 체험단·명령 칸은 뺐다. 스케줄은 할일판2에서 본다.
+   순서: 한눈에(숫자 4칸) → 🔥 지금 할 일 → 📅 이번 주 → 🛠️ 진행 중인 게시물 → 📌 날짜 없는 일 → 📋 게시물 후보 → 📊 막대 일정표 */
+:root {
+  --bg: #f6f7f5; --surface: #ffffff; --line: #dfe3de; --fg: #1f2622; --muted: #66706a;
+  --accent: #e8731c; --accent-soft: #fdeedf; --red: #d33a2c; --red-soft: #fbe6e3;
+  --amber: #c98a00; --amber-soft: #fbf1d6; --school: #3b6fd8; --school-soft: #e6eefc;
+  --done: #9aa39d; --green-soft: #e1f2dc; --green: #3f8f3a;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --gt-blue: #a9cbea; --gt-orange: #ebc08a; --gt-green: #b9ddb3;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151a17; --surface: #1d2420; --line: #2f3833; --fg: #e9eee9; --muted: #9aa59e;
+  --accent: #f28a3a; --accent-soft: #3a2a1c; --red: #ff6f61; --red-soft: #3b2220;
+  --amber: #f0b429; --amber-soft: #3a3019; --school: #7aa2f7; --school-soft: #1f2a40; --done: #66706a; --green-soft: #1f3320; --green: #7cc576; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #151a17; --surface: #1d2420; --line: #2f3833; --fg: #e9eee9; --muted: #9aa59e;
+  --accent: #f28a3a; --accent-soft: #3a2a1c; --red: #ff6f61; --red-soft: #3b2220;
+  --amber: #f0b429; --amber-soft: #3a3019; --school: #7aa2f7; --school-soft: #1f2a40; --done: #66706a; --green-soft: #1f3320; --green: #7cc576; color-scheme: dark }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; display: grid; gap: 28px; }
+.wrap > section { min-width: 0; scroll-margin-top: 12px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+h1 { margin: 0; font-size: 26px; font-weight: 700; text-wrap: balance; }
+h1 small { display: block; font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: .02em; }
+h1 .total { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 8px; white-space: nowrap; }
+h1 .total b { font-family: var(--font-num); font-weight: 500; color: var(--fg); }
+h2 { margin: 0 0 10px; font-size: 17px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+h2 .sub { font-size: 12px; font-weight: 500; color: var(--muted); }
+button { font: inherit; cursor: pointer; touch-action: manipulation; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:focus-visible, .check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { font-size: 12px; color: var(--muted); }
+
+/* 작업 타이머 + 스톱워치 (그대로 둠) */
+.tools { display: grid; gap: 6px; }
+.timer { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px 8px; }
+.timer::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--p, 0) * 100%); background: var(--accent); }
+.t-time { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 22px; min-width: 7ch; text-align: center; }
+.t-go { min-width: 60px; }
+.t-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.t-presets button { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 3px 9px; font-size: 12px; }
+.t-presets button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.timer.ring .t-time { color: var(--red); }
+.sws { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.swc { position: relative; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.swm { display: grid; justify-items: center; width: 100%; border: 0; background: none; color: var(--fg); padding: 4px 4px 3px; border-radius: 10px; }
+.swm .l { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.3; }
+.swm .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; line-height: 1.25; }
+.swr, .swe { position: absolute; top: 0; border: 0; background: none; color: var(--muted); font-size: 11px; line-height: 1; padding: 3px 4px; opacity: .7; }
+.swr { right: 0; } .swe { left: 0; }
+.sw-edit { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 6px 8px; }
+.sw-edit input { width: 3.6em; font: inherit; font-family: var(--font-num); padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.swc.on { border-color: var(--accent); background: var(--accent-soft); }
+.swc.on .l, .swc.on .v { color: var(--accent); }
+.swm:focus-visible, .swr:focus-visible, .swe:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (prefers-reduced-motion: no-preference) { .timer.ring .t-time { animation: tblink 1s steps(2) infinite; } }
+@keyframes tblink { 50% { opacity: .2; } }
+.banner { border: 1px solid var(--amber); background: var(--amber-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* 한눈에: 숫자 4칸. 누르면 그 칸으로 내려감 */
+.glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gl { display: grid; gap: 2px; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.gl .k { font-size: 12px; font-weight: 600; color: var(--muted); }
+.gl .v { font-family: var(--font-num); font-size: 26px; line-height: 1.15; }
+.gl .v small { font-size: 14px; color: var(--muted); }
+.gl .n { font-size: 12px; color: var(--muted); min-height: 1.5em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.gl.hot { border-color: var(--red); background: var(--red-soft); }
+.gl.hot .v { color: var(--red); }
+.gl.full { border-color: var(--green); background: var(--green-soft); }
+.gl.full .v { color: var(--green); }
+@media (hover: hover) { .gl:hover { border-color: var(--accent); } }
+
+/* 목록 줄 */
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); align-items: start; }
+.row:first-child { border-top: 0; }
+.row.lvl3 { box-shadow: inset 3px 0 0 var(--red); }
+.row.lvl2 { box-shadow: inset 3px 0 0 var(--amber); }
+.row .main { min-width: 0; display: grid; gap: 2px; }
+.row .title { font-weight: 500; overflow-wrap: anywhere; }
+.row .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.row .meta .late { color: var(--red); font-weight: 600; }
+.time { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); margin-right: 6px; }
+.mark { margin-right: 4px; }
+.order { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; margin-right: 6px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-family: var(--font-num); font-size: 12px; font-weight: 500; vertical-align: 1px; }
+.order.next { background: var(--accent); border-color: var(--accent); color: #fff; }
+.row.done .order { background: transparent; color: var(--done); }
+.row.done > .main > .title { text-decoration: line-through; color: var(--done); }
+.row.busy { opacity: .55; pointer-events: none; }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; padding: 0; display: grid; place-items: center; color: transparent; font-size: 13px; line-height: 1; margin-top: 1px; }
+.lvl3 > .check { border-color: var(--red); }
+.lvl2 > .check { border-color: var(--amber); }
+@media (hover: hover) { .btn:hover { border-color: var(--accent); } .check:hover { background: var(--accent-soft); } }
+.check:active { background: var(--accent-soft); }
+.done > .check { background: var(--done); border-color: var(--done); color: var(--surface); }
+.skeleton, .empty { color: var(--muted); padding: 14px; font-size: 14px; }
+.day-h { padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-top: 1px solid var(--line); }
+.day-h:first-child { border-top: 0; }
+.day-h + .row { border-top: 0; }
+.day-h.today { color: var(--accent); }
+
+/* 진행 중인 게시물: 카드마다 남은 단계 + 다음 단계 강조 */
+.projs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+.pj { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.pj-h { padding: 10px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.pj-h b { font-size: 15px; overflow-wrap: anywhere; }
+.pj-h .info { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.pj-h .desc { font-size: 12px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pj .row { padding: 7px 14px; }
+.pj .row .title { font-weight: 400; font-size: 14px; }
+.pj .row.nextstep { background: var(--accent-soft); }
+.pj .row.nextstep .title { font-weight: 600; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 0 7px; margin-left: 6px; vertical-align: 1px; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent); }
+.rep { font-size: 11px; color: var(--muted); margin-left: 6px; white-space: nowrap; }
+
+/* 📋 게시물 후보 (2026-11-17 요청): 계정별 목록, 체크 = 'Todoist 라벨 고름' (완료 아님) */
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.pk-acc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.pk-acc h3 { margin: 0; padding: 10px 14px; font-size: 15px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pk-acc h3 span { font-size: 12px; font-weight: 500; color: var(--muted); }
+.pk-acc h3 span b { color: var(--green); font-weight: 700; }
+.pk-acc .row .check { border-radius: 5px; }
+.pk-acc .row.picked { background: var(--green-soft); }
+.pk-acc .row.picked .check { background: var(--green); border-color: var(--green); color: #fff; }
+.pk-acc .row .meta { white-space: pre-line; }
+.pk-goal { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; }
+.pk-goal.full { border-color: var(--green); background: var(--green-soft); }
+.pk-goal.over { border-color: var(--red); background: var(--red-soft); }
+.pk-goal .big { font-size: 15px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.pk-goal .big b { font-family: var(--font-num); font-size: 24px; font-weight: 500; color: var(--green); }
+.pk-goal.over .big b { color: var(--red); }
+.pk-dots { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.pk-dots i { height: 8px; border-radius: 4px; background: var(--line); }
+.pk-dots i.on { background: var(--green); }
+.pk-chosen { display: flex; flex-wrap: wrap; gap: 6px; }
+.pk-chosen span { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--green); overflow-wrap: anywhere; }
+.pk-goal .hint { font-size: 13px; color: var(--muted); }
+.pk-goal.full .hint { color: var(--green); font-weight: 600; }
+.pk-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-top: 1px solid var(--line); }
+.pk-acc h3 + .pk-sub { border-top: 0; }
+.pk-sub span { font-weight: 500; }
+.pk-sub + .row { border-top: 0; }
+.pk-tag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--school); background: var(--school-soft); border-radius: 999px; padding: 0 7px; margin-right: 6px; vertical-align: 1px; }
+.pk-cols { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.pk-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.pk-col:empty { display: none; }
+
+/* 📊 막대 일정표 (샤오홍슈만) */
+.gt { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); -webkit-overflow-scrolling: touch; }
+.gt-grid { display: grid; grid-template-columns: 200px 1fr; min-width: 700px; }
+.gt-lab { position: sticky; left: 0; z-index: 2; background: var(--surface); padding: 0 10px 0 12px; font-size: 13px; display: flex; align-items: center; min-height: 30px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.gt-lab.grp { font-weight: 700; min-height: 34px; }
+.gt-lab.it { color: var(--muted); padding-left: 22px; }
+.gt-lab.head { border-top: 0; }
+.gt-track { position: relative; min-height: 30px; border-top: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / 9), var(--bg) calc(100% / 9) calc(200% / 9)); }
+.gt-track.grp { min-height: 34px; }
+.gt-tip { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, calc(-100% - 10px)); background: var(--fg); color: var(--bg); border-radius: 6px; padding: 3px 8px; font-size: 12px; font-family: var(--font-num); white-space: nowrap; }
+.gt-tip.we { background: var(--accent); color: #fff; }
+.gt-head { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-top: 0; }
+.gt-head span { padding: 6px 2px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.3; }
+.gt-head b { display: block; font-size: 12px; color: var(--fg); font-weight: 700; min-height: 1.3em; }
+.gt-bar { position: absolute; top: 50%; height: 10px; transform: translateY(-50%); border-radius: 5px; }
+.gt-dot { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; }
+.gt-b { background: var(--gt-blue); } .gt-o { background: var(--gt-orange); } .gt-g { background: var(--gt-green); }
+.gt-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); opacity: .8; pointer-events: none; }
+.gt-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--muted); padding: 8px 12px; border-top: 1px solid var(--line); }
+.gt-foot i { display: inline-block; width: 22px; height: 8px; border-radius: 4px; margin-right: 5px; vertical-align: 1px; }
+.gt-foot .note { margin-left: auto; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 14px; display: flex; gap: 12px; align-items: center; max-width: calc(100% - 32px); z-index: 20; }
+.toast button { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 0; }
+@media (prefers-reduced-motion: no-preference) { .row { transition: opacity .2s; } html { scroll-behavior: smooth; } }
+
+/* ---------- 휴대폰 ---------- */
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .wrap { padding-block: 0 56px; gap: 22px; }
+  header { position: sticky; top: 0; z-index: 9; background: var(--bg); padding-block: max(8px, env(safe-area-inset-top, 0px)) 8px; align-items: center; row-gap: 6px; column-gap: 8px; box-shadow: 0 0 0 100vmax var(--bg); clip-path: inset(0 -100vmax); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 18px; line-height: 1.2; }
+  h1 small { display: inline; font-size: 11px; margin-right: 6px; }
+  h1 .total { font-size: 11px; margin-left: 6px; }
+  header .status { display: none; }
+  header .btn { padding: 4px 10px; font-size: 12px; }
+  .tools { order: 3; flex: 1 1 100%; gap: 4px; }
+  .timer { flex-wrap: nowrap; gap: 5px; padding: 3px 6px 5px; border-radius: 10px; }
+  .t-time { font-size: 18px; min-width: 6ch; }
+  .t-go { min-width: 46px; flex: none; }
+  .t-presets { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .t-presets button { flex: none; padding: 3px 8px; font-size: 11px; }
+  .timer.running .t-presets { display: none; }
+  .swm { padding: 2px; }
+  .swm .l { font-size: 10px; line-height: 1.2; }
+  .swm .v { font-size: 13px; line-height: 1.2; }
+  .wrap > section, .glance { scroll-margin-top: 150px; }
+  .glance { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+  .gl { padding: 8px 12px; }
+  .gl .v { font-size: 22px; }
+  h2 { font-size: 18px; }
+  .row { grid-template-columns: 32px 1fr; padding: 11px 14px; gap: 12px; }
+  .check { width: 28px; height: 28px; font-size: 15px; margin-top: -2px; }
+  .pj .row { padding: 8px 14px; }
+  .row .meta { font-size: 13px; }
+  .gt-grid { grid-template-columns: 136px 1fr; min-width: 600px; }
+  .gt-lab { font-size: 12px; padding-right: 6px; }
+  .gt-lab.it { padding-left: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small id="today-label">오늘</small>샤오홍슈 작업목록<span class="total">오늘 총 <b id="w-total">0분</b></span></h1>
+    <div class="tools">
+      <div class="timer" id="timer" role="group" aria-label="작업 타이머">
+        <span class="t-time" id="t-time">40:00</span>
+        <button class="btn primary t-go" id="t-go" type="button">시작</button>
+        <button class="btn" id="t-reset" type="button" aria-label="처음으로">↺</button>
+        <div class="t-presets" id="t-presets">
+          <button type="button" data-min="10">10분</button>
+          <button type="button" data-min="40">40분</button>
+          <button type="button" data-min="60">1시간</button>
+          <button type="button" data-min="80">1시간 20분</button>
+          <button type="button" data-min="120">2시간</button>
+        </div>
+      </div>
+      <div class="sws" id="sws" role="group" aria-label="과목별 스톱워치"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="status" id="status">불러오는 중…</span>
+      <button class="btn" id="refresh" type="button">새로고침</button>
+    </div>
+  </header>
+
+  <div id="notices" style="display:grid;gap:8px"></div>
+
+  <nav class="glance" id="glance" aria-label="한눈에"></nav>
+
+  <section id="sec-now">
+    <h2>🔥 지금 할 일 <span class="sub">오늘까지 할 샤오홍슈 일 · 번호 = 크리링 추천 순서(주황 = 지금 할 것) · 동그라미를 누르면 Todoist에서 완료</span></h2>
+    <div class="list" id="now"><div class="skeleton">Todoist에서 샤오홍슈 일을 가져오고 있어요.</div></div>
+  </section>
+
+  <section id="sec-week">
+    <h2>📅 이번 주 <span class="sub">내일부터 7일 동안 날짜가 잡힌 일</span></h2>
+    <div class="list" id="week"><div class="skeleton">불러오는 중…</div></div>
+  </section>
+
+  <section id="sec-proj">
+    <h2>🛠️ 진행 중인 게시물 <span class="sub">게시물마다 남은 단계 · 주황 줄 = 다음에 할 단계</span></h2>
+    <div class="projs" id="projs"><div class="skeleton">불러오는 중…</div></div>
+  </section>
+
+  <section id="sec-undated">
+    <h2>📌 날짜 없는 일</h2>
+    <div class="list" id="undated"><div class="skeleton">불러오는 중…</div></div>
+  </section>
+
+  <section id="sec-picks">
+    <h2>📋 게시물 후보 <span class="sub">두 계정 합쳐 7개를 고르면 그 주에 올려요 · 번호 = 크리링 추천 순서(주황 1~7 = 이번 주 추천) · ✍️ 내가 적은 후보 / 💡 아이디어 칸 · 네모를 누르면 '고름'(완료 아님)</span></h2>
+    <div class="picks" id="picks"><div class="skeleton">불러오는 중…</div></div>
+  </section>
+
+  <section id="sec-gantt">
+    <h2>📊 샤오홍슈 막대 일정표 <span class="sub">11월 1주차 ~ 12월 5주차 · 축제 기간·고정 게시·목표 · 주황 세로줄 = 오늘</span></h2>
+    <div class="gt" id="gantt"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const TD = "Todoist";
+const XHS_SECTION = "6hqfPfPwmP6H8C76";   // 💼 일 > 샤오홍슈
+const IDEA_SECTION = "6hqfQg4Q9MMprpjc";  // 💼 일 > 샤오홍슈 아이디어 (게시물 후보 칸에서 따로 보여 줌)
+// 다른 칸에 있어도 이름에 이 말이 있으면 샤오홍슈 일로 봄
+const XHS_WORDS = /샤오홍슈|날씨달력|축제달력|날씨지도|옷차림|게시물|nadllog|나들로그|제주라이브|레퍼런스|썸네일|캡션|르방/;
+const WD = ["일","월","화","수","목","금","토"];
+const IMPORTANT_WORDS = /과제|업로드|올리기/;
+let mcp = null;
+let state = { work: [], picks: [], ideas: [], errors: {} };
+let lastLoad = 0;
+
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+
+// 날짜 도우미 (보는 사람의 지역 시간 기준)
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const parseYmd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const dayDiff = (a, b) => Math.round((parseYmd(a) - parseYmd(b)) / 86400000);
+const md = (s) => { const d = parseYmd(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
+const mdw = (s) => `${md(s)} (${WD[parseYmd(s).getDay()]})`;
+let TODAY = ymd(new Date());
+const taskDate = (t) => (t.dueDate ? t.dueDate.slice(0, 10) : null);
+const taskTime = (t) => (t.dueDate && t.dueDate.length > 10 ? t.dueDate.slice(11, 16) : null);
+
+// 이름 끝 "(2시간 30분)"처럼 적힌 걸리는 시간
+function nameMin(t) {
+  const m = (t.content || "").match(/\((?:(\d+)시간)?\s*(?:(\d+)분)?\)\s*$/);
+  return m && (m[1] || m[2]) ? Number(m[1] || 0) * 60 + Number(m[2] || 0) : 0;
+}
+// 중요도: p1·"올리기/업로드" = 꼭(빨강), p2 = 중요(노랑)
+const taskLevel = (t) => (t.priority === "p1" || IMPORTANT_WORDS.test(t.content) ? 3 : t.priority === "p2" ? 2 : 0);
+const MARK = { 3: "🔴", 2: "🟠", 0: "" };
+// 반복 설명을 한국어로 짧게 ("every saturday" → 매주 토)
+const EN_WD = { sunday: "일", monday: "월", tuesday: "화", wednesday: "수", thursday: "목", friday: "금", saturday: "토" };
+function repLabel(t) {
+  const r = typeof t.recurring === "string" ? t.recurring.toLowerCase() : "";
+  if (!r) return null;
+  const w = r.match(/every (sunday|monday|tuesday|wednesday|thursday|friday|saturday)/);
+  if (w) return `🔁 매주 ${EN_WD[w[1]]}`;
+  if (/every day|daily|매일/.test(r)) return "🔁 매일";
+  return "🔁 반복";
+}
+
+// ---------- 체크(완료) ----------
+const doneKeys = new Set();
+let toastTimer = null;
+function toast(msg, action) {
+  const el = $("toast"); el.replaceChildren(h("span", null, msg));
+  if (action) el.append(h("button", { type: "button", onclick: () => { el.hidden = true; action.fn(); } }, action.label));
+  el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.hidden = true), 6000);
+}
+function errText(err) {
+  switch (err?.code) {
+    case "needs_reauth": return "Todoist 연결이 끊겼어요. claude.ai 설정 → 커넥터에서 다시 연결해 주세요.";
+    case "server_not_connected": return "Todoist가 연결되어 있지 않아요. claude.ai 설정 → 커넥터에서 추가해 주세요.";
+    case "approval_required": case "not_in_manifest": case "consent_required": return "Todoist 사용을 허용해야 해요. 다시 눌러서 허용해 주세요.";
+    case "server_unavailable": return "Todoist가 잠시 응답하지 않아요. 잠시 뒤 새로고침해 주세요.";
+    case "tool_error": return `Todoist에서 처리하지 못했어요: ${err.message || ""}`.trim();
+    default: return "Todoist에 연결하지 못했어요. 새로고침해 보세요.";
+  }
+}
+const isDone = (t) => doneKeys.has(t.id);
+async function setDone(t, el, on) {
+  if (!mcp) return;
+  el.classList.add("busy");
+  try {
+    await mcp.callTool(TD, on ? "complete-tasks" : "uncomplete-tasks", { ids: [t.id] }, { cache: false });
+    on ? doneKeys.add(t.id) : doneKeys.delete(t.id);
+    render();
+    if (on) toast(t.recurring ? "체크했어요 (반복 일이라 다음 날짜로 넘어가요)" : "체크했어요", { label: "되돌리기", fn: () => setDone(t, el, false) });
+    else toast("체크를 풀었어요");
+  } catch (err) {
+    el.classList.remove("busy");
+    toast(errText(err));
+  }
+}
+const checkBtn = (t, el) => h("button", { class: "check", type: "button", "aria-label": `${t.content} 체크`, onclick: () => setDone(t, el, !isDone(t)) }, "✓");
+
+// ---------- 묶기 ----------
+const byName = (a, b) => a.content.localeCompare(b.content, "ko");
+function buckets() {
+  const all = state.work;
+  const ids = new Set(all.map((t) => t.id));
+  const kidsOf = {};
+  for (const t of all) if (t.parentId && ids.has(t.parentId)) (kidsOf[t.parentId] ||= []).push(t);
+  for (const k of Object.values(kidsOf)) k.sort(byName);
+  const parentOf = (t) => (t.parentId ? all.find((p) => p.id === t.parentId) : null);
+  const weekEnd = ymd(addDays(parseYmd(TODAY), 7));
+  const now = [], week = [], projs = [], undated = [];
+  for (const t of all) {
+    const d = taskDate(t);
+    const isKid = t.parentId && ids.has(t.parentId);
+    // 날짜가 있으면(단계여도) 날짜 칸에 나옴
+    if (d && d <= TODAY) now.push(t);
+    else if (d && d <= weekEnd) week.push(t);
+    if (isKid) continue;
+    if (kidsOf[t.id]?.length) projs.push(t);
+    else if (!d) undated.push(t);
+  }
+  return { now, week, projs, undated, kidsOf, parentOf };
+}
+
+// 지금 할 일 추천 순서: 꼭(🔴) → 밀린 일 → 중요(🟠) → 나머지, 같으면 시간순. 끝낸 일은 맨 뒤
+function orderNow(list) {
+  const rank = (t) => (taskLevel(t) === 3 ? 0 : taskDate(t) < TODAY ? 1 : taskLevel(t) === 2 ? 2 : 3);
+  return list.slice().sort((a, b) => isDone(a) - isDone(b) || rank(a) - rank(b) || (taskTime(a) || "99").localeCompare(taskTime(b) || "99") || byName(a, b));
+}
+
+function taskRow(t, { order, next, parent, showDate } = {}) {
+  const lv = taskLevel(t), d = taskDate(t), tm = taskTime(t);
+  const el = h("div", { class: `row lvl${lv}` + (isDone(t) ? " done" : "") });
+  const late = d && d < TODAY;
+  const mins = nameMin(t);
+  const metaBits = [
+    late ? h("span", { class: "late" }, `${mdw(d)}부터 밀림`) : null,
+    showDate && d && !late ? h("span", null, mdw(d)) : null,
+    parent ? h("span", null, `게시물: ${parent.content.replace(/\s*\(게시물\)\s*$/, "")}`) : null,
+    repLabel(t) ? h("span", null, repLabel(t)) : null,
+  ].filter(Boolean);
+  el.append(checkBtn(t, el), h("div", { class: "main" },
+    h("div", { class: "title" },
+      order ? h("span", { class: "order" + (next ? " next" : ""), "aria-label": `${order}번째` }, order) : null,
+      lv ? h("span", { class: "mark" }, MARK[lv]) : null,
+      tm ? h("span", { class: "time" }, tm) : null,
+      t.content.replace(/\s*\((?:\d+시간)?\s*(?:\d+분)?\)\s*$/, ""),
+      mins ? h("span", { class: "rep" }, `⏱ ${tLabel(mins * 60000)}`) : null),
+    metaBits.length ? h("div", { class: "meta" }, metaBits) : null));
+  return el;
+}
+
+// ---------- 그리기 ----------
+function render() {
+  const b = buckets();
+
+  // 🔥 지금 할 일
+  const nowBox = $("now"); nowBox.replaceChildren();
+  const nowList = orderNow(b.now);
+  if (!nowList.length) nowBox.append(h("div", { class: "empty" }, state.errors.any ? "불러오지 못했어요. 위 안내를 확인해 주세요." : "오늘까지 할 샤오홍슈 일은 다 끝났어요 🎉"));
+  let n = 0, nx = 0;
+  for (const t of nowList) {
+    const next = !isDone(t) && nx < 2 && ++nx > 0;
+    nowBox.append(taskRow(t, { order: ++n, next, parent: b.parentOf(t) }));
+  }
+
+  // 📅 이번 주 (날짜별로 묶음)
+  const weekBox = $("week"); weekBox.replaceChildren();
+  const byDay = {};
+  for (const t of b.week) (byDay[taskDate(t)] ||= []).push(t);
+  const days = Object.keys(byDay).sort();
+  if (!days.length) weekBox.append(h("div", { class: "empty" }, "이번 주에 날짜가 잡힌 샤오홍슈 일이 없어요."));
+  for (const d of days) {
+    const diff = dayDiff(d, TODAY);
+    weekBox.append(h("div", { class: "day-h" + (diff === 1 ? " today" : "") }, `${mdw(d)}${diff === 1 ? " · 내일" : ""}`));
+    byDay[d].sort((x, y) => (taskTime(x) || "99").localeCompare(taskTime(y) || "99") || byName(x, y)).forEach((t) => weekBox.append(taskRow(t, { parent: b.parentOf(t) })));
+  }
+
+  // 🛠️ 진행 중인 게시물
+  const pjBox = $("projs"); pjBox.replaceChildren();
+  if (!b.projs.length) pjBox.append(h("div", { class: "list" }, h("div", { class: "empty" }, "단계로 나눠 둔 게시물이 없어요.")));
+  const pjInfo = b.projs.map((p) => {
+    const kids = b.kidsOf[p.id];
+    const left = kids.filter((k) => !isDone(k));
+    return { p, kids, left, mins: left.reduce((s, k) => s + nameMin(k), 0) };
+  }).sort((x, y) => x.left.length - y.left.length || byName(x.p, y.p));
+  for (const { p, kids, left, mins } of pjInfo) {
+    const nextKid = left[0];
+    const desc = (p.description || "").split("\n")[0];
+    const card = h("div", { class: "pj" }, h("div", { class: "pj-h" },
+      h("b", null, MARK[taskLevel(p)] ? MARK[taskLevel(p)] + " " : "", p.content.replace(/\s*\(게시물\)\s*$/, "")),
+      h("div", { class: "info" },
+        h("span", null, left.length ? `남은 단계 ${left.length}개` : "단계 다 끝남 ✅"),
+        mins ? h("span", null, `남은 시간 약 ${tLabel(mins * 60000)}`) : null,
+        taskDate(p) ? h("span", null, mdw(taskDate(p))) : null),
+      desc ? h("div", { class: "desc", title: p.description }, desc) : null));
+    for (const k of kids) {
+      const row = taskRow(k, { showDate: true });
+      if (k === nextKid) { row.classList.add("nextstep"); row.querySelector(".title").append(h("span", { class: "tag" }, "다음")); }
+      card.append(row);
+    }
+    pjBox.append(card);
+  }
+
+  // 📌 날짜 없는 일
+  const udBox = $("undated"); udBox.replaceChildren();
+  if (!b.undated.length) udBox.append(h("div", { class: "empty" }, "날짜 없는 샤오홍슈 일이 없어요."));
+  for (const t of b.undated.slice().sort(byName)) udBox.append(taskRow(t));
+
+  renderGlance(b, nowList, pjInfo);
+}
+
+// 한눈에: 숫자 4칸
+function renderGlance(b, nowList, pjInfo) {
+  const left = nowList.filter((t) => !isDone(t));
+  const late = left.filter((t) => taskDate(t) < TODAY).length;
+  const weekLeft = b.week.filter((t) => !isDone(t));
+  const firstWeek = weekLeft.slice().sort((x, y) => taskDate(x).localeCompare(taskDate(y)))[0];
+  const picked = pickedCount();
+  const tile = (href, k, v, note, cls) => h("a", { class: "gl" + (cls ? " " + cls : ""), href }, h("span", { class: "k" }, k), h("span", { class: "v" }, v), h("span", { class: "n" }, note || " "));
+  $("glance").replaceChildren(
+    tile("#sec-now", "🔥 지금 할 일", String(left.length), late ? `그중 밀린 일 ${late}개` : left[0] ? `1번: ${left[0].content}` : "다 끝났어요", late ? "hot" : ""),
+    tile("#sec-week", "📅 이번 주", String(weekLeft.length), firstWeek ? `다음: ${mdw(taskDate(firstWeek))} ${firstWeek.content}` : "잡힌 일 없음"),
+    tile("#sec-proj", "🛠️ 진행 중 게시물", String(pjInfo.filter((x) => x.left.length).length), pjInfo[0]?.left[0] ? `다음 단계: ${pjInfo[0].left[0].content}` : ""),
+    h("a", { class: "gl" + (picked === PICK_GOAL ? " full" : picked > PICK_GOAL ? " hot" : ""), href: "#sec-picks" }, h("span", { class: "k" }, "📋 이번 주 고른 후보"), h("span", { class: "v" }, String(picked), h("small", null, ` / ${PICK_GOAL}`)), h("span", { class: "n" }, picked < PICK_GOAL ? `${PICK_GOAL - picked}개 더 고르기` : picked === PICK_GOAL ? "다 골랐어요" : `${picked - PICK_GOAL}개 많아요`)));
+}
+
+// ---------- 📋 게시물 후보 (2026-11-17 요청) ----------
+// Todoist "💼 일 > 샤오홍슈 아이디어"의 "📋 ○○ 게시물 후보" 묶음 밑 할 일 + 아이디어 칸 전체를 계정별로 보여 줌.
+// 체크하면 완료가 아니라 '고름' 라벨을 붙였다 뗌 → 강정준비준이 고른 것만 일정에 넣음
+const PICK_LABEL = "고름";
+const isPicked = (t) => (t.labels || []).includes(PICK_LABEL);
+// 100개가 넘어도 하나도 빠지지 않게 다음 쪽(cursor)까지 끝까지 불러옴 (2026-11-20 요청)
+async function findAll(args) {
+  const out = [];
+  let cursor = null;
+  for (let i = 0; i < 20; i++) {
+    const p = (await mcp.callTool(TD, "find-tasks", { ...args, limit: 100, ...(cursor ? { cursor } : {}) }, { cache: false })).payload || {};
+    out.push(...(p.tasks || []));
+    cursor = p.nextCursor || null;
+    if (!cursor || p.hasMore === false) break;
+  }
+  return out;
+}
+async function loadPicks() {
+  const all = await findAll({ sectionId: IDEA_SECTION });
+  const heads = all.filter((t) => !t.parentId && /게시물 후보/.test(t.content));
+  state.picks = await Promise.all(heads.map(async (hd) => {
+    const kids = await findAll({ parentId: hd.id });
+    return { head: hd, items: kids.filter((k) => k.parentId === hd.id) };
+  }));
+  state.ideas = all.filter((t) => !t.parentId && !/게시물 후보/.test(t.content));
+}
+async function togglePick(t, el) {
+  if (!mcp) return;
+  const on = !isPicked(t);
+  const labels = on ? [...(t.labels || []), PICK_LABEL] : (t.labels || []).filter((l) => l !== PICK_LABEL);
+  el.classList.add("busy");
+  try {
+    await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
+    t.labels = labels;
+    renderPicks(); render();
+    const n = pickedCount();
+    toast(!on ? "고르기를 풀었어요" : n === PICK_GOAL ? "7개 다 골랐어요! 크리링에게 '고른 거 넣어줘'라고 하면 이번 주에 넣어요" : n > PICK_GOAL ? `${n - PICK_GOAL}개 많아요. 7개만 남겨 주세요` : `골랐어요 (${n}/${PICK_GOAL})`);
+  } catch (err) {
+    el.classList.remove("busy");
+    toast(errText(err));
+  }
+}
+const PICK_GOAL = 7;
+const accOf = (head) => head.content.replace(/^\*\s*/, "").replace(/^📋\s*/, "").replace(/\s*게시물 후보\s*$/, "");
+const accIcon = (name) => (/제주라이브/.test(name) ? "🆘" : /나들로그/.test(name) ? "🗿" : "💡");
+const ideaAcc = (t) => (/^🆘|제주라이브/.test(t.content) ? "제주라이브" : /^🗿|나들로그/.test(t.content) ? "나들로그" : null);
+const isKrillin = (t) => /크리링 판단/.test(t.description || "");
+const pickables = () => [
+  ...state.picks.flatMap(({ head, items }) => items.map((t) => [accOf(head), t])),
+  ...state.ideas.map((t) => [ideaAcc(t) || "", t]),
+];
+const pickedCount = () => pickables().filter(([, t]) => isPicked(t)).length;
+const pickName = (t) => t.content.replace(/^\S+\s*(나들로그|제주라이브)\s*:\s*/, "").replace(/\s*\((?:\d+시간)?\s*(?:\d+분)?\)\s*$/, "");
+// 크리링 추천 순서 (2026-11-18 요청): [할 일 id, 이유]. 1~7 = 이번 주 추천(주황 번호). 목록에 없는 새 후보는 맨 뒤
+const PICK_ORDER = [
+  ["6hqrXmF6Xqm9GHrc", "이미 고름 · VOL.01 썸네일 완성 · 동백 제철"],
+  ["6j34Qwx4HjQqF826", "제주라이브 기본 글 · 다른 글이 모두 이 글로 이어짐"],
+  ["6j34cRH7Q4xGXXhc", "11월 월간 목표(휴애리 홍보 디자인) · 11월 안에"],
+  ["6j34fQRGhHM8Qpx6", "1번 동백 글과 짝 · 같은 시기에 올려야 함"],
+  ["6j34Qwwqv7CvWMC6", "구좌 캡션이 이미 있어 바로 만들 수 있음"],
+  ["6hhV33JRwmjRfPVf", "직접 적은 후보 · 모든 여행객의 첫 관문"],
+  ["6hhV346g43FR9rrf", "직접 고른 후보"],
+  ["6hhRm2C2QXv4f5Ff", "직접 적은 후보 · 대리예약으로 넓히는 첫걸음"],
+  ["6hqrXmCRFQr5hqc6", "12월 초 전에 올려야 연말 계획에 들어감"],
+  ["6j34Qx2f5QJ6q5W6", "8번 예약 글과 이어지는 시리즈 첫 편"],
+  ["6hqrXmGVhM2mx4W6", "눈꽃 제철 12~2월 · 12월 초에 올리기"],
+  ["6j34fQQg74Wg6Gxc", "연말 예약 몰림 · 12월 초"],
+  ["6hpFh9RWP5w26WH7", "직접 고른 후보 · 계절 안 타서 언제든 가능"],
+  ["6j37Pgh8JJ2gCjm6", "막히는 순간 시리즈 둘째 편"],
+  ["6hqrXmHc6r4MHwjc", "12월 중순에 올려야 새해 계획에 들어감"],
+  ["6j389pf7Rr6Rf846", "11번 한라산 글과 짝 · 12월"],
+  ["6hqrcggvVJrPQh9c", "중국 겨울방학 전 12월에"],
+  ["6hqrXmMmGVpF7Wv6", "춘절 2월 초 → 1월 초에 올리기"],
+  ["6hhV35P8m9VJ2VPf", "직접 적은 후보 · 7번 칠성로 다음 코스"],
+  ["6hhRjxhvv6XCCRff", "직접 적은 후보 · 여행계획 짜 주기로 이어짐"],
+  ["6j34fQR54P2JMhP6", "1번 동백 총정리와 많이 겹쳐서 뒤로"],
+  ["6j34fQRfVvfC5Fpc", "9번 연말 명소와 겹쳐서 뒤로"],
+  ["6j34fQRf6QvF6pw6", "분실물 본업 · 2번 다음에"],
+  ["6j389ph3xx726CFc", "필요한 글이지만 급한 시기는 없음"],
+  ["6hhV376pxVwXRjPf", "19번 동문시장 다음에"],
+  ["6hhRm4XhvjhM3gvf", "직접 적은 후보 · 범위가 커서 지역별로 쪼개야 함"],
+  ["6hpFh9JHp5h9WG67", "직접 적은 후보 · 계절마다 한 편씩"],
+  ["6hqrXmPGCcMvMxc6", "꽃이 1월 말부터라 1월에"],
+  ["6hhV332h2W82RGpf", "직접 적은 후보 · 영상이라 시간이 더 듦"],
+  ["6j34Qwx5VxVcHwFc", "실제 찾아 준 사례가 생기면"],
+  ["6hmPVMfvgc45j2Vf", "직접 적은 후보"],
+  ["6hmPF9cxmMxxRfwf", "직접 적은 후보"],
+  ["6hmPF8fmM65964pf", "범위가 너무 커서 다른 글이 쌓인 뒤 모음 글로"],
+  ["6hpFW4PJ94GGXq7f", "직접 적은 후보"],
+  ["6hrWjwv8rXgv7wW6", "팔로워 댓글이 쌓인 뒤에"],
+  ["6hrHMv2HjH283prc", "급한 시기 없음"],
+  ["6hwjFrrMpjQF7fm6", "AI 영상이라 심사 확인이 먼저"],
+  ["6hqrWxrFGc52x37c", "3D 작업이 커서 나중에"],
+  ["6hwCGjjg25HxvMwc", "게시물이 아니라 마을소개 규칙"],
+  ["6hwCGxC9Mp38j7W6", "게시물이 아니라 마을소개 규칙"],
+  ["6hpCjPcW87PQwHMf", "게시물이 아니라 준비 작업"],
+  ["6hpCjR3hjWw8Gxv7", "게시물이 아니라 준비 작업"],
+  ["6hmPc6qf3rGh8Q5f", "메모(문장이 끊겨 있음)"],
+  ["6hqrcghCxwCrxg36", "방어축제가 11/19 시작이라 지금 만들면 늦음"],
+  ["6j34QwqrJ6JJPQ6c", "전문 사진가 섭외한 뒤에"],
+];
+const RANK = new Map(PICK_ORDER.map(([id, why], i) => [id, { n: i + 1, why }]));
+const byRank = (a, b) => (RANK.get(a.id)?.n ?? 999) - (RANK.get(b.id)?.n ?? 999);
+function pickRow(t) {
+  const el = h("div", { class: "row" + (isPicked(t) ? " picked" : "") });
+  const r = RANK.get(t.id);
+  const why = r ? r.why : (t.description || "").split("\n")[0].replace(/^왜:\s*/, "");
+  el.append(
+    h("button", { class: "check", type: "button", "aria-pressed": String(isPicked(t)), "aria-label": `${t.content} 고르기`, onclick: () => togglePick(t, el) }, "✓"),
+    h("div", { class: "main" }, h("div", { class: "title" }, r ? h("span", { class: "order" + (r.n <= PICK_GOAL ? " next" : ""), "aria-label": `추천 ${r.n}번` }, r.n) : null, isKrillin(t) ? h("span", { class: "pk-tag" }, "크리링 추천") : null, pickName(t)), why ? h("div", { class: "meta" }, why) : null));
+  return el;
+}
+function renderPicks() {
+  const box = $("picks"); box.replaceChildren();
+  if (!state.picks.length && !state.ideas.length) { box.append(h("div", { class: "skeleton" }, state.errors.any ? "Todoist를 불러오지 못했어요." : "게시물 후보가 없어요.")); return; }
+  const chosen = pickables().filter(([, t]) => isPicked(t)).sort(([, x], [, y]) => byRank(x, y)).map(([acc, t]) => `${accIcon(acc)} ${pickName(t)}`);
+  const n = chosen.length;
+  box.append(h("div", { class: "pk-goal" + (n === PICK_GOAL ? " full" : n > PICK_GOAL ? " over" : "") },
+    h("div", { class: "big" }, "이번 주에 올릴 게시물", h("span", null, h("b", null, n), ` / ${PICK_GOAL}개`)),
+    h("div", { class: "pk-dots", "aria-hidden": "true" }, [...Array(PICK_GOAL)].map((_, i) => h("i", { class: i < n ? "on" : null }))),
+    n ? h("div", { class: "pk-chosen" }, chosen.map((c) => h("span", null, c))) : null,
+    h("div", { class: "hint" }, n < PICK_GOAL ? `아래에서 두 계정 합쳐 ${PICK_GOAL - n}개 더 골라 주세요` : n === PICK_GOAL ? "다 골랐어요! 크리링에게 '고른 거 넣어줘'라고 하면 이번 주에 넣어요" : `${n - PICK_GOAL}개 많아요. ${PICK_GOAL}개만 남겨 주세요`)));
+  const sub = (label, count) => h("div", { class: "pk-sub" }, label, h("span", null, `${count}개`));
+  const card = (name, mine, ideas) => {
+    const all = [...(mine || []), ...ideas];
+    const k = all.filter(isPicked).length;
+    const acc = h("div", { class: "pk-acc" }, h("h3", null, `${accIcon(name)} ${name}`, h("span", null, h("b", null, `${k}개 고름`), ` · 전체 ${all.length}개`)));
+    if (mine) { acc.append(sub("✍️ 내가 적은 후보", mine.length)); if (!mine.length) acc.append(h("div", { class: "empty" }, "후보가 없어요.")); mine.slice().sort(byRank).forEach((t) => acc.append(pickRow(t))); }
+    if (ideas.length) { acc.append(sub("💡 아이디어 칸", ideas.length)); ideas.slice().sort(byRank).forEach((t) => acc.append(pickRow(t))); }
+    return acc;
+  };
+  const names = state.picks.map(({ head }) => accOf(head));
+  const cards = state.picks.map(({ head, items }) => {
+    const name = accOf(head), ideas = state.ideas.filter((t) => ideaAcc(t) === name);
+    return [card(name, items, ideas), items.length + ideas.length];
+  });
+  const rest = state.ideas.filter((t) => !names.includes(ideaAcc(t)));
+  if (rest.length) cards.push([card("계정 안 정한 아이디어", null, rest), rest.length]);
+  const cols = [h("div", { class: "pk-col" }), h("div", { class: "pk-col" })], len = [0, 0];
+  for (const [c, cnt] of cards) { const i = len[0] <= len[1] ? 0 : 1; cols[i].append(c); len[i] += cnt + 3; }
+  box.append(h("div", { class: "pk-cols" }, cols));
+}
+
+// ---------- 불러오기 ----------
+async function load() {
+  TODAY = ymd(new Date());
+  const t = parseYmd(TODAY);
+  $("today-label").textContent = `${t.getMonth() + 1}월 ${t.getDate()}일 ${WD[t.getDay()]}요일`;
+  $("status").textContent = "불러오는 중…";
+  $("refresh").textContent = "불러오는 중…";
+  const notices = $("notices"); notices.replaceChildren();
+  state.errors = {};
+  const [sec, byDate, picks] = await Promise.allSettled([
+    findAll({ sectionId: XHS_SECTION }),
+    mcp.callTool(TD, "find-tasks-by-date", { startDate: "today", daysCount: 8, limit: 100 }, { cache: false }),
+    loadPicks(),
+  ]);
+  const map = new Map();
+  if (sec.status === "fulfilled") for (const x of sec.value) map.set(x.id, x);
+  // 다른 칸에 있어도 날짜가 잡힌 샤오홍슈 일은 같이 보여 줌 (아이디어 칸은 후보 칸에서 따로)
+  if (byDate.status === "fulfilled") for (const x of byDate.value.payload?.tasks || []) {
+    if (map.has(x.id) || x.sectionId === IDEA_SECTION) continue;
+    if (x.sectionId === XHS_SECTION || XHS_WORDS.test(x.content)) map.set(x.id, x);
+  }
+  state.work = [...map.values()];
+  if (sec.status === "rejected") { state.errors.any = true; notices.append(h("div", { class: "banner" }, h("span", null, errText(sec.reason)), h("button", { class: "btn", type: "button", onclick: load }, "다시 불러오기"))); }
+  if (picks.status === "rejected") { state.picks = []; state.ideas = []; }
+  doneKeys.clear();
+  try { renderPicks(); } catch (err) { $("picks").replaceChildren(h("div", { class: "skeleton" }, "게시물 후보를 그리지 못했어요. 크리링에게 알려 주세요.")); }
+  render();
+  lastLoad = Date.now();
+  const now = new Date();
+  $("status").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}에 불러옴`;
+  $("refresh").textContent = "새로고침";
+}
+
+// ---------- 오늘 총 작업 시간 (타이머·스톱워치로 잰 시간 · 이 기기에만 기억) ----------
+const WKEY = "board-work";
+let work = {};
+try { work = JSON.parse(localStorage.getItem(WKEY)) || {}; } catch {}
+function addWork(ms) {
+  if (!(ms > 0)) return;
+  const d = ymd(new Date());
+  work[d] = (work[d] || 0) + ms;
+  try { localStorage.setItem(WKEY, JSON.stringify(work)); } catch {}
+}
+function wDraw() {
+  const now = Date.now();
+  let ms = work[ymd(new Date())] || 0;
+  if (timer.run) ms += Math.max(0, Math.min(now, timer.endAt) - timer.segAt);
+  if (sw.run) ms += Math.max(0, now - sw.startAt);
+  const m = Math.floor(ms / 60000), hh = Math.floor(m / 60), mm = m % 60;
+  $("w-total").textContent = hh ? `${hh}시간 ${mm}분` : `${mm}분`;
+}
+
+// ---------- 작업 타이머 (이 기기에만 기억 · 끝나면 소리·진동) ----------
+const TKEY = "board-timer";
+const timer = { total: 40 * 60000, left: 40 * 60000, endAt: 0, run: false, segAt: 0 };
+let tTick = null, audioCtx = null;
+try { Object.assign(timer, JSON.parse(localStorage.getItem(TKEY)) || {}); } catch {}
+if (timer.run && !timer.segAt) timer.segAt = Date.now();
+const tSave = () => { try { localStorage.setItem(TKEY, JSON.stringify(timer)); } catch {} };
+const tLeft = () => (timer.run ? Math.max(0, timer.endAt - Date.now()) : timer.left);
+const tCount = () => { if (timer.run) addWork(Math.min(Date.now(), timer.endAt) - timer.segAt); };
+function tFmt(ms) {
+  const s = Math.ceil(ms / 1000), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+  return hh ? `${hh}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
+}
+function tLabel(ms) {
+  const m = Math.round(ms / 60000), hh = Math.floor(m / 60), mm = m % 60;
+  return [hh ? `${hh}시간` : "", mm ? `${mm}분` : ""].filter(Boolean).join(" ");
+}
+function tDraw() {
+  const left = tLeft();
+  $("t-time").textContent = tFmt(left);
+  $("t-go").textContent = timer.run ? "멈춤" : left > 0 && left < timer.total ? "계속" : "시작";
+  $("timer").style.setProperty("--p", 1 - left / timer.total);
+  $("timer").classList.toggle("running", timer.run);
+  for (const b of $("t-presets").children) b.setAttribute("aria-pressed", String(Number(b.dataset.min) * 60000 === timer.total));
+  wDraw();
+  if (timer.run && left <= 0) tDone();
+}
+function beep() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audioCtx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), at = t0 + i * 0.5;
+      o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.3, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.35);
+      o.start(at); o.stop(at + 0.4);
+    }
+  } catch {}
+}
+function tStopTick() { clearInterval(tTick); tTick = null; }
+function tDone() {
+  tCount();
+  timer.run = false; timer.left = 0; tSave(); tStopTick();
+  $("timer").classList.add("ring");
+  beep();
+  try { navigator.vibrate?.([400, 200, 400, 200, 400]); } catch {}
+  toast(`⏰ ${tLabel(timer.total)} 끝났어요! 잠깐 쉬어 가요`);
+  tDraw();
+}
+$("t-go").addEventListener("click", () => {
+  $("timer").classList.remove("ring");
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
+  if (timer.run) { tCount(); timer.left = tLeft(); timer.run = false; tStopTick(); }
+  else {
+    if (timer.left <= 0) timer.left = timer.total;
+    timer.endAt = Date.now() + timer.left; timer.segAt = Date.now(); timer.run = true;
+    tStopTick(); tTick = setInterval(tDraw, 250);
+  }
+  tSave(); tDraw();
+});
+function tSet(ms) {
+  tCount();
+  timer.total = timer.left = ms; timer.run = false; tStopTick(); tSave();
+  $("timer").classList.remove("ring"); tDraw();
+}
+$("t-reset").addEventListener("click", () => tSet(timer.total));
+$("t-presets").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-min]");
+  if (b) tSet(Number(b.dataset.min) * 60000);
+});
+
+// ---------- 과목별 스톱워치 (2026-11-05 요청: 샤오홍슈·전공·마케팅·블로그) ----------
+const SKEY = "board-sw-subjects";
+const SUBJECTS = [["xhs", "샤오홍슈"], ["major", "전공"], ["mkt", "마케팅"], ["blog", "블로그"]];
+const sw = { day: "", acc: {}, run: null, startAt: 0 };
+let swTick = null;
+try { Object.assign(sw, JSON.parse(localStorage.getItem(SKEY)) || {}); } catch {}
+if (!sw.acc || typeof sw.acc !== "object") sw.acc = {};
+const swSave = () => { try { localStorage.setItem(SKEY, JSON.stringify(sw)); } catch {} };
+const swNow = (k) => (sw.acc[k] || 0) + (sw.run === k ? Date.now() - sw.startAt : 0);
+function swFmt(ms) {
+  const s = Math.floor(ms / 1000), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+  return hh ? `${hh}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
+}
+function swStop() {
+  if (!sw.run) return;
+  const seg = Date.now() - sw.startAt;
+  sw.acc[sw.run] = (sw.acc[sw.run] || 0) + seg; sw.run = null; addWork(seg);
+  clearInterval(swTick); swTick = null;
+}
+function swRoll() {
+  const d = ymd(new Date());
+  if (sw.day === d) return;
+  swStop(); sw.day = d; sw.acc = {}; swSave();
+}
+const swEls = {};
+$("sws").append(...SUBJECTS.map(([k, n]) => {
+  const v = h("span", { class: "v" }, "00:00");
+  const go = h("button", { class: "swm", type: "button", "aria-label": `${n} 스톱워치`, "aria-pressed": "false", onclick: () => swToggle(k) }, h("span", { class: "l" }, n), v);
+  const box = h("div", { class: "swc" }, go, h("button", { class: "swe", type: "button", "aria-label": `${n} 스톱워치 시간 고치기`, onclick: () => swEdit(k) }, "✎"), h("button", { class: "swr", type: "button", "aria-label": `${n} 스톱워치 처음으로`, onclick: () => swReset(k) }, "↺"));
+  swEls[k] = { box, v, go };
+  return box;
+}));
+function swDraw() {
+  swRoll();
+  for (const [k] of SUBJECTS) {
+    const e = swEls[k], on = sw.run === k;
+    e.v.textContent = swFmt(swNow(k));
+    e.box.classList.toggle("on", on);
+    e.go.setAttribute("aria-pressed", String(on));
+  }
+  wDraw();
+}
+function swToggle(k) {
+  swRoll();
+  const was = sw.run;
+  swStop();
+  if (was !== k) { sw.run = k; sw.startAt = Date.now(); swTick = setInterval(swDraw, 250); }
+  swSave(); swDraw();
+}
+function swReset(k) {
+  swRoll();
+  if (sw.run === k) swStop();
+  sw.acc[k] = 0; swSave(); swDraw();
+}
+function swSetTime(k, ms) {
+  swRoll();
+  if (sw.run === k) swStop();
+  const old = sw.acc[k] || 0;
+  sw.acc[k] = ms; swSave();
+  const d = ymd(new Date());
+  work[d] = Math.max(0, (work[d] || 0) + ms - old);
+  try { localStorage.setItem(WKEY, JSON.stringify(work)); } catch {}
+  swDraw();
+}
+let swEditor = null;
+function swEdit(k) {
+  swEditor?.remove();
+  const name = SUBJECTS.find(([x]) => x === k)[1];
+  const cur = Math.floor(swNow(k) / 60000);
+  const hIn = h("input", { type: "number", min: "0", max: "23", inputmode: "numeric", value: Math.floor(cur / 60), "aria-label": "시간" });
+  const mIn = h("input", { type: "number", min: "0", max: "59", inputmode: "numeric", value: cur % 60, "aria-label": "분" });
+  const close = () => { swEditor?.remove(); swEditor = null; };
+  const save = () => {
+    const ms = (Math.max(0, Number(hIn.value) || 0) * 60 + Math.max(0, Number(mIn.value) || 0)) * 60000;
+    swSetTime(k, ms); close(); toast(`${name} 스톱워치를 ${tLabel(ms) || "0분"}으로 맞췄어요`);
+  };
+  swEditor = h("div", { class: "sw-edit", role: "group", "aria-label": `${name} 시간 고치기` }, h("span", null, `✎ ${name}`), hIn, "시간", mIn, "분", h("button", { class: "btn primary", type: "button", onclick: save }, "저장"), h("button", { class: "btn", type: "button", onclick: close }, "취소"));
+  $("sws").append(swEditor);
+  hIn.focus();
+}
+if (timer.run) tTick = setInterval(tDraw, 250);
+if (sw.run) swTick = setInterval(swDraw, 250);
+tDraw(); swDraw();
+
+// ---------- 📊 샤오홍슈 막대 일정표 (2026-11-06 요청, 2026-11-24 마킴 탭 뺌) ----------
+// 축제 날짜는 비짓제주 기준. 넣을 축제는 강정준비준이 고른다. 이번 주 게시물 칸은 고른 7개로 바꾼다
+const GT_START = "2026-11-01", GT_DAYS = 63;
+const GT_WEEKS = [["11월", "1주차"], ["", "2주차"], ["", "3주차"], ["", "4주차"], ["12월", "1주차"], ["", "2주차"], ["", "3주차"], ["", "4주차"], ["", "5주차"]];
+const gtDate = (s) => (s.length === 5 ? (s.startsWith("01") ? "2027-" : "2026-") + s : s);
+const GT_SUNDAYS = [...Array(9)].map((_, i) => { const d = ymd(addDays(parseYmd(GT_START), i * 7)).slice(5); return [d, d]; });
+const GANTT_XHS = {
+  note: "축제 날짜는 비짓제주(visitjeju.net) 기준. 게시물은 강정준비준이 게시물 후보에서 고른 7개예요.",
+  groups: [
+    ["축제 기간", "o", [
+      ["제주올레걷기축제", [["11-05", "11-07"]]],
+      ["휴애리 동백축제 (작년 기준, ~1월)", [["11-16", "01-02"]]],
+      ["제26회 최남단방어축제 (모슬포항)", [["11-19", "11-22"]]],
+      ["제주감귤박람회 (예상)", [["11-19", "11-23"]]],
+      ["감귤 따기 체험 (~1월)", [["11-01", "01-02"]]],
+      ["귤따러옵서 2026 (야크마을, 1인 39,000원)", [["11-01", "12-30"]]],
+      ["감귤박물관 감귤따기체험 (1인 5,000원, 감귤 다 떨어지면 끝)", [["11-01", "12-23"]]],
+      ["함덕 비치 크리스마스", [["12-25", "12-25"]]],
+      ["성산일출축제", [["12-31", "01-01"]]],
+    ]],
+    ["이번 주 게시물 (게시물 후보에서 7개 고르면 여기 들어가요)", "g", [
+      ["🗿 나들로그: 날씨·축제달력 만들기", [["11-21", "11-21"]]],
+    ]],
+    ["고정 일정", "b", [
+      ["날씨달력 올리기 (매주 일 10시)", GT_SUNDAYS],
+      ["축제달력 올리기 (매주 일 20시)", GT_SUNDAYS.filter(([d]) => d >= "11-29")],
+      ["날씨·축제달력 만들기 (매주 토 2시간 30분)", GT_SUNDAYS.map(([d]) => { const x = ymd(addDays(parseYmd("2026-" + d), -1)).slice(5); return [x, x]; }).filter(([x]) => x >= "11-21")],
+    ]],
+    ["목표", "g", [
+      ["11월 축제 피드 10개 · 저장 100+ 5개", [["11-01", "11-30"]]],
+      ["휴애리 동백 홍보 디자인", [["11-01", "11-30"]]],
+      ["첫 홍보 의뢰 1건 (12월 초)", [["11-29", "12-12"]]],
+    ]],
+  ],
+};
+const gtPct = (s) => (dayDiff(gtDate(s), GT_START) / GT_DAYS) * 100;
+function renderGantt() {
+  const g = GANTT_XHS;
+  const nowPct = (dayDiff(ymd(new Date()), GT_START) + 0.5) / GT_DAYS * 100;
+  const nowLine = () => (nowPct >= 0 && nowPct <= 100 ? h("div", { class: "gt-now", style: `left:${nowPct}%` }) : null);
+  const grid = h("div", { class: "gt-grid" });
+  grid.append(h("div", { class: "gt-lab head" }), h("div", { class: "gt-track gt-head" }, GT_WEEKS.map(([m, w]) => h("span", null, h("b", null, m), w))));
+  for (const [gname, color, items] of g.groups) {
+    grid.append(h("div", { class: "gt-lab grp" }, "• " + gname), h("div", { class: "gt-track grp" }, nowLine()));
+    for (const [label, spans] of items) {
+      const track = h("div", { class: "gt-track" }, nowLine());
+      for (const [s, e] of spans) {
+        const a = gtPct(s), b = gtPct(e) + 100 / GT_DAYS;
+        const title = `${label} · ${mdw(gtDate(s))}${s === e ? "" : " ~ " + mdw(gtDate(e))}`;
+        if (s === e && spans.length > 1 || b - a < 2) track.append(h("div", { class: `gt-dot gt-${color}`, style: `left:${(a + b) / 2}%`, title }));
+        else track.append(h("div", { class: `gt-bar gt-${color}`, style: `left:${a}%;width:${b - a}%`, title }));
+      }
+      grid.append(h("div", { class: "gt-lab it" }, "· " + label), track);
+    }
+  }
+  const legend = [...new Set(g.groups.map(([n, c]) => n + "|" + c))].map((x) => { const [n, c] = x.split("|"); return h("span", null, h("i", { class: `gt-${c}` }), n); });
+  $("gantt").replaceChildren(grid, h("div", { class: "gt-foot" }, legend, h("span", { class: "note" }, "※ " + g.note)));
+}
+renderGantt();
+const gtTip = h("div", { class: "gt-tip", hidden: true });
+document.body.append(gtTip);
+function gtHover(e) {
+  const bar = e.target.closest?.(".gt-bar, .gt-dot");
+  const tr = bar?.closest(".gt-track");
+  if (!tr) { gtTip.hidden = true; return; }
+  const r = tr.getBoundingClientRect();
+  const i = Math.floor((e.clientX - r.left) / r.width * GT_DAYS);
+  if (i < 0 || i >= GT_DAYS) { gtTip.hidden = true; return; }
+  const d = addDays(parseYmd(GT_START), i);
+  gtTip.textContent = mdw(ymd(d));
+  gtTip.classList.toggle("we", d.getDay() === 0 || d.getDay() === 6);
+  gtTip.style.left = e.clientX + "px"; gtTip.style.top = e.clientY + "px";
+  gtTip.hidden = false;
+}
+$("gantt").addEventListener("pointermove", gtHover);
+$("gantt").addEventListener("pointerdown", gtHover);
+$("gantt").addEventListener("pointerleave", () => (gtTip.hidden = true));
+$("gantt").addEventListener("scroll", () => (gtTip.hidden = true));
+
+$("refresh").addEventListener("click", () => mcp ? load().catch(() => { $("refresh").textContent = "새로고침"; }) : null);
+// 홈 화면에서 다시 열었을 때 2분이 지났으면 저절로 새로 불러옴
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && mcp && Date.now() - lastLoad > 120000) load().catch(() => {});
+});
+(async () => {
+  try { mcp = window.claude ? await window.claude.use("mcp") : null; } catch { mcp = null; }
+  if (!mcp) {
+    $("status").textContent = "연결 안 됨";
+    for (const id of ["now", "week", "undated", "picks"]) $(id).replaceChildren(h("div", { class: "skeleton" }, "이 페이지는 claude.ai에서 열어야 Todoist를 불러올 수 있어요."));
+    $("projs").replaceChildren();
+    return;
+  }
+  load().catch(() => { $("status").textContent = "불러오지 못했어요"; $("refresh").textContent = "새로고침"; });
+})();
+</script>
+</body>
+</html>
