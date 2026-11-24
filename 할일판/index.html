@@ -8,8 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* 할 일판 1 = 샤오홍슈 작업목록 전용. 2026-11-24 세 번째 정리 요청:
-   🟢 지금 하고 있는 일(비움) → 🔁 정기 업로드(나들로그 / 제주라이브 칸, 이번 주 체크박스) → 🧭 행동강령 → 🗂️ 게시물(구분 없이 한 목록).
+/* 할 일판 1 = 샤오홍슈 작업목록 전용. 2026-11-24 네 번째 정리 요청:
+   🧭 행동강령 → 🟢 지금 하고 있는 일(비움) → 🔁 정기 업로드(나들로그 / 제주라이브 칸, 이번 주 체크박스)
+   → 📅 이번 주(나들로그 / 제주라이브 칸, 게시물에서 옮겨 온 것) → 🗂️ 게시물(두 줄, 체크·계정 옮기기 버튼).
    기능은 작업 타이머만 남김(스톱워치·한눈에 숫자·게시물 후보 고르기·진행 중 게시물·날짜 없는 일·막대 일정표 뺌). */
 :root {
   --bg: #f6f7f5; --surface: #ffffff; --line: #dfe3de; --fg: #1f2622; --muted: #66706a;
@@ -74,6 +75,25 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
 .ck input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; flex: none; }
 .ck input:checked + span { color: var(--muted); text-decoration: line-through; }
 
+/* 게시물 줄: 체크 + 이름 + 계정 옮기기 버튼 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; }
+.grid2 > .post { border-top: 1px solid var(--line); }
+.grid2 > .post:nth-child(-n+2) { border-top: 0; }
+.grid2 > .post:nth-child(odd) { border-right: 1px solid var(--line); }
+.grid2 > .empty { grid-column: 1 / -1; }
+.post { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; min-width: 0; }
+.fx .post { border-top: 1px solid var(--line); }
+.fx .post:first-of-type { border-top: 0; }
+.post input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; flex: none; cursor: pointer; }
+.post .title { flex: 1 1 auto; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.post.done .title { color: var(--muted); text-decoration: line-through; }
+.post.busy { opacity: .5; pointer-events: none; }
+.mv { display: flex; gap: 4px; flex: none; }
+.mv button { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.mv button.n { color: var(--green); border-color: var(--green); }
+.mv button.j { color: var(--blue); border-color: var(--blue); }
+@media (hover: hover) { .mv button:hover { background: var(--accent-soft); } }
+
 /* 행동강령 */
 .steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0; padding: 12px 14px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .steps li { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
@@ -100,6 +120,11 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
   h2 { font-size: 18px; }
   .row .meta { font-size: 13px; }
 }
+@media (max-width: 560px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .grid2 > .post:nth-child(2) { border-top: 1px solid var(--line); }
+  .grid2 > .post:nth-child(odd) { border-right: 0; }
+}
 </style>
 </head>
 <body>
@@ -124,24 +149,29 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
     </div>
   </header>
 
-  <section id="sec-doing">
-    <h2>🟢 지금 하고 있는 일</h2>
-    <div class="list"><div class="empty">비어 있어요.</div></div>
-  </section>
-
-  <section id="sec-week">
-    <h2>🔁 정기 업로드 · 이번 주</h2>
-    <div class="fixed" id="fixed"></div>
-  </section>
-
   <section id="sec-rule">
     <h2>🧭 행동강령</h2>
     <ol class="steps" id="steps"></ol>
   </section>
 
+  <section id="sec-doing">
+    <h2>🟢 지금 하고 있는 일</h2>
+    <div class="list"><div class="empty">비어 있어요.</div></div>
+  </section>
+
+  <section id="sec-regular">
+    <h2>🔁 정기 업로드</h2>
+    <div class="fixed" id="fixed"></div>
+  </section>
+
+  <section id="sec-week">
+    <h2>📅 이번 주</h2>
+    <div class="fixed" id="week"></div>
+  </section>
+
   <section id="sec-posts">
     <h2>🗂️ 게시물</h2>
-    <div class="list" id="cards"><div class="empty">불러오는 중…</div></div>
+    <div class="list grid2" id="cards"><div class="empty">불러오는 중…</div></div>
   </section>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -213,10 +243,47 @@ async function findAll(args) {
   }
   return out;
 }
-function renderCards(items) {
-  $("cards").replaceChildren(...(items.length ? items.map((t) => {
-    return h("div", { class: "row" }, h("div", { class: "title" }, cleanName(t)));
-  }) : [h("div", { class: "empty" }, "아이디어 칸이 비어 있어요.")]));
+// 체크 = Todoist에서 완료(다시 누르면 되돌림). 나들로그·제주라이브 버튼 = Todoist 라벨을 달아 📅 이번 주 그 계정 칸으로 옮김
+const ACC = { n: "나들로그", j: "제주라이브" };
+const accOf = (t) => ((t.labels || []).includes(ACC.n) ? "n" : (t.labels || []).includes(ACC.j) ? "j" : null);
+let posts = [];
+function postRow(t, where) {
+  const row = h("div", { class: "post" + (t._done ? " done" : "") });
+  const box = h("input", { type: "checkbox", "aria-label": "완료", checked: !!t._done, onchange: async (e) => {
+    const on = e.target.checked;
+    row.classList.add("busy");
+    try {
+      await mcp.callTool(TD, on ? "complete-tasks" : "uncomplete-tasks", { ids: [t.id] }, { cache: false });
+      t._done = on; row.classList.toggle("done", on);
+    } catch { e.target.checked = !on; toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+    row.classList.remove("busy");
+  } });
+  const mv = h("div", { class: "mv" });
+  if (where) mv.append(h("button", { type: "button", title: "게시물로 되돌리기", onclick: () => move(t, null, row) }, "↩ 빼기"));
+  else mv.append(h("button", { type: "button", class: "n", onclick: () => move(t, "n", row) }, "→ 나들로그"),
+                 h("button", { type: "button", class: "j", onclick: () => move(t, "j", row) }, "→ 제주라이브"));
+  row.append(box, h("span", { class: "title" }, cleanName(t)), mv);
+  return row;
+}
+async function move(t, acc, row) {
+  const labels = (t.labels || []).filter((l) => l !== ACC.n && l !== ACC.j);
+  if (acc) labels.push(ACC[acc]);
+  row.classList.add("busy");
+  try {
+    await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
+    t.labels = labels; renderPosts();
+    toast(acc ? `📅 이번 주 ${ACC[acc]} 칸으로 옮겼어요` : "🗂️ 게시물로 되돌렸어요");
+  } catch { row.classList.remove("busy"); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+}
+function renderPosts() {
+  $("week").replaceChildren(...["n", "j"].map((a) => {
+    const mine = posts.filter((t) => accOf(t) === a);
+    return h("div", { class: "fx " + a }, h("div", { class: "fx-h" }, ACC[a]),
+      mine.length ? mine.map((t) => postRow(t, a)) : h("div", { class: "empty" }, "아래 게시물에서 옮겨 오세요."));
+  }));
+  const rest = posts.filter((t) => !accOf(t));
+  $("cards").replaceChildren(...(rest.length ? rest.map((t) => postRow(t, null))
+    : [h("div", { class: "empty" }, "아이디어 칸이 비어 있어요.")]));
 }
 async function load() {
   renderFixed();
@@ -226,7 +293,7 @@ async function load() {
     // 머리 할 일 「📋 ○○ 게시물 후보」는 묶음일 뿐이라 빼고 그 밑 할 일은 보여 줌. ①②③ 단계는 보여 주지 않음
     const heads = new Set(all.filter((t) => !t.parentId && /게시물 후보/.test(t.content)).map((t) => t.id));
     const items = all.filter((t) => (!t.parentId && !heads.has(t.id)) || heads.has(t.parentId));
-    renderCards(items);
+    posts = items; renderPosts();
     const n = new Date();
     $("status").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
   } catch (err) {
