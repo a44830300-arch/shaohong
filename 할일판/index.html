@@ -9,8 +9,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 할 일판 1 = 샤오홍슈 작업목록 전용. 2026-11-24 네 번째 정리 요청:
-   🧭 행동강령 → 🟢 지금 하고 있는 일(비움) → 🔁 정기 업로드(나들로그 / 제주라이브 칸, 이번 주 체크박스)
-   → 📅 이번 주(나들로그 / 제주라이브 칸, 게시물에서 옮겨 온 것) → 🗂️ 게시물(두 줄, 체크·계정 옮기기 버튼).
+   🧭 행동강령 → 🟢 지금 하고 있는 일(비움) → 🛠️ 진행 중인 작업물(게시물 체크하면 옴, 2026-11-25)
+   → 📅 이번 주(고정 날씨달력·축제달력 + 옮겨 온 게시물, 월요일마다 초기화) → 🗂️ 게시물(두 줄, 체크·계정 옮기기 버튼).
    기능은 작업 타이머만 남김(스톱워치·한눈에 숫자·게시물 후보 고르기·진행 중 게시물·날짜 없는 일·막대 일정표 뺌). */
 :root {
   --bg: #f6f7f5; --surface: #ffffff; --line: #dfe3de; --fg: #1f2622; --muted: #66706a;
@@ -94,6 +94,12 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
 .mv button.j { color: var(--blue); border-color: var(--blue); }
 @media (hover: hover) { .mv button:hover { background: var(--accent-soft); } }
 
+.post .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--line); }
+.post .dot.n { background: var(--green); } .post .dot.j { background: var(--blue); }
+#wip .post { border-top: 1px solid var(--line); }
+#wip .post:first-child { border-top: 0; }
+.mv button.ok { color: var(--accent); border-color: var(--accent); }
+
 /* 행동강령 */
 .steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0; padding: 12px 14px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .steps li { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
@@ -159,9 +165,9 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
     <div class="list"><div class="empty">비어 있어요.</div></div>
   </section>
 
-  <section id="sec-regular">
-    <h2>🔁 정기 업로드</h2>
-    <div class="fixed" id="fixed"></div>
+  <section id="sec-wip">
+    <h2>🛠️ 진행 중인 작업물</h2>
+    <div class="list" id="wip"><div class="empty">불러오는 중…</div></div>
   </section>
 
   <section id="sec-week">
@@ -200,29 +206,28 @@ const mdw = (d) => `${d.getMonth() + 1}/${d.getDate()} (${WD[d.getDay()]})`;
 let toastTimer = null;
 function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.hidden = true), 6000); }
 
-// ---------- 🔁 정기 업로드 (계정별 칸, 이번 주 체크박스 · 이 기기에만 기억 · 월요일마다 새로) ----------
-// 정기적으로 올리는 게 늘면 그 계정 items에 이름만 더한다
-const REGULAR = [
-  { acc: "n", name: "나들로그", items: ["날씨달력", "축제달력"] },
-  { acc: "j", name: "제주라이브", items: [] },
-];
+// ---------- 📅 이번 주 고정 (2026-11-25 요청: 이번 주 칸에서 고정은 날씨달력·축제달력뿐) ----------
+// 체크박스는 이 기기에만 기억 · 월요일마다 새로. 고정이 늘면 그 계정 배열에 이름만 더한다
+const FIXED = { n: ["날씨달력", "축제달력"], j: [] };
 const CKEY = "board-regular";
-function renderFixed() {
-  const now = new Date();
-  const monday = addDays(now, -((now.getDay() + 6) % 7)), week = ymd(monday);
-  $("today-label").textContent = `${now.getMonth() + 1}월 ${now.getDate()}일 ${WD[now.getDay()]}요일`;
+const thisMonday = () => { const n = new Date(); return ymd(addDays(n, -((n.getDay() + 6) % 7))); };
+function fixedRows(a) {
+  const week = thisMonday();
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(CKEY)) || {}; } catch {}
   if (saved.week !== week) saved = { week, done: {} };
   const save = () => { try { localStorage.setItem(CKEY, JSON.stringify(saved)); } catch {} };
-  $("fixed").replaceChildren(...REGULAR.map((g) => h("div", { class: "fx " + g.acc },
-    h("div", { class: "fx-h" }, g.name),
-    g.items.length ? g.items.map((it) => {
-      const key = g.acc + ":" + it;
-      return h("label", { class: "ck" },
-        h("input", { type: "checkbox", checked: !!saved.done[key], onchange: (e) => { saved.done[key] = e.target.checked; save(); } }),
-        h("span", null, it));
-    }) : h("div", { class: "empty" }, "아직 없어요."))));
+  return FIXED[a].map((it) => {
+    const key = a + ":" + it;
+    return h("label", { class: "ck" },
+      h("input", { type: "checkbox", checked: !!saved.done[key], onchange: (e) => { saved.done[key] = e.target.checked; save(); } }),
+      h("span", null, it));
+  });
+}
+function renderFixed() {
+  const now = new Date();
+  $("today-label").textContent = `${now.getMonth() + 1}월 ${now.getDate()}일 ${WD[now.getDay()]}요일`;
+  renderPosts();
 }
 
 // ---------- 🧭 행동강령 (체크리스트 아님) ----------
@@ -243,47 +248,83 @@ async function findAll(args) {
   }
   return out;
 }
-// 체크 = Todoist에서 완료(다시 누르면 되돌림). 나들로그·제주라이브 버튼 = Todoist 라벨을 달아 📅 이번 주 그 계정 칸으로 옮김
+// 체크 = 🛠️ 진행 중인 작업물 칸으로 옮김(Todoist 라벨 '진행중', 2026-11-25 요청).
+// 진행 중 칸에서 체크를 풀면 원래 자리로, "✓ 완료" = Todoist 완료.
+// 나들로그·제주라이브 버튼 = Todoist 라벨을 달아 📅 이번 주 그 계정 칸으로 옮김
 const ACC = { n: "나들로그", j: "제주라이브" };
-const accOf = (t) => ((t.labels || []).includes(ACC.n) ? "n" : (t.labels || []).includes(ACC.j) ? "j" : null);
-let posts = [];
-function postRow(t, where) {
-  const row = h("div", { class: "post" + (t._done ? " done" : "") });
-  const box = h("input", { type: "checkbox", "aria-label": "완료", checked: !!t._done, onchange: async (e) => {
-    const on = e.target.checked;
-    row.classList.add("busy");
-    try {
-      await mcp.callTool(TD, on ? "complete-tasks" : "uncomplete-tasks", { ids: [t.id] }, { cache: false });
-      t._done = on; row.classList.toggle("done", on);
-    } catch { e.target.checked = !on; toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
-    row.classList.remove("busy");
-  } });
-  const mv = h("div", { class: "mv" });
-  if (where) mv.append(h("button", { type: "button", title: "게시물로 되돌리기", onclick: () => move(t, null, row) }, "↩ 빼기"));
-  else mv.append(h("button", { type: "button", class: "n", onclick: () => move(t, "n", row) }, "→ 나들로그"),
-                 h("button", { type: "button", class: "j", onclick: () => move(t, "j", row) }, "→ 제주라이브"));
-  row.append(box, h("span", { class: "title" }, cleanName(t)), mv);
-  return row;
-}
-async function move(t, acc, row) {
-  const labels = (t.labels || []).filter((l) => l !== ACC.n && l !== ACC.j);
-  if (acc) labels.push(ACC[acc]);
+const WIP = "진행중";
+const has = (t, l) => (t.labels || []).includes(l);
+const accOf = (t) => (has(t, ACC.n) ? "n" : has(t, ACC.j) ? "j" : null);
+let posts = [], loaded = false;
+async function setLabels(t, labels, row, msg) {
   row.classList.add("busy");
   try {
     await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
-    t.labels = labels; renderPosts();
-    toast(acc ? `📅 이번 주 ${ACC[acc]} 칸으로 옮겼어요` : "🗂️ 게시물로 되돌렸어요");
-  } catch { row.classList.remove("busy"); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+    t.labels = labels; renderPosts(); if (msg) toast(msg);
+  } catch { renderPosts(); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+}
+function postRow(t, where) {
+  const row = h("div", { class: "post" });
+  const wip = where === "wip";
+  const box = h("input", { type: "checkbox", "aria-label": wip ? "진행 중 풀기" : "진행 중으로", checked: wip, onchange: (e) => {
+    const labels = (t.labels || []).filter((l) => l !== WIP);
+    if (e.target.checked) labels.push(WIP);
+    setLabels(t, labels, row, e.target.checked ? "🛠️ 진행 중인 작업물 칸으로 옮겼어요" : "원래 자리로 되돌렸어요");
+  } });
+  const mv = h("div", { class: "mv" });
+  if (wip) mv.append(h("button", { type: "button", class: "ok", onclick: async () => {
+    row.classList.add("busy");
+    try {
+      await mcp.callTool(TD, "complete-tasks", { ids: [t.id] }, { cache: false });
+      posts = posts.filter((x) => x !== t); renderPosts(); toast("✅ 완료했어요");
+    } catch { row.classList.remove("busy"); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+  } }, "✓ 완료"));
+  else if (where) mv.append(h("button", { type: "button", title: "게시물로 되돌리기", onclick: () => move(t, null, row) }, "↩ 빼기"));
+  else mv.append(h("button", { type: "button", class: "n", onclick: () => move(t, "n", row) }, "→ 나들로그"),
+                 h("button", { type: "button", class: "j", onclick: () => move(t, "j", row) }, "→ 제주라이브"));
+  row.append(box);
+  if (wip) row.append(h("span", { class: "dot " + (accOf(t) || "") }));
+  row.append(h("span", { class: "title" }, cleanName(t)), mv);
+  return row;
+}
+function move(t, acc, row) {
+  const labels = (t.labels || []).filter((l) => l !== ACC.n && l !== ACC.j);
+  if (acc) labels.push(ACC[acc]);
+  setLabels(t, labels, row, acc ? `📅 이번 주 ${ACC[acc]} 칸으로 옮겼어요` : "🗂️ 게시물로 되돌렸어요");
 }
 function renderPosts() {
+  const wip = posts.filter((t) => has(t, WIP)), rest = posts.filter((t) => !has(t, WIP));
   $("week").replaceChildren(...["n", "j"].map((a) => {
-    const mine = posts.filter((t) => accOf(t) === a);
+    const rows = [...fixedRows(a), ...rest.filter((t) => accOf(t) === a).map((t) => postRow(t, a))];
     return h("div", { class: "fx " + a }, h("div", { class: "fx-h" }, ACC[a]),
-      mine.length ? mine.map((t) => postRow(t, a)) : h("div", { class: "empty" }, "아래 게시물에서 옮겨 오세요."));
+      rows.length ? rows : h("div", { class: "empty" }, "아래 게시물에서 옮겨 오세요."));
   }));
-  const rest = posts.filter((t) => !accOf(t));
-  $("cards").replaceChildren(...(rest.length ? rest.map((t) => postRow(t, null))
+  if (!loaded) return;
+  $("wip").replaceChildren(...(wip.length ? wip.map((t) => postRow(t, "wip")) : [h("div", { class: "empty" }, "게시물을 체크하면 여기로 와요.")]));
+  const free = rest.filter((t) => !accOf(t));
+  $("cards").replaceChildren(...(free.length ? free.map((t) => postRow(t, null))
     : [h("div", { class: "empty" }, "아이디어 칸이 비어 있어요.")]));
+}
+
+// ---------- 📅 이번 주 초기화 (월요일마다, 2026-11-25 요청) ----------
+// 어느 주에 초기화했는지는 Todoist 라벨 '이번주-월요일날짜' 하나로 기억(휴대폰·컴퓨터 같이 봄).
+// 새 주가 되면 이번 주 칸에 옮겨 둔 게시물(진행 중 아닌 것)의 계정 라벨을 떼서 🗂️ 게시물로 되돌린다.
+const MARK = "이번주-";
+async function weeklyReset(items) {
+  const week = thisMonday();
+  const p = (await mcp.callTool(TD, "find-labels", { searchText: MARK }, { cache: false })).payload || {};
+  const marks = (p.labels || []).filter((l) => l.name.startsWith(MARK));
+  if (marks.some((l) => l.name === MARK + week)) return;
+  if (marks.length) {   // 지난주 표시가 있을 때만 비움(처음 표시를 만들 때는 지우지 않음)
+    const back = items.filter((t) => accOf(t) && !has(t, WIP));
+    if (back.length) {
+      const tasks = back.map((t) => ({ id: t.id, labels: (t.labels || []).filter((l) => l !== ACC.n && l !== ACC.j) }));
+      await mcp.callTool(TD, "update-tasks", { tasks }, { cache: false });
+      back.forEach((t, i) => (t.labels = tasks[i].labels));
+    }
+  }
+  await mcp.callTool(TD, "add-labels", { labels: [{ name: MARK + week, color: "grey" }] }, { cache: false });
+  for (const l of marks) { try { await mcp.callTool(TD, "delete-object", { type: "label", id: l.id }, { cache: false }); } catch {} }
 }
 async function load() {
   renderFixed();
@@ -293,11 +334,13 @@ async function load() {
     // 머리 할 일 「📋 ○○ 게시물 후보」는 묶음일 뿐이라 빼고 그 밑 할 일은 보여 줌. ①②③ 단계는 보여 주지 않음
     const heads = new Set(all.filter((t) => !t.parentId && /게시물 후보/.test(t.content)).map((t) => t.id));
     const items = all.filter((t) => (!t.parentId && !heads.has(t.id)) || heads.has(t.parentId));
-    posts = items; renderPosts();
+    try { await weeklyReset(items); } catch { toast("이번 주 칸을 새로 비우지 못했어요. 새로고침해 보세요."); }
+    posts = items; loaded = true; renderPosts();
     const n = new Date();
     $("status").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
   } catch (err) {
     $("cards").replaceChildren(h("div", { class: "empty" }, "Todoist를 불러오지 못했어요. 새로고침해 보세요."));
+    $("wip").replaceChildren(h("div", { class: "empty" }, "Todoist를 불러오지 못했어요."));
     $("status").textContent = "불러오지 못했어요";
   }
   $("refresh").textContent = "새로고침";
@@ -387,6 +430,7 @@ document.addEventListener("visibilitychange", () => {
   if (!mcp) {
     $("status").textContent = "연결 안 됨";
     $("cards").replaceChildren(h("div", { class: "empty" }, "이 페이지는 claude.ai에서 열어야 Todoist를 불러올 수 있어요."));
+    $("wip").replaceChildren(h("div", { class: "empty" }, "claude.ai에서 열어 주세요."));
     return;
   }
   await load(); lastLoad = Date.now();
