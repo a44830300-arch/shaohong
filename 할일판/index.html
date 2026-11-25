@@ -11,7 +11,8 @@
 /* 할 일판 1 = 샤오홍슈 작업목록 (나들로그만). 2026-11-25 손그림 수정안:
    🧭 작업 순서 → [🛠️ 작업중 | 🗓️ 월별/분기별 + 📅 이번 주] → 🗂️ 게시물(두 줄, 체크=작업중으로·✕=숨기기)
    → ✅ 끝난 작업물(접기, 완료 날짜 기준 한 주씩) → 📖 컨텐츠 가이드(고치기·추가·지우기).
-   직접 적는 칸(월별/분기별·이번 주 체크·숨긴 게시물·컨텐츠 가이드)은 페이지 저장소(db)에 둬서 휴대폰·컴퓨터 같이 봄. */
+   직접 적는 칸(월별/분기별·이번 주 체크·숨긴 게시물·컨텐츠 가이드)은 페이지 저장소(db)에 둬서 휴대폰·컴퓨터 같이 봄.
+   2026-11-25 추가: 게시물·작업중·이번 주에 직접 추가하는 줄, 게시물 카테고리(직접 만들고 게시물마다 골라 나눔, db board/cats). */
 :root {
   --bg: #f6f7f5; --surface: #ffffff; --line: #dfe3de; --fg: #1f2622; --muted: #66706a;
   --accent: #e8731c; --accent-soft: #fdeedf; --red: #d33a2c;
@@ -87,6 +88,20 @@ button { font: inherit; cursor: pointer; touch-action: manipulation; }
 .add input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
 .add .btn { flex: none; }
 
+/* 게시물: 카테고리 칸들 */
+.posts { display: grid; gap: 12px; }
+.cat-bar { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); font-weight: 700; min-width: 0; }
+.cat-bar .name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.cat-bar .name::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 8px; vertical-align: middle; }
+.cat-bar.none .name::before { background: var(--muted); }
+.cat-bar .cnt { flex: none; font-family: var(--font-num); font-size: 12px; color: var(--muted); font-weight: 500; }
+.cat-bar .edit-in { font-weight: 700; }
+.list.newbox { border-style: dashed; }
+.list.newbox .add { border-top: 0; }
+.pick { flex: none; max-width: 8.5em; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 2px 6px; font: inherit; font-size: 12px; cursor: pointer; }
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chip { flex: none; max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 1px 8px; font-size: 12px; background: var(--green-soft); color: var(--green); font-weight: 600; }
+
 /* 게시물 두 줄 */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; }
 .grid2 > .row:nth-child(-n+2) { border-top: 0; }
@@ -147,6 +162,7 @@ details.fold > summary .cnt { font-family: var(--font-num); font-size: 13px; col
   h2, details.fold > summary { font-size: 18px; }
   .top { grid-template-columns: 1fr; }
   #wip { min-height: 0; }
+  .pick { max-width: 7em; }
 }
 @media (max-width: 560px) {
   .grid2 { grid-template-columns: 1fr; }
@@ -200,8 +216,8 @@ details.fold > summary .cnt { font-family: var(--font-num); font-size: 13px; col
   </div>
 
   <section id="sec-posts">
-    <h2>🗂️ 게시물</h2>
-    <div class="list grid2" id="posts"><div class="empty">불러오는 중…</div></div>
+    <h2>🗂️ 게시물 <button class="btn right" id="cat-edit" type="button" hidden>🏷️ 카테고리 만들기·고치기</button></h2>
+    <div class="posts" id="posts"><div class="list"><div class="empty">불러오는 중…</div></div></div>
     <details class="more" id="hidden-box" hidden>
       <summary id="hidden-sum">숨긴 게시물</summary>
       <div class="list" id="hidden-list"></div>
@@ -253,8 +269,9 @@ const STEPS = ["기획안 짜기", "레퍼런스 찾기", "작업하기", "마�
 $("steps").append(...STEPS.map((s, i) => h("li", null, h("span", { class: "n" }, i + 1), s)));
 
 // ---------- 페이지 저장소(db): 월별/분기별 · 이번 주 체크 · 숨긴 게시물 · 컨텐츠 가이드 ----------
-// 문서 4개: board/period {items:[{id,text,done}]} · board/week {week, done:{}} · board/hidden {ids:[]} · board/guide {cats:[{id,name,items:[{id,text}]}]}
-const store = { period: null, week: null, hidden: null, guide: null };
+// 문서 5개: board/period {items:[{id,text,done}]} · board/week {week, done:{}, extra:[{id,text}]} · board/hidden {ids:[]}
+//          board/guide {cats:[{id,name,items:[{id,text}]}]} · board/cats {cats:[{id,name}], assign:{Todoist id: 카테고리 id}}
+const store = { period: null, week: null, hidden: null, guide: null, cats: null };
 async function save(name, body) {
   if (!db) { toast("이 화면에서는 저장할 수 없어요. claude.ai에서 열어 주세요."); return false; }
   store[name] = body; renderStore();
@@ -294,15 +311,41 @@ function renderPeriod() {
   box.replaceChildren(...rows, ...(db ? [addLine("새 항목", (text) => write([...items, { id: newId(), text, done: false }]))] : rows.length ? [] : [h("div", { class: "empty" }, "비어 있어요.")]));
 }
 
-// ---------- 📅 이번 주 (고정: 날씨달력·축제달력, 월요일마다 새로) ----------
+// ---------- 📅 이번 주 (고정: 날씨달력·축제달력 + 직접 추가, 월요일마다 체크 새로) ----------
+// 직접 추가한 것 중 못 끝낸 건 다음 주로 넘어가고, 체크한 건 다음 주에 사라짐
 const FIXED = ["날씨달력", "축제달력"];
-function renderWeek() {
+function weekState() {
   const week = ymd(mondayOf(new Date()));
-  const s = store.week && store.week.week === week ? store.week : { week, done: {} };
-  $("week").replaceChildren(...FIXED.map((it) => h("label", { class: "row" + (s.done[it] ? " done" : "") },
-    h("input", { type: "checkbox", checked: !!s.done[it], onchange: (e) => save("week", { week, done: { ...s.done, [it]: e.target.checked } }) }),
-    h("span", { class: "title" }, it))));
+  const w = store.week || {};
+  if (w.week === week) return { week, done: w.done || {}, extra: w.extra || [] };
+  const old = w.done || {};
+  return { week, done: {}, extra: (w.extra || []).filter((x) => !old[x.id]) };
 }
+function renderWeek() {
+  const s = weekState();
+  const write = (next) => save("week", { ...s, ...next });
+  const fixed = FIXED.map((it) => h("label", { class: "row" + (s.done[it] ? " done" : "") },
+    h("input", { type: "checkbox", checked: !!s.done[it], onchange: (e) => write({ done: { ...s.done, [it]: e.target.checked } }) }),
+    h("span", { class: "title" }, it)));
+  const extra = s.extra.map((it) => h("div", { class: "row" + (s.done[it.id] ? " done" : "") },
+    h("input", { type: "checkbox", checked: !!s.done[it.id], "aria-label": it.text + " 체크", onchange: (e) => write({ done: { ...s.done, [it.id]: e.target.checked } }) }),
+    h("span", { class: "title" }, it.text),
+    xBtn("지우기", () => { const done = { ...s.done }; delete done[it.id]; write({ done, extra: s.extra.filter((x) => x.id !== it.id) }); })));
+  $("week").replaceChildren(...fixed, ...extra, ...(db && store.week !== null ? [addLine("이번 주에 할 것", (text) => write({ extra: [...s.extra, { id: newId(), text }] }))] : []));
+}
+
+// ---------- 🏷️ 게시물 카테고리 (직접 만들고·이름 고치고·지우고, 게시물마다 골라 나눔) ----------
+const catList = () => (store.cats && store.cats.cats) || [];
+const assignOf = () => (store.cats && store.cats.assign) || {};
+const saveCats = (cats, assign) => save("cats", { cats, assign });
+function catOf(id) { const c = assignOf()[id]; return catList().some((x) => x.id === c) ? c : ""; }
+function setCatOf(id, catId) {
+  const a = { ...assignOf() };
+  if (catId) a[id] = catId; else delete a[id];
+  saveCats(catList(), a);
+}
+let catEdit = false;
+$("cat-edit").addEventListener("click", () => { catEdit = !catEdit; renderPosts(); });
 
 // ---------- Todoist: 게시물 · 작업중 · 끝난 작업물 (나들로그만) ----------
 // 체크(게시물) = 작업중으로(라벨 '진행중') · 작업중 체크 = Todoist 완료 → 끝난 작업물 · 작업중 ✕ = 게시물 목록으로
@@ -342,6 +385,20 @@ async function finish(t, row) {
     renderPosts(); renderDone(); toast("✅ 완료! 끝난 작업물로 옮겼어요");
   } catch { row.classList.remove("busy"); renderPosts(); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
 }
+// 직접 추가 = Todoist "샤오홍슈 아이디어"에 새 할 일(이름 앞 "🗿 나들로그:"), 작업중 칸에서 넣으면 라벨 '진행중'도 붙임
+async function addPost(text, { catId = "", wip = false } = {}) {
+  if (!mcp) { toast("claude.ai에서 열어야 Todoist에 넣을 수 있어요."); return; }
+  const content = "🗿 나들로그: " + text;
+  const labels = wip ? [WIP] : [];
+  try {
+    const r = await mcp.callTool(TD, "add-tasks", { tasks: [{ content, sectionId: IDEA_SECTION, ...(wip ? { labels } : {}) }] }, { cache: false });
+    let t = (((r && r.payload) || {}).tasks || [])[0];
+    if (t && t.id) { t = { content, labels, ...t }; posts.push(t); renderPosts(); }
+    else { await load(); t = posts.find((x) => x.content === content); }
+    if (t && catId) setCatOf(t.id, catId);
+    toast(wip ? "🛠️ 작업중 칸에 넣었어요 (Todoist에도 들어갔어요)" : "🗂️ 게시물을 넣었어요 (Todoist에도 들어갔어요)");
+  } catch { toast("Todoist에 넣지 못했어요. 다시 해 보세요."); }
+}
 const hiddenIds = () => new Set((store.hidden && store.hidden.ids) || []);
 function setHidden(id, on) {
   const ids = [...hiddenIds()].filter((x) => x !== id);
@@ -355,21 +412,72 @@ function renderPosts() {
   const free = posts.filter((t) => !has(t, WIP) && !hid.has(t.id));
   const gone = posts.filter((t) => !has(t, WIP) && hid.has(t.id));
 
+  const cats = catList();
+  const catName = (id) => (cats.find((c) => c.id === id) || {}).name;
+
   $("wip").replaceChildren(...(wip.length ? wip.map((t) => {
     const row = h("div", { class: "row" });
-    row.append(h("input", { type: "checkbox", "aria-label": "완료", title: "완료 → 끝난 작업물", onchange: () => finish(t, row) }),
+    const cn = catName(catOf(t.id));
+    row.append(...[h("input", { type: "checkbox", "aria-label": "완료", title: "완료 → 끝난 작업물", onchange: () => finish(t, row) }),
       h("span", { class: "title" }, cleanName(t)),
-      xBtn("게시물 목록으로", () => setWip(t, false, row)));
+      cn ? h("span", { class: "chip", title: cn }, cn) : null,
+      xBtn("게시물 목록으로", () => setWip(t, false, row))].filter(Boolean));
     return row;
-  }) : [h("div", { class: "empty" }, "아래 게시물을 체크하면 여기로 와요.")]));
+  }) : [h("div", { class: "empty" }, "아래 게시물을 체크하면 여기로 와요.")]),
+    addLine("바로 작업할 게시물", (text) => addPost(text, { wip: true })));
 
-  $("posts").replaceChildren(...(free.length ? free.map((t) => {
+  // 카테고리 고르기 (게시물마다)
+  const picker = (t) => {
+    const cur = catOf(t.id);
+    const sel = h("select", { class: "pick", "aria-label": "카테고리", title: "카테고리 고르기", onchange: (e) => setCatOf(t.id, e.target.value) },
+      h("option", { value: "" }, "분류 안 함"), ...cats.map((c) => h("option", { value: c.id }, c.name)));
+    sel.value = cur;
+    return sel;
+  };
+  const postRow = (t) => {
     const row = h("div", { class: "row" });
-    row.append(h("input", { type: "checkbox", "aria-label": "작업중으로", title: "작업중으로", onchange: () => setWip(t, true, row) }),
+    row.append(...[h("input", { type: "checkbox", "aria-label": "작업중으로", title: "작업중으로", onchange: () => setWip(t, true, row) }),
       h("span", { class: "title" }, cleanName(t)),
-      db ? xBtn("목록에서 숨기기", () => setHidden(t.id, true)) : null);
+      db && cats.length ? picker(t) : null,
+      db ? xBtn("목록에서 숨기기", () => setHidden(t.id, true)) : null].filter(Boolean));
     return row;
-  }) : [h("div", { class: "empty" }, "아이디어 칸이 비어 있어요.")]));
+  };
+  const grid = (list, emptyMsg) => h("div", { class: "grid2" }, ...(list.length ? list.map(postRow) : [h("div", { class: "empty" }, emptyMsg)]));
+
+  const cbtn = $("cat-edit");
+  cbtn.hidden = !db;
+  cbtn.textContent = catEdit ? "✓ 다 고쳤어요" : "🏷️ 카테고리 만들기·고치기";
+  cbtn.classList.toggle("on", catEdit);
+
+  const boxes = [];
+  if (!cats.length) {
+    boxes.push(h("div", { class: "list" }, grid(free, "아이디어 칸이 비어 있어요."), addLine("새 게시물", (text) => addPost(text))));
+  } else {
+    const loose = free.filter((t) => !catOf(t.id));
+    if (loose.length || catEdit) boxes.push(h("div", { class: "list" },
+      h("div", { class: "cat-bar none" }, h("span", { class: "name" }, "분류 안 함"), h("span", { class: "cnt" }, loose.length)),
+      grid(loose, "모두 분류했어요."), addLine("새 게시물", (text) => addPost(text))));
+    const write = (next, assign) => saveCats(next, assign || assignOf());
+    cats.forEach((c, i) => {
+      const mine = free.filter((t) => catOf(t.id) === c.id);
+      const bar = catEdit
+        ? h("div", { class: "cat-bar" },
+            h("input", { class: "edit-in", value: c.name, "aria-label": "카테고리 이름", maxlength: "40", onchange: (e) => { const v = e.target.value.trim(); if (v) write(cats.map((x) => (x.id === c.id ? { ...x, name: v } : x))); } }),
+            i > 0 ? h("button", { type: "button", class: "x", "aria-label": "위로", title: "위로", onclick: () => { const n = [...cats]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; write(n); } }, "↑") : null,
+            xBtn("카테고리 지우기", () => {
+              if (!confirm(`「${c.name}」 카테고리를 지울까요?\n안에 있던 게시물은 '분류 안 함'으로 가요. (Todoist에는 그대로)`)) return;
+              const a = { ...assignOf() };
+              for (const k of Object.keys(a)) if (a[k] === c.id) delete a[k];
+              write(cats.filter((x) => x.id !== c.id), a);
+            }))
+        : h("div", { class: "cat-bar" }, h("span", { class: "name" }, c.name), h("span", { class: "cnt" }, mine.length));
+      boxes.push(h("div", { class: "list" }, bar, grid(mine, "아직 없어요."),
+        addLine(`「${c.name}」에 새 게시물`, (text) => addPost(text, { catId: c.id }))));
+    });
+  }
+  if (catEdit) boxes.push(h("div", { class: "list newbox" },
+    addLine("새 카테고리 이름", (name) => saveCats([...cats, { id: newId(), name: name.slice(0, 40) }], assignOf()))));
+  $("posts").replaceChildren(...boxes);
 
   $("hidden-box").hidden = !gone.length;
   $("hidden-sum").textContent = `숨긴 게시물 ${gone.length}개`;
@@ -456,7 +564,7 @@ async function load() {
     renderDone();
     $("status").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}에 불러옴`;
   } catch (err) {
-    $("posts").replaceChildren(h("div", { class: "empty" }, "Todoist를 불러오지 못했어요. 새로고침해 보세요."));
+    $("posts").replaceChildren(h("div", { class: "list" }, h("div", { class: "empty" }, "Todoist를 불러오지 못했어요. 새로고침해 보세요.")));
     $("wip").replaceChildren(h("div", { class: "empty" }, "Todoist를 불러오지 못했어요."));
     $("status").textContent = "불러오지 못했어요";
   }
@@ -550,7 +658,7 @@ document.addEventListener("visibilitychange", () => {
   try { mcp = window.claude ? await window.claude.use("mcp") : null; } catch { mcp = null; }
   if (!mcp) {
     $("status").textContent = "연결 안 됨";
-    $("posts").replaceChildren(h("div", { class: "empty" }, "이 페이지는 claude.ai에서 열어야 Todoist를 불러올 수 있어요."));
+    $("posts").replaceChildren(h("div", { class: "list" }, h("div", { class: "empty" }, "이 페이지는 claude.ai에서 열어야 Todoist를 불러올 수 있어요.")));
     $("wip").replaceChildren(h("div", { class: "empty" }, "claude.ai에서 열어 주세요."));
     $("done").replaceChildren(h("div", { class: "empty" }, "claude.ai에서 열어 주세요."));
     return;
