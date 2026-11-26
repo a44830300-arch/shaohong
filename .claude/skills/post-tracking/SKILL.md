@@ -30,6 +30,7 @@ description: 샤오홍슈 게시글 올린 뒤 데이터 분석 예약(1·2·3�
 1. 内容分析 화면에서 그 글의 숫자를 읽는다: 曝光(노출) · 观看(조회) · 封面点击率(표지 클릭률) · 点赞(좋아요) · 评论(댓글) · 收藏(저장) · 涨粉(늘어난 팔로워) · 分享(공유) · 人均观看时长(평균 보는 시간). 거기에 아직 없으면 笔记管理 숫자만 적고 나머지는 비운다. **안 보이는 숫자는 만들지 않는다.**
 2. 실제로 본 시각과 게시 후 실제 지난 시간을 적는다(늦게 실행됐으면 그대로 알린다).
 3. `샤오홍슈/분석/게시글_추적.csv`에 한 줄 더하고 본 공책(main)에 합쳐 올린다.
+   - **게시글 추적판**(https://claude.ai/artifact/KR5a67wiDABUVAqh9UfnKp, 2026-11-26)에도 `ArtifactData` set으로 한 줄 넣는다(페이지는 다시 발행하지 않는다). `data/team/checks`, 문서 id `p<MMDD>-<HHmm>-<1h|2h|3h|24h|48h|72h|1w|2w>`, 칸: `name`(짧은 한국어 글 이름) `point`("1시간"… "2주") `hours`(1·2·3·24·48·72·168·336) `posted` `postedAt`(YYYY-MM-DDTHH:mm) `seen`("11/27 (금) 10:00") `exposure` `views` `ctr` `likes` `saves` `comments` `shares` `follows` `watch` `note`. 같은 글의 `data/team/posts/p<MMDD>-<HHmm>`(`name` `posted` `postedAt` `seen`(YYYY-MM-DD)와 숫자 칸)도 최신 값으로 넣는다(있는 문서는 먼저 get 해서 if_version으로 update).
 4. 짧게 알린다(쉬운 한국어):
    - 숫자 표: 이번 값 + 지난 확인보다 늘어난 만큼
    - 저장률(저장÷조회)·공유율·클릭률을 지난 글들의 **같은 시점** 값과 비교(없으면 비교할 기록이 아직 없다고 쓴다)
