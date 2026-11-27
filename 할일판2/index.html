@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 할일판 2 — 노트 옮겨적기 모드 (2026-11-21 요청, 기존 할 일판과 따로)
-   강정준비준 노트 한 장 = 3일. 날짜 → 10분 눈금 → 7~24시 칸(형광펜: 노랑 = 수업·교육, 파랑 = 전공 복습) → 빨간 메모(★ 오늘 할 일 · 다음날 준비) */
+   강정준비준 노트 한 장 = 3일. 날짜 → 10분 눈금 → 7~24시 칸(형광펜: 노랑 = 수업·교육, 주황 = 약속, 파랑 = 공부, 회색 = 점심·저녁) → 빨간 메모(★ 오늘 할 일 · 다음날 준비) */
 :root {
   --paper: #fbfbf7;
   --grid: #d9e1e6;
@@ -15,6 +15,8 @@
   --hl-yellow: rgba(255, 214, 10, .62);
   --hl-blue: rgba(120, 196, 232, .55);
   --hl-red: rgba(255, 99, 99, .5);
+  --hl-orange: rgba(255, 150, 40, .55);
+  --hl-gray: rgba(150, 150, 150, .32);
   --chip: #ffffff;
   --done: #a3a9ad;
   --hand: "Gaegu", "Nanum Pen Script", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
@@ -23,10 +25,10 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
-  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --chip: #24292c; --done: #646b70; color-scheme: dark } }
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --hl-orange: rgba(255, 150, 50, .4); --hl-gray: rgba(170, 170, 170, .26); --chip: #24292c; --done: #646b70; color-scheme: dark } }
 :root[data-theme="dark"] {
   --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;
-  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --chip: #24292c; --done: #646b70; color-scheme: dark }
+  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --hl-orange: rgba(255, 150, 50, .4); --hl-gray: rgba(170, 170, 170, .26); --chip: #24292c; --done: #646b70; color-scheme: dark }
 
 body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.4; }
 .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 48px; display: grid; gap: 14px; }
@@ -41,7 +43,7 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .status { font-size: 12px; color: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 22px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
-.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); } .legend .p { background: var(--hl-red); }
+.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); } .legend .p { background: var(--hl-orange); } .legend .g { background: var(--hl-gray); }
 .legend .r { color: var(--red); font-weight: 600; }
 .banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
@@ -65,10 +67,11 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .hr:last-child .trk { border-bottom: 1px solid var(--grid); }
 /* 형광펜: 칸마다 따로 칠한 것처럼 살짝 비뚤게 */
 .hl { position: absolute; top: 5px; bottom: 5px; border-radius: 3px 6px 4px 7px; transform: skewX(-6deg); }
-/* 노랑 = 절대 못 바꾸는 일정(수업·교육·약속), 파랑 = 고정이지만 바꿀 수 있는 일정(전공 복습·개인공부) */
+/* 노랑 = 수업·교육, 주황 = 약속, 파랑 = 공부 시간(전공·샤오홍슈·공무원 등), 회색 = 점심·저녁 (2026-11-27 요청) */
 .hl.class { background: var(--hl-yellow); }
-.hl.appt { background: var(--hl-red); } /* 개인 약속 = 빨간 형광펜 (2026-11-21 요청) */
+.hl.appt { background: var(--hl-orange); } /* 약속 = 주황 형광펜 (2026-11-27 바꿈, 전에는 빨강) */
 .hl.review { background: var(--hl-blue); }
+.hl.meal { background: var(--hl-gray); } /* 점심·저녁 = 회색 형광펜 (2026-11-27) */
 .hl { cursor: pointer; overflow: hidden; }
 .hl span { position: absolute; top: 0; bottom: 0; left: 3px; display: flex; align-items: baseline; gap: 4px; font-family: var(--hand); font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); white-space: nowrap; overflow: visible; transform: skewX(6deg); z-index: 2; pointer-events: none; }
 .hl span b { font-weight: 700; }
@@ -187,7 +190,7 @@ const SCHOOL = [
 // 평일 고정 스케줄. [시각, 이름, "b"] = 파랑 형광펜(개인공부·전공 복습, 50분 고정, 이어지면 50분 + 쉬는 10분)
 // [시각, 이름] = 검은 점 글씨. 학교 가는 시간(씻기·출발)은 그날 첫 수업에서 거꾸로 계산 (2026-11-21 요청)
 const BLOCK = 50;
-const EVE0 = [["18:00", "운동 + 저녁"], ["20:40", "샤오홍슈 ①", "b"], ["21:40", "샤오홍슈 ②", "b"]]; // 샤오홍슈도 파랑 (2026-11-21)
+const EVE0 = [["18:00", "운동 + 저녁", "m"], ["20:40", "샤오홍슈 ①", "b"], ["21:40", "샤오홍슈 ②", "b"]]; // 샤오홍슈도 파랑 (2026-11-21)
 const EVE = [...EVE0, ["22:40", "공무원 ①", "b"], ["23:40", "공무원 ②", "b"], ["24:40", "→ 내일 일정"]];
 // 7시: 기상·철봉·스케줄 확인·씻기를 하나씩 눌러 체크 (2026-11-21 요청)
 // 7시도 파랑 형광펜(07:00~07:50), 안의 할 일은 하나씩 눌러 체크. 07:30 제주라이브 날씨 올리기도 여기 안에
@@ -197,11 +200,11 @@ const DAILY = [["07:30", "제주라이브 날씨 올리기"]];
 // 국어 비문학 + 영어 독해는 50분 한 세트 (2026-11-21 요청)
 const KE = "국어 비문학 + 영어 독해";
 const FIXED = {
-  1: [...UP, ["08:30", KE, "b"], ["12:00", "점심"], ["14:50", "전공 복습", "b"], ...EVE], // 월요일도 공무원 ①② 다시 넣음 (2026-11-21)
-  2: [...UP, ["08:00", KE, "b"], ["11:45", "전공 복습", "b"], ["12:40", "점심"], ["14:50", "전공 복습", "b"], ...EVE],
-  3: [...UP, ["12:00", "점심"], ["12:30", "전공 복습", "b"], ...EVE],
-  4: [...UP, ["10:15", "전공 복습", "b"], ["11:15", KE, "b"], ["12:10", "점심"], ...EVE],
-  5: [...UP, ["08:00", KE, "b"], ["12:00", "점심"], ...EVE],
+  1: [...UP, ["08:30", KE, "b"], ["12:00", "점심", "m"], ["14:50", "전공 복습", "b"], ...EVE], // 월요일도 공무원 ①② 다시 넣음 (2026-11-21)
+  2: [...UP, ["08:00", KE, "b"], ["11:45", "전공 복습", "b"], ["12:40", "점심", "m"], ["14:50", "전공 복습", "b"], ...EVE],
+  3: [...UP, ["12:00", "점심", "m", 30], ["12:30", "전공 복습", "b"], ...EVE],
+  4: [...UP, ["10:15", "전공 복습", "b"], ["11:15", KE, "b"], ["12:10", "점심", "m"], ...EVE],
+  5: [...UP, ["08:00", KE, "b"], ["12:00", "점심", "m"], ...EVE],
 };
 // 첫 수업 전: 40분 전 출발, 출발 30분 전(= 수업 70분 전) 씻기
 const LEAVE = 40, WASH = 30;
@@ -257,6 +260,7 @@ function taskLevel(t) {
   if (t.sectionId === BLOG_SECTION || IMPORTANT.test(t.content) || t.priority === "p1") return 3;
   return t.priority === "p2" ? 2 : 0;
 }
+const isStudyTitle = (s) => /공부|복습|공무원|샤오홍슈|독해|비문학/.test(s) && !/스터디카페/.test(s);
 const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
 const isGong = (t) => t.sectionId === GONG_SECTION || /공무원|행정법|행정학/.test(t.content);
 
@@ -295,7 +299,9 @@ function buildDay(d) {
     let em = ymd(en) === d ? en.getHours() * 60 + en.getMinutes() : 1440 + en.getHours() * 60 + en.getMinutes();
     if (em <= sm) em = sm + 30;
     // 캘린더의 시간 있는 일정 = 수업·교육·약속 → 모두 노랑 (2026-11-21 요청)
-    bars.push({ s: sm, e: em, kind: isClassTitle(title) ? "class" : "appt", name: title, done: isChecked(e) });
+    // 수업·교육 = 노랑, 공부 = 파랑, 그 밖의 약속 = 주황 (2026-11-27 요청)
+    const kind = isClassTitle(title) ? "class" : isStudyTitle(title) ? "review" : "appt";
+    bars.push({ s: sm, e: em, kind, name: title, done: isChecked(e), cal: true });
   }
   if (d <= SCHOOL_END) for (const [w, s, e, n] of SCHOOL) {
     if (w !== wd) continue;
@@ -318,7 +324,7 @@ function buildDay(d) {
     } else todos.push({ text: t.content, lvl: taskLevel(t), late: taskDate(t) < d, id: t.id });
   }
   // 평일 고정 스케줄: 노랑(못 바꾸는 일정)과 겹치거나 실제 일정이 그 자리에 있으면 고정 칸은 뺌
-  const yellow = bars.filter((b) => b.kind === "class" || b.kind === "appt");
+  const yellow = bars.filter((b) => b.kind === "class" || b.kind === "appt" || b.cal);
   const hitsYellow = (s, e) => yellow.some((y) => s < y.e && e > y.s);
   // 학교 가는 시간: 그날 첫 수업(노랑 수업·교육)에서 거꾸로
   const first = bars.filter((b) => b.kind === "class").sort((a, b) => a.s - b.s)[0];
@@ -327,10 +333,10 @@ function buildDay(d) {
   const goBusy = first ? [first.s - LEAVE, first.s] : null;
   for (const f of [...(FIXED[wd] ? [] : DAILY), ...(FIXED[wd] || [])]) {
     const s = toMin(f[0]);
-    if (f[2] === "b") {
+    if (f[2] === "b" || f[2] === "m") {
       const e = s + (f[3] || BLOCK);
       if (hitsYellow(s, e) || (goBusy && s < goBusy[1] && e > goBusy[0])) continue;
-      bars.push({ s, e, kind: "review", name: f[1], items: f[4] || null });
+      bars.push({ s, e, kind: f[2] === "m" ? "meal" : "review", name: f[1], items: f[4] || null });
       continue;
     }
     if (hitsYellow(s, s + 1) || texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
