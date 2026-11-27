@@ -504,7 +504,8 @@ async function load() {
   ]);
   const errs = [];
   data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
-  data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled") : (errs.push("구글 캘린더"), []);
+  // 마케팅은 끝남 → 캘린더에 남아 있어도 보여 주지 않음 (2026-11-27 요청)
+  data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled" && !/마케팅|마킴|마뗑/.test(e.summary || "")) : (errs.push("구글 캘린더"), []);
   render();
   const n = new Date();
   // 긴 안내 글씨 대신 위 막대에 짧게만 (2026-11-21 요청)
