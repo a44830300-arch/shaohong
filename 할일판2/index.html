@@ -1,4 +1,4 @@
-<title>할일판 2</title>
+<title>스케줄표</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -108,6 +108,14 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
 .rbrk b { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: var(--hand); font-size: 15px; font-weight: 700; white-space: nowrap; }
 /* □ 밑에 [ 로 묶은 작은 목록 (가방, 도시락 등) */
 .sub { margin: 2px 0 2px 6px; padding-left: 10px; border-left: 2px solid var(--red); font-size: 16px; line-height: 1.25; }
+.dday { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.dday .dl { font-family: var(--hand); font-size: 18px; font-weight: 700; color: var(--red); margin-right: 2px; }
+.dchip { display: inline-flex; align-items: baseline; gap: 6px; border: 1.5px solid var(--red); border-radius: 999px; padding: 2px 10px; font-size: 13px; background: var(--chip); }
+.dchip b { font-family: var(--num); font-size: 13px; color: var(--red); }
+.dchip.soon { background: var(--red); color: var(--paper); } .dchip.soon b { color: var(--paper); }
+.dchip small { color: var(--muted); font-size: 11px; } .dchip.soon small { color: var(--paper); opacity: .85; }
+.dh .dmark { font-family: var(--body); font-size: 11px; font-weight: 700; color: var(--paper); background: var(--red); border-radius: 4px; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.week .dh .dmark { font-size: 9.5px; padding: 0 4px; }
 .nowl { position: absolute; left: 46px; right: 0; height: 0; border-top: 2px dashed var(--red); z-index: 4; pointer-events: none; opacity: .7; }
 
 /* 빨간 메모 */
@@ -167,6 +175,8 @@ h1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: v
     </div>
   </div>
   <!-- 색 설명·안내 글씨는 없앰 (2026-11-21 요청) -->
+  <!-- 시험·기말고사·발표 디데이 (2026-11-27 요청) -->
+  <div class="dday" id="dday" hidden></div>
   <div id="notice" hidden></div>
   <div class="page" id="page"></div>
 </div>
@@ -262,6 +272,10 @@ function taskLevel(t) {
 }
 const isStudyTitle = (s) => /공부|복습|공무원|샤오홍슈|독해|비문학/.test(s) && !/스터디카페/.test(s);
 const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
+// 디데이로 세는 일정: 제목에 시험·고사·기말·중간·발표·퀴즈·면접이 들어간 캘린더 일정과 Todoist 할 일 (2026-11-27 요청)
+const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈|면접/;
+const DDAY_NOT = /원서접수|접수|합격 ?발표|결과 ?발표/;
+const isDday = (s) => DDAY_RE.test(s) && !DDAY_NOT.test(s);
 const isGong = (t) => t.sectionId === GONG_SECTION || /공무원|행정법|행정학/.test(t.content);
 
 // 옮겨 적은 것 줄 긋기 (이 기기에만 기억)
@@ -284,6 +298,17 @@ const monday = (s) => { const w = parseYmd(s).getDay(); return addDays(s, w === 
 const home = () => (mode === "week" ? monday(TODAY()) : TODAY());
 let start = home();
 let data = { tasks: [], events: [], errors: [] };
+let ddays = []; // [{ d: "YYYY-MM-DD", title }]
+const dLabel = (d) => { const n = Math.round((parseYmd(d) - parseYmd(TODAY())) / 86400000); return n === 0 ? "D-DAY" : n > 0 ? `D-${n}` : `D+${-n}`; };
+function renderDday() {
+  const box = $("dday");
+  const list = ddays.filter((x) => x.d >= TODAY()).sort((a, b) => a.d.localeCompare(b.d));
+  box.hidden = !list.length;
+  box.replaceChildren(h("span", { class: "dl" }, "디데이"), ...list.map((x) => {
+    const dt = parseYmd(x.d), n = Math.round((dt - parseYmd(TODAY())) / 86400000);
+    return h("span", { class: "dchip" + (n <= 7 ? " soon" : ""), title: x.title }, h("b", null, dLabel(x.d)), x.title, h("small", null, `${dt.getMonth() + 1}/${dt.getDate()} (${WD[dt.getDay()]})`));
+  }));
+}
 
 // 하루치를 노트 모양 자료로 정리
 function buildDay(d) {
@@ -366,7 +391,8 @@ function renderDay(day) {
   const { d, wd } = day;
   const dt = parseYmd(d);
   const col = h("section", { class: "day", "aria-label": `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${WD[wd]}요일` });
-  col.append(h("div", { class: "dh" + (wd === 0 ? " sun" : "") }, `${dt.getMonth() + 1}.${dt.getDate()} ${WD[wd]}`, d === TODAY() ? h("span", { class: "today" }, "오늘") : null));
+  col.append(h("div", { class: "dh" + (wd === 0 ? " sun" : "") }, `${dt.getMonth() + 1}.${dt.getDate()} ${WD[wd]}`, d === TODAY() ? h("span", { class: "today" }, "오늘") : null,
+    ...ddays.filter((x) => x.d === d).map((x) => h("span", { class: "dmark", title: x.title }, `🎯 ${x.title}`))));
   col.append(h("div", { class: "scale", "aria-hidden": "true" }, h("span"), [10, 20, 30, 40, 50, 60].map((n) => h("span", null, n))));
   const grid = h("div", { class: "grid" });
   const ROW = mode === "week" ? 26 : 30; // CSS .hr 높이와 같게
@@ -504,15 +530,32 @@ async function load() {
   const base = start <= today ? today : start;
   const last = addDays(start, NDAYS()); // 마지막 날 + 다음날(내일 스케줄 메모용)
   const days = Math.min(30, Math.max(1, Math.round((parseYmd(last) - parseYmd(base)) / 86400000) + 1));
-  const [tk, ev] = await Promise.allSettled([
+  const [tk, ev, dc, dt] = await Promise.allSettled([
     mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 100 }, { cache: false }),
     mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, NDAYS() + 1)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+    // 디데이: 앞으로 1년 캘린더 + Todoist 전체에서 시험·발표 찾기
+    mcp.callTool(GC, "list_events", { startTime: `${today}T00:00:00`, endTime: `${addDays(today, 365)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+    mcp.callTool(TD, "find-tasks", { filter: "search: 시험 | search: 고사 | search: 기말 | search: 발표 | search: 퀴즈 | search: 면접", limit: 100 }, { cache: false }),
   ]);
+  const dd = [];
+  if (dc.status === "fulfilled") for (const e of dc.value.payload?.events || []) {
+    const t = cleanSummary(e.summary);
+    if (e.status === "cancelled" || isChecked(e) || !isDday(t)) continue;
+    dd.push({ d: e.start?.dateTime ? ymd(new Date(e.start.dateTime)) : e.start?.date?.slice(0, 10), title: t });
+  }
+  if (dt.status === "fulfilled") for (const t of dt.value.payload?.tasks || []) {
+    const td = taskDate(t);
+    if (!td || !isDday(t.content)) continue;
+    const title = t.content.replace(/\s*\(.*?\)/g, "").replace(/\s*\S+까지$/, "").trim();
+    if (!dd.some((x) => x.d === td && x.title === title)) dd.push({ d: td, title });
+  }
+  ddays = dd.filter((x) => x.d);
   const errs = [];
   data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
   // 마케팅은 끝남 → 캘린더에 남아 있어도 보여 주지 않음 (2026-11-27 요청)
   data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled" && !/마케팅|마킴|마뗑/.test(e.summary || "")) : (errs.push("구글 캘린더"), []);
   render();
+  renderDday();
   const n = new Date();
   // 긴 안내 글씨 대신 위 막대에 짧게만 (2026-11-21 요청)
   $("status").textContent = errs.length ? `${errs.join("·")} 못 불러옴` : `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
