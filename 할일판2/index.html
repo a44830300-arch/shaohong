@@ -273,11 +273,13 @@ function taskLevel(t) {
 const isStudyTitle = (s) => /공부|복습|공무원|샤오홍슈|독해|비문학/.test(s) && !/스터디카페/.test(s);
 const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
 // 디데이로 세는 일정: 제목에 시험·고사·기말·중간·발표·퀴즈·면접이 들어간 캘린더 일정과 Todoist 할 일 (2026-11-27 요청)
-const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈|면접/;
-const DDAY_NOT = /원서접수|접수|합격 ?발표|결과 ?발표|장소|공고/;
-// 강정준비준 시험이 아닌 것 (다른 사람 시험, 2026-11-27 요청) — 캘린더 일정은 그대로 두고 디데이에서만 뺌
-const DDAY_SKIP = /준호|형범/;
-const isDday = (s) => DDAY_RE.test(s) && !DDAY_NOT.test(s) && !DDAY_SKIP.test(s);
+const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈/;
+// 강정준비준 시험만 (2026-11-27 요청): 원서접수·장소 공고·합격 발표·면접 같은 건 빼고 필기시험 날만
+const DDAY_NOT = /원서|접수|합격|결과|장소|공고|면접|발표일 ?공지/;
+// 친구 시험은 뺌 (2026-11-27 요청): 이름 + 시험 모양(예: 준호시험, 형범 시험). 과목·시험 이름이 앞에 오면 내 시험으로 봄
+const MINE = /전기|회로|공업|수학|자기|문학|제주|국어|영어|행정|한국사|필기|기말|중간|공무원|9급|국가직|지방직|토익|자격|기사/;
+const isFriend = (s) => /준호|형범/.test(s) || (/^[가-힣]{2,3}\s?시험$/.test(s.trim()) && !MINE.test(s));
+const isDday = (s) => DDAY_RE.test(s) && !DDAY_NOT.test(s) && !isFriend(s);
 const isGong = (t) => t.sectionId === GONG_SECTION || /공무원|행정법|행정학/.test(t.content);
 
 // 옮겨 적은 것 줄 긋기 (이 기기에만 기억)
