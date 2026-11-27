@@ -273,7 +273,7 @@ function taskLevel(t) {
 const isStudyTitle = (s) => /공부|복습|공무원|샤오홍슈|독해|비문학/.test(s) && !/스터디카페/.test(s);
 const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
 // 디데이로 세는 일정: 제목에 시험·고사·기말·중간·발표·퀴즈·면접이 들어간 캘린더 일정과 Todoist 할 일 (2026-11-27 요청)
-const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈/;
+const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈|과제|리포트|레포트/; // 과제도 디데이 (2026-11-27 요청)
 // 강정준비준 시험만 (2026-11-27 요청): 원서접수·장소 공고·합격 발표·면접 같은 건 빼고 필기시험 날만
 const DDAY_NOT = /원서|접수|합격|결과|장소|공고|면접|발표일 ?공지/;
 // 친구 시험은 뺌 (2026-11-27 요청): 이름 + 시험 모양(예: 준호시험, 형범 시험). 과목·시험 이름이 앞에 오면 내 시험으로 봄
@@ -539,7 +539,7 @@ async function load() {
     mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, NDAYS() + 1)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
     // 디데이: 앞으로 1년 캘린더 + Todoist 전체에서 시험·발표 찾기
     mcp.callTool(GC, "list_events", { startTime: `${today}T00:00:00`, endTime: `${addDays(today, 365)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
-    mcp.callTool(TD, "find-tasks", { filter: "search: 시험 | search: 고사 | search: 기말 | search: 발표 | search: 퀴즈 | search: 면접", limit: 100 }, { cache: false }),
+    mcp.callTool(TD, "find-tasks", { filter: "search: 시험 | search: 고사 | search: 기말 | search: 발표 | search: 퀴즈 | search: 과제 | search: 리포트 | search: 레포트", limit: 100 }, { cache: false }),
   ]);
   const dd = [];
   if (dc.status === "fulfilled") for (const e of dc.value.payload?.events || []) {
