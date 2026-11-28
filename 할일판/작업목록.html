@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>샤오홍슈 작업목록</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 할 일판 1 = 샤오홍슈 작업목록 (나들로그만). 2026-11-25 손그림 수정안:
+   🧭 작업 순서 → [🛠️ 작업중 | 🗓️ 월별/분기별 + 📅 이번 주] → 🗂️ 게시물(두 줄, 체크=작업중으로·✕=숨기기)
+   → ✅ 끝난 작업물(접기, 완료 날짜 기준 한 주씩) → 📖 컨텐츠 가이드(고치기·추가·지우기).
+   직접 적는 칸(월별/분기별·이번 주 체크·숨긴 게시물·컨텐츠 가이드)은 페이지 저장소(db)에 둬서 휴대폰·컴퓨터 같이 봄.
+   2026-11-25 추가: 게시물·작업중·이번 주에 직접 추가하는 줄, 게시물 카테고리(직접 만들고 게시물마다 골라 나눔, db board/cats). */
+:root {
+  --bg: #f6f7f5; --surface: #ffffff; --line: #dfe3de; --fg: #1f2622; --muted: #66706a;
+  --accent: #e8731c; --accent-soft: #fdeedf; --red: #d33a2c;
+  --green: #3f8f3a; --green-soft: #e1f2dc;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151a17; --surface: #1d2420; --line: #2f3833; --fg: #e9eee9; --muted: #9aa59e;
+  --accent: #f28a3a; --accent-soft: #3a2a1c; --red: #ff6f61;
+  --green: #7cc576; --green-soft: #1f3320; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #151a17; --surface: #1d2420; --line: #2f3833; --fg: #e9eee9; --muted: #9aa59e;
+  --accent: #f28a3a; --accent-soft: #3a2a1c; --red: #ff6f61;
+  --green: #7cc576; --green-soft: #1f3320; color-scheme: dark }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; display: grid; gap: 28px; }
+.wrap > section, .top > * { min-width: 0; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+h1 { margin: 0; font-size: 26px; font-weight: 700; }
+h1 small { display: block; font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: .02em; }
+h2 { margin: 0 0 10px; font-size: 17px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+h2 .right { margin-left: auto; }
+button { font: inherit; cursor: pointer; touch-action: manipulation; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.on { border-color: var(--accent); background: var(--accent-soft); }
+.btn:focus-visible, .x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) { .btn:hover { border-color: var(--accent); } }
+.status { font-size: 12px; color: var(--muted); }
+
+/* 작업 타이머 */
+.timer { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px 8px; }
+.timer::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--p, 0) * 100%); background: var(--accent); }
+.t-time { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 22px; min-width: 7ch; text-align: center; }
+.t-go { min-width: 60px; }
+.t-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.t-presets button { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 3px 9px; font-size: 12px; }
+.t-presets button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.timer.ring .t-time { color: var(--red); }
+@media (prefers-reduced-motion: no-preference) { .timer.ring .t-time { animation: tblink 1s steps(2) infinite; } }
+@keyframes tblink { 50% { opacity: .2; } }
+
+/* 작업 순서 */
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0; padding: 12px 14px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.steps li { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+.steps li .n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-family: var(--font-num); font-size: 12px; }
+.steps li + li::before { content: "→"; color: var(--muted); font-weight: 400; margin-right: 2px; }
+
+/* 위쪽: 작업중 | 월별/분기별 + 이번 주 */
+.top { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px 16px; align-items: start; }
+.top .side { display: grid; gap: 16px; }
+.top .side h2 { margin-bottom: 8px; }
+
+/* 목록 공통 */
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.empty { color: var(--muted); padding: 16px 14px; font-size: 14px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; min-width: 0; border-top: 1px solid var(--line); }
+.list > .row:first-child { border-top: 0; }
+.row input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; flex: none; cursor: pointer; }
+.row .title { flex: 1 1 auto; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.row.done .title { color: var(--muted); text-decoration: line-through; }
+.row.busy { opacity: .5; pointer-events: none; }
+.x { flex: none; width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 15px; line-height: 1; }
+@media (hover: hover) { .x:hover { background: var(--accent-soft); color: var(--red); } }
+#wip { min-height: 180px; }
+
+/* 직접 추가하는 줄 */
+.add { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--line); }
+.add input { flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 14px; }
+.add input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.add .btn { flex: none; }
+
+/* 게시물: 카테고리 칸들 */
+.posts { display: grid; gap: 12px; }
+.cat-bar { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); font-weight: 700; min-width: 0; }
+.cat-bar .name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.cat-bar .name::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 8px; vertical-align: middle; }
+.cat-bar.none .name::before { background: var(--muted); }
+.cat-bar .cnt { flex: none; font-family: var(--font-num); font-size: 12px; color: var(--muted); font-weight: 500; }
+.cat-bar .edit-in { font-weight: 700; }
+.list.newbox { border-style: dashed; }
+.list.newbox .add { border-top: 0; }
+.pick { flex: none; max-width: 8.5em; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 2px 6px; font: inherit; font-size: 12px; cursor: pointer; }
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chip { flex: none; max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 1px 8px; font-size: 12px; background: var(--green-soft); color: var(--green); font-weight: 600; }
+
+/* 게시물 두 줄 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; }
+.grid2 > .row:nth-child(-n+2) { border-top: 0; }
+.grid2 > .row:nth-child(odd) { border-right: 1px solid var(--line); }
+.grid2 > .empty { grid-column: 1 / -1; }
+.more { margin-top: 8px; }
+.more summary { cursor: pointer; font-size: 13px; color: var(--muted); padding: 4px 2px; }
+.more .list { margin-top: 6px; }
+.restore { flex: none; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+
+/* 끝난 작업물 (접기) */
+details.fold { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+details.fold > summary { list-style: none; cursor: pointer; padding: 12px 14px; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: "▾"; margin-left: auto; color: var(--muted); transition: transform .15s; }
+details.fold[open] > summary::after { transform: rotate(180deg); }
+details.fold > summary .cnt { font-family: var(--font-num); font-size: 13px; color: var(--muted); font-weight: 500; }
+.wk { border-top: 1px solid var(--line); }
+.wk-h { padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--bg); }
+.wk .row { border-top: 1px solid var(--line); }
+.wk .row .d { flex: none; font-family: var(--font-num); font-size: 12px; color: var(--muted); }
+.wk .row .ok { flex: none; color: var(--green); font-weight: 700; }
+
+/* 컨텐츠 가이드 */
+.guide { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.cat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.cat-h { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); font-weight: 700; }
+.cat-h .name { flex: 1 1 auto; min-width: 0; }
+.cat-h .name::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+.cat ul { list-style: none; margin: 0; padding: 4px 0; flex: 1 1 auto; }
+.cat li { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 14px; font-size: 14px; min-width: 0; }
+.cat li .t { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.cat li .t::before { content: "· "; color: var(--muted); }
+.cat li.none { color: var(--muted); }
+.cat li.none .t::before { content: ""; }
+.edit-in { flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 6px; padding: 3px 8px; font: inherit; font-size: 14px; }
+.cat-h .edit-in { font-weight: 700; }
+.cat.newcat { border-style: dashed; justify-content: center; }
+.guide .x { width: 26px; height: 26px; font-size: 13px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 14px; max-width: calc(100% - 32px); z-index: 20; }
+
+/* ---------- 휴대폰 ---------- */
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .wrap { padding-block: 0 56px; gap: 22px; }
+  header { position: sticky; top: 0; z-index: 9; background: var(--bg); padding-block: max(8px, env(safe-area-inset-top, 0px)) 8px; align-items: center; row-gap: 6px; column-gap: 8px; box-shadow: 0 0 0 100vmax var(--bg); clip-path: inset(0 -100vmax); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 18px; line-height: 1.2; }
+  h1 small { display: inline; font-size: 11px; margin-right: 6px; }
+  header .status { display: none; }
+  header .btn { padding: 4px 10px; font-size: 12px; }
+  .timer { order: 3; flex: 1 1 100%; flex-wrap: nowrap; gap: 5px; padding: 3px 6px 5px; border-radius: 10px; }
+  .t-time { font-size: 18px; min-width: 6ch; }
+  .t-go { min-width: 46px; flex: none; }
+  .t-presets { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .t-presets button { flex: none; padding: 3px 8px; font-size: 11px; }
+  .timer.running .t-presets { display: none; }
+  h2, details.fold > summary { font-size: 18px; }
+  .top { grid-template-columns: 1fr; }
+  #wip { min-height: 0; }
+  .pick { max-width: 7em; }
+}
+@media (max-width: 560px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .grid2 > .row:nth-child(2) { border-top: 1px solid var(--line); }
+  .grid2 > .row:nth-child(odd) { border-right: 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small id="today-label">오늘</small>샤오홍슈 작업목록</h1>
+    <div class="timer" id="timer" role="group" aria-label="작업 타이머">
+      <span class="t-time" id="t-time">40:00</span>
+      <button class="btn primary t-go" id="t-go" type="button">시작</button>
+      <button class="btn" id="t-reset" type="button" aria-label="처음으로">↺</button>
+      <div class="t-presets" id="t-presets">
+        <button type="button" data-min="10">10분</button>
+        <button type="button" data-min="40">40분</button>
+        <button type="button" data-min="60">1시간</button>
+        <button type="button" data-min="80">1시간 20분</button>
+        <button type="button" data-min="120">2시간</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="status" id="status">불러오는 중…</span>
+      <button class="btn" id="refresh" type="button">새로고침</button>
+    </div>
+  </header>
+
+  <section id="sec-steps">
+    <h2>🧭 작업 순서</h2>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <div class="top">
+    <section id="sec-wip">
+      <h2>🛠️ 작업중</h2>
+      <div class="list" id="wip"><div class="empty">불러오는 중…</div></div>
+    </section>
+    <div class="side">
+      <section id="sec-period">
+        <h2>🗓️ 월별 / 분기별</h2>
+        <div class="list" id="period"></div>
+      </section>
+      <section id="sec-week">
+        <h2>📅 이번 주</h2>
+        <div class="list" id="week"></div>
+      </section>
+    </div>
+  </div>
+
+  <section id="sec-posts">
+    <h2>🗂️ 게시물 <button class="btn right" id="cat-edit" type="button" hidden>🏷️ 카테고리 만들기·고치기</button></h2>
+    <div class="posts" id="posts"><div class="list"><div class="empty">불러오는 중…</div></div></div>
+    <details class="more" id="hidden-box" hidden>
+      <summary id="hidden-sum">숨긴 게시물</summary>
+      <div class="list" id="hidden-list"></div>
+    </details>
+  </section>
+
+  <details class="fold" id="sec-done">
+    <summary>✅ 끝난 작업물 <span class="cnt" id="done-cnt"></span></summary>
+    <div id="done"><div class="empty">불러오는 중…</div></div>
+  </details>
+
+  <section id="sec-guide">
+    <h2>📖 컨텐츠 가이드 <button class="btn right" id="guide-edit" type="button" hidden>✏️ 고치기</button></h2>
+    <div class="guide" id="guide"><div class="list"><div class="empty">불러오는 중…</div></div></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const TD = "Todoist";
+const IDEA_SECTION = "6hqfQg4Q9MMprpjc";  // 💼 일 > 샤오홍슈 아이디어
+const WD = ["일","월","화","수","목","금","토"];
+let mcp = null, db = null;
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "value") el.value = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mdw = (d) => `${d.getMonth() + 1}/${d.getDate()} (${WD[d.getDay()]})`;
+const mondayOf = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return addDays(x, -((x.getDay() + 6) % 7)); };
+const newId = () => Math.random().toString(36).slice(2, 10);
+let toastTimer = null;
+function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.hidden = true), 6000); }
+const xBtn = (label, onclick) => h("button", { type: "button", class: "x", "aria-label": label, title: label, onclick }, "✕");
+
+// ---------- 🧭 작업 순서 (안내일 뿐, 체크리스트 아님) ----------
+const STEPS = ["기획안 짜기", "레퍼런스 찾기", "작업하기", "마무리", "캡션 짜기"];
+$("steps").append(...STEPS.map((s, i) => h("li", null, h("span", { class: "n" }, i + 1), s)));
+
+// ---------- 페이지 저장소(db): 월별/분기별 · 이번 주 체크 · 숨긴 게시물 · 컨텐츠 가이드 ----------
+// 문서 5개: board/period {items:[{id,text,done}]} · board/week {week, done:{}, extra:[{id,text}]} · board/hidden {ids:[]}
+//          board/guide {cats:[{id,name,items:[{id,text}]}]} · board/cats {cats:[{id,name}], assign:{Todoist id: 카테고리 id}}
+const store = { period: null, week: null, hidden: null, guide: null, cats: null };
+async function save(name, body) {
+  if (!db) { toast("이 화면에서는 저장할 수 없어요. claude.ai에서 열어 주세요."); return false; }
+  store[name] = body; renderStore();
+  try { await db.doc("board/" + name).set(body); return true; }
+  catch (e) { toast("저장하지 못했어요. 다시 해 보세요."); return false; }
+}
+function watchStore() {
+  const timer = setTimeout(() => { if (Object.values(store).some((v) => v === null)) toast("저장된 내용을 아직 못 불러왔어요. 잠시 뒤 새로고침해 보세요."); }, 10000);
+  for (const name of Object.keys(store)) {
+    db.doc("board/" + name).onSnapshot((snap) => {
+      store[name] = snap.exists ? snap.data() : {};
+      if (!snap.metadata.fromCache && Object.values(store).every((v) => v !== null)) clearTimeout(timer);
+      renderStore();
+    }, () => { if (store[name] === null) store[name] = {}; renderStore(); });
+  }
+}
+function renderStore() { renderPeriod(); renderWeek(); renderPosts(); renderGuide(); }
+
+// 직접 추가하는 줄 (입력칸 + 추가 버튼, 엔터로도 추가)
+function addLine(placeholder, onAdd) {
+  const input = h("input", { type: "text", placeholder, "aria-label": placeholder, maxlength: "120" });
+  const go = () => { const v = input.value.trim(); if (!v) return; input.value = ""; onAdd(v); };
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); go(); } });
+  return h("div", { class: "add" }, input, h("button", { type: "button", class: "btn", onclick: go }, "추가"));
+}
+
+// ---------- 🗓️ 월별 / 분기별 (빈 칸에서 직접 추가·체크·지우기) ----------
+function renderPeriod() {
+  const items = (store.period && store.period.items) || [];
+  const write = (next) => save("period", { items: next });
+  const rows = items.map((it) => h("div", { class: "row" + (it.done ? " done" : "") },
+    h("input", { type: "checkbox", checked: !!it.done, "aria-label": it.text + " 체크", onchange: (e) => write(items.map((x) => x.id === it.id ? { ...x, done: e.target.checked } : x)) }),
+    h("span", { class: "title" }, it.text),
+    xBtn("지우기", () => write(items.filter((x) => x.id !== it.id)))));
+  const box = $("period");
+  if (store.period === null && db) { box.replaceChildren(h("div", { class: "empty" }, "불러오는 중…")); return; }
+  box.replaceChildren(...rows, ...(db ? [addLine("새 항목", (text) => write([...items, { id: newId(), text, done: false }]))] : rows.length ? [] : [h("div", { class: "empty" }, "비어 있어요.")]));
+}
+
+// ---------- 📅 이번 주 (고정: 날씨달력·축제달력 + 직접 추가, 월요일마다 체크 새로) ----------
+// 직접 추가한 것 중 못 끝낸 건 다음 주로 넘어가고, 체크한 건 다음 주에 사라짐
+const FIXED = ["날씨달력", "축제달력"];
+function weekState() {
+  const week = ymd(mondayOf(new Date()));
+  const w = store.week || {};
+  if (w.week === week) return { week, done: w.done || {}, extra: w.extra || [] };
+  const old = w.done || {};
+  return { week, done: {}, extra: (w.extra || []).filter((x) => !old[x.id]) };
+}
+function renderWeek() {
+  const s = weekState();
+  const write = (next) => save("week", { ...s, ...next });
+  const fixed = FIXED.map((it) => h("label", { class: "row" + (s.done[it] ? " done" : "") },
+    h("input", { type: "checkbox", checked: !!s.done[it], onchange: (e) => write({ done: { ...s.done, [it]: e.target.checked } }) }),
+    h("span", { class: "title" }, it)));
+  const extra = s.extra.map((it) => h("div", { class: "row" + (s.done[it.id] ? " done" : "") },
+    h("input", { type: "checkbox", checked: !!s.done[it.id], "aria-label": it.text + " 체크", onchange: (e) => write({ done: { ...s.done, [it.id]: e.target.checked } }) }),
+    h("span", { class: "title" }, it.text),
+    xBtn("지우기", () => { const done = { ...s.done }; delete done[it.id]; write({ done, extra: s.extra.filter((x) => x.id !== it.id) }); })));
+  $("week").replaceChildren(...fixed, ...extra, ...(db && store.week !== null ? [addLine("이번 주에 할 것", (text) => write({ extra: [...s.extra, { id: newId(), text }] }))] : []));
+}
+
+// ---------- 🏷️ 게시물 카테고리 (직접 만들고·이름 고치고·지우고, 게시물마다 골라 나눔) ----------
+const catList = () => (store.cats && store.cats.cats) || [];
+const assignOf = () => (store.cats && store.cats.assign) || {};
+const saveCats = (cats, assign) => save("cats", { cats, assign });
+function catOf(id) { const c = assignOf()[id]; return catList().some((x) => x.id === c) ? c : ""; }
+function setCatOf(id, catId) {
+  const a = { ...assignOf() };
+  if (catId) a[id] = catId; else delete a[id];
+  saveCats(catList(), a);
+}
+let catEdit = false;
+$("cat-edit").addEventListener("click", () => { catEdit = !catEdit; renderPosts(); });
+
+// ---------- Todoist: 게시물 · 작업중 · 끝난 작업물 (나들로그만) ----------
+// 체크(게시물) = 작업중으로(라벨 '진행중') · 작업중 체크 = Todoist 완료 → 끝난 작업물 · 작업중 ✕ = 게시물 목록으로
+// 게시물 ✕ = 목록에서만 숨기기(Todoist에는 남음, 아래 "숨긴 게시물"에서 되돌림)
+const WIP = "진행중";
+const has = (t, l) => (t.labels || []).includes(l);
+const cleanName = (t) => t.content.replace(/^\S+\s*(나들로그|제주라이브)\s*:\s*/, "").replace(/\s*\((?:\d+시간)?\s*(?:\d+분)?\)\s*$/, "");
+const isLive = (t) => has(t, "제주라이브") || /^\S*\s*제주라이브\s*:/.test(t.content);
+let posts = [], done = [], heads = new Set(), liveHeads = new Set(), loaded = false;
+const keep = (t) => !isLive(t) && !liveHeads.has(t.parentId) && ((!t.parentId && !heads.has(t.id)) || heads.has(t.parentId));
+
+async function pageAll(tool, args) {
+  const out = []; let cursor = null;
+  for (let i = 0; i < 20; i++) {
+    const p = (await mcp.callTool(TD, tool, { ...args, ...(cursor ? { cursor } : {}) }, { cache: false })).payload || {};
+    out.push(...(p.tasks || []));
+    cursor = p.nextCursor || null;
+    if (!cursor || p.hasMore === false) break;
+  }
+  return out;
+}
+async function setWip(t, on, row) {
+  row.classList.add("busy");
+  const labels = (t.labels || []).filter((l) => l !== WIP);
+  if (on) labels.push(WIP);
+  try {
+    await mcp.callTool(TD, "update-tasks", { tasks: [{ id: t.id, labels }] }, { cache: false });
+    t.labels = labels; renderPosts(); toast(on ? "🛠️ 작업중 칸으로 옮겼어요" : "🗂️ 게시물 목록으로 되돌렸어요");
+  } catch { renderPosts(); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+}
+async function finish(t, row) {
+  row.classList.add("busy");
+  try {
+    await mcp.callTool(TD, "complete-tasks", { ids: [t.id] }, { cache: false });
+    posts = posts.filter((x) => x !== t);
+    done.unshift({ ...t, completedAt: new Date().toISOString() });
+    renderPosts(); renderDone(); toast("✅ 완료! 끝난 작업물로 옮겼어요");
+  } catch { row.classList.remove("busy"); renderPosts(); toast("Todoist에 반영하지 못했어요. 다시 눌러 보세요."); }
+}
+// 직접 추가 = Todoist "샤오홍슈 아이디어"에 새 할 일(이름 앞 "🗿 나들로그:"), 작업중 칸에서 넣으면 라벨 '진행중'도 붙임
+async function addPost(text, { catId = "", wip = false } = {}) {
+  if (!mcp) { toast("claude.ai에서 열어야 Todoist에 넣을 수 있어요."); return; }
+  const content = "🗿 나들로그: " + text;
+  const labels = wip ? [WIP] : [];
+  try {
+    const r = await mcp.callTool(TD, "add-tasks", { tasks: [{ content, sectionId: IDEA_SECTION, ...(wip ? { labels } : {}) }] }, { cache: false });
+    let t = (((r && r.payload) || {}).tasks || [])[0];
+    if (t && t.id) { t = { content, labels, ...t }; posts.push(t); renderPosts(); }
+    else { await load(); t = posts.find((x) => x.content === content); }
+    if (t && catId) setCatOf(t.id, catId);
+    toast(wip ? "🛠️ 작업중 칸에 넣었어요 (Todoist에도 들어갔어요)" : "🗂️ 게시물을 넣었어요 (Todoist에도 들어갔어요)");
+  } catch { toast("Todoist에 넣지 못했어요. 다시 해 보세요."); }
+}
+const hiddenIds = () => new Set((store.hidden && store.hidden.ids) || []);
+function setHidden(id, on) {
+  const ids = [...hiddenIds()].filter((x) => x !== id);
+  if (on) ids.push(id);
+  save("hidden", { ids }).then((ok) => ok && toast(on ? "목록에서 숨겼어요 (Todoist에는 그대로 있어요)" : "다시 보이게 했어요"));
+}
+function renderPosts() {
+  if (!loaded) return;
+  const hid = hiddenIds();
+  const wip = posts.filter((t) => has(t, WIP));
+  const free = posts.filter((t) => !has(t, WIP) && !hid.has(t.id));
+  const gone = posts.filter((t) => !has(t, WIP) && hid.has(t.id));
+
+  const cats = catList();
+  const catName = (id) => (cats.find((c) => c.id === id) || {}).name;
+
+  $("wip").replaceChildren(...(wip.length ? wip.map((t) => {
+    const row = h("div", { class: "row" });
+    const cn = catName(catOf(t.id));
+    row.append(...[h("input", { type: "checkbox", "aria-label": "완료", title: "완료 → 끝난 작업물", onchange: () => finish(t, row) }),
+      h("span", { class: "title" }, cleanName(t)),
+      cn ? h("span", { class: "chip", title: cn }, cn) : null,
+      xBtn("게시물 목록으로", () => setWip(t, false, row))].filter(Boolean));
+    return row;
+  }) : [h("div", { class: "empty" }, "아래 게시물을 체크하면 여기로 와요.")]),
+    addLine("바로 작업할 게시물", (text) => addPost(text, { wip: true })));
+
+  // 카테고리 고르기 (게시물마다)
+  const picker = (t) => {
+    const cur = catOf(t.id);
+    const sel = h("select", { class: "pick", "aria-label": "카테고리", title: "카테고리 고르기", onchange: (e) => setCatOf(t.id, e.target.value) },
+      h("option", { value: "" }, "분류 안 함"), ...cats.map((c) => h("option", { value: c.id }, c.name)));
+    sel.value = cur;
+    return sel;
+  };
+  const postRow = (t) => {
+    const row = h("div", { class: "row" });
+    row.append(...[h("input", { type: "checkbox", "aria-label": "작업중으로", title: "작업중으로", onchange: () => setWip(t, true, row) }),
+      h("span", { class: "title" }, cleanName(t)),
+      db && cats.length ? picker(t) : null,
+      db ? xBtn("목록에서 숨기기", () => setHidden(t.id, true)) : null].filter(Boolean));
+    return row;
+  };
+  const grid = (list, emptyMsg) => h("div", { class: "grid2" }, ...(list.length ? list.map(postRow) : [h("div", { class: "empty" }, emptyMsg)]));
+
+  const cbtn = $("cat-edit");
+  cbtn.hidden = !db;
+  cbtn.textContent = catEdit ? "✓ 다 고쳤어요" : "🏷️ 카테고리 만들기·고치기";
+  cbtn.classList.toggle("on", catEdit);
+
+  const boxes = [];
+  if (!cats.length) {
+    boxes.push(h("div", { class: "list" }, grid(free, "아이디어 칸이 비어 있어요."), addLine("새 게시물", (text) => addPost(text))));
+  } else {
+    const loose = free.filter((t) => !catOf(t.id));
+    if (loose.length || catEdit) boxes.push(h("div", { class: "list" },
+      h("div", { class: "cat-bar none" }, h("span", { class: "name" }, "분류 안 함"), h("span", { class: "cnt" }, loose.length)),
+      grid(loose, "모두 분류했어요."), addLine("새 게시물", (text) => addPost(text))));
+    const write = (next, assign) => saveCats(next, assign || assignOf());
+    cats.forEach((c, i) => {
+      const mine = free.filter((t) => catOf(t.id) === c.id);
+      const bar = catEdit
+        ? h("div", { class: "cat-bar" },
+            h("input", { class: "edit-in", value: c.name, "aria-label": "카테고리 이름", maxlength: "40", onchange: (e) => { const v = e.target.value.trim(); if (v) write(cats.map((x) => (x.id === c.id ? { ...x, name: v } : x))); } }),
+            i > 0 ? h("button", { type: "button", class: "x", "aria-label": "위로", title: "위로", onclick: () => { const n = [...cats]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; write(n); } }, "↑") : null,
+            xBtn("카테고리 지우기", () => {
+              if (!confirm(`「${c.name}」 카테고리를 지울까요?\n안에 있던 게시물은 '분류 안 함'으로 가요. (Todoist에는 그대로)`)) return;
+              const a = { ...assignOf() };
+              for (const k of Object.keys(a)) if (a[k] === c.id) delete a[k];
+              write(cats.filter((x) => x.id !== c.id), a);
+            }))
+        : h("div", { class: "cat-bar" }, h("span", { class: "name" }, c.name), h("span", { class: "cnt" }, mine.length));
+      boxes.push(h("div", { class: "list" }, bar, grid(mine, "아직 없어요."),
+        addLine(`「${c.name}」에 새 게시물`, (text) => addPost(text, { catId: c.id }))));
+    });
+  }
+  if (catEdit) boxes.push(h("div", { class: "list newbox" },
+    addLine("새 카테고리 이름", (name) => saveCats([...cats, { id: newId(), name: name.slice(0, 40) }], assignOf()))));
+  $("posts").replaceChildren(...boxes);
+
+  $("hidden-box").hidden = !gone.length;
+  $("hidden-sum").textContent = `숨긴 게시물 ${gone.length}개`;
+  $("hidden-list").replaceChildren(...gone.map((t) => h("div", { class: "row" },
+    h("span", { class: "title" }, cleanName(t)),
+    h("button", { type: "button", class: "restore", onclick: () => setHidden(t.id, false) }, "↩ 되돌리기"))));
+}
+
+// ---------- ✅ 끝난 작업물 (완료 날짜 기준 월~일 한 주씩) ----------
+const DONE_WEEKS = 8;
+function renderDone() {
+  if (!loaded) return;
+  $("done-cnt").textContent = done.length ? `${done.length}개` : "";
+  if (!done.length) { $("done").replaceChildren(h("div", { class: "empty" }, `최근 ${DONE_WEEKS}주 동안 끝난 작업물이 없어요.`)); return; }
+  const groups = new Map();
+  for (const t of [...done].sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""))) {
+    const d = new Date(t.completedAt), key = ymd(mondayOf(d));
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ t, d });
+  }
+  const thisMon = ymd(mondayOf(new Date()));
+  $("done").replaceChildren(...[...groups].map(([key, list]) => {
+    const mon = new Date(key + "T00:00:00");
+    const label = (key === thisMon ? "이번 주 · " : "") + `${mdw(mon)} ~ ${mdw(addDays(mon, 6))} · ${list.length}개`;
+    return h("div", { class: "wk" }, h("div", { class: "wk-h" }, label),
+      ...list.map(({ t, d }) => h("div", { class: "row" }, h("span", { class: "ok" }, "✓"),
+        h("span", { class: "title" }, cleanName(t)), h("span", { class: "d" }, mdw(d)))));
+  }));
+}
+
+// ---------- 📖 컨텐츠 가이드 (✏️ 고치기를 누르면 이름 고치기·추가·지우기) ----------
+let guideEdit = false;
+$("guide-edit").addEventListener("click", () => { guideEdit = !guideEdit; renderGuide(); });
+function renderGuide() {
+  const btn = $("guide-edit");
+  btn.hidden = !db;
+  btn.textContent = guideEdit ? "✓ 다 고쳤어요" : "✏️ 고치기";
+  btn.classList.toggle("on", guideEdit);
+  if (db && store.guide === null) return;
+  const cats = (store.guide && store.guide.cats) || [];
+  const write = (next) => save("guide", { cats: next });
+  const setCat = (id, fn) => write(cats.map((c) => (c.id === id ? fn(c) : c)));
+  const rename = (value, apply) => { const v = value.trim(); if (v) apply(v); };
+
+  const cards = cats.map((c) => {
+    const items = c.items || [];
+    const head = guideEdit
+      ? h("div", { class: "cat-h" },
+          h("input", { class: "edit-in", value: c.name, "aria-label": "분류 이름", onchange: (e) => rename(e.target.value, (v) => setCat(c.id, (x) => ({ ...x, name: v }))) }),
+          xBtn("분류 지우기", () => { if (confirm(`「${c.name}」 분류를 항목과 함께 지울까요?`)) write(cats.filter((x) => x.id !== c.id)); }))
+      : h("div", { class: "cat-h" }, h("span", { class: "name" }, c.name));
+    const lis = items.map((it) => guideEdit
+      ? h("li", null,
+          h("input", { class: "edit-in", value: it.text, "aria-label": "항목", onchange: (e) => rename(e.target.value, (v) => setCat(c.id, (x) => ({ ...x, items: x.items.map((y) => (y.id === it.id ? { ...y, text: v } : y)) }))) }),
+          xBtn("항목 지우기", () => setCat(c.id, (x) => ({ ...x, items: x.items.filter((y) => y.id !== it.id) }))))
+      : h("li", null, h("span", { class: "t" }, it.text)));
+    if (!lis.length && !guideEdit) lis.push(h("li", { class: "none" }, h("span", { class: "t" }, "아직 없어요")));
+    return h("div", { class: "cat" }, head, h("ul", null, lis),
+      guideEdit ? addLine("새 항목", (text) => setCat(c.id, (x) => ({ ...x, items: [...(x.items || []), { id: newId(), text }] }))) : null);
+  });
+  if (guideEdit) cards.push(h("div", { class: "cat newcat" }, addLine("새 분류 이름", (name) => write([...cats, { id: newId(), name, items: [] }]))));
+  if (!cards.length) cards.push(h("div", { class: "list" }, h("div", { class: "empty" }, db ? "비어 있어요. ✏️ 고치기로 분류를 추가하세요." : "claude.ai에서 열어야 보여요.")));
+  $("guide").replaceChildren(...cards);
+}
+
+// ---------- 불러오기 ----------
+async function load() {
+  const now = new Date();
+  $("today-label").textContent = `${now.getMonth() + 1}월 ${now.getDate()}일 ${WD[now.getDay()]}요일`;
+  renderWeek();
+  $("status").textContent = "불러오는 중…"; $("refresh").textContent = "불러오는 중…";
+  try {
+    const all = await pageAll("find-tasks", { sectionId: IDEA_SECTION, limit: 100 });
+    // 머리 할 일 「📋 ○○ 게시물 후보」는 묶음일 뿐이라 빼고 그 밑 할 일은 보여 줌(제주라이브 후보 밑은 뺌). ①②③ 단계는 보여 주지 않음
+    const headList = all.filter((t) => !t.parentId && /게시물 후보/.test(t.content));
+    heads = new Set(headList.map((t) => t.id));
+    liveHeads = new Set(headList.filter((t) => /제주라이브/.test(t.content)).map((t) => t.id));
+    posts = all.filter(keep);
+    loaded = true; renderPosts();
+    try {
+      const fin = await pageAll("find-completed-tasks", { sectionId: IDEA_SECTION, since: ymd(addDays(mondayOf(now), -7 * (DONE_WEEKS - 1))), until: ymd(now), limit: 200 });
+      done = fin.filter(keep);
+    } catch { done = []; toast("끝난 작업물을 불러오지 못했어요."); }
+    renderDone();
+    $("status").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}에 불러옴`;
+  } catch (err) {
+    $("posts").replaceChildren(h("div", { class: "list" }, h("div", { class: "empty" }, "Todoist를 불러오지 못했어요. 새로고침해 보세요.")));
+    $("wip").replaceChildren(h("div", { class: "empty" }, "Todoist를 불러오지 못했어요."));
+    $("status").textContent = "불러오지 못했어요";
+  }
+  $("refresh").textContent = "새로고침";
+}
+
+// ---------- 작업 타이머 (이 기기에만 기억 · 끝나면 소리·진동) ----------
+const TKEY = "board-timer";
+const timer = { total: 40 * 60000, left: 40 * 60000, endAt: 0, run: false };
+let tTick = null, audioCtx = null;
+try { Object.assign(timer, JSON.parse(localStorage.getItem(TKEY)) || {}); } catch {}
+const tSave = () => { try { localStorage.setItem(TKEY, JSON.stringify(timer)); } catch {} };
+const tLeft = () => (timer.run ? Math.max(0, timer.endAt - Date.now()) : timer.left);
+function tFmt(ms) {
+  const s = Math.ceil(ms / 1000), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+  return hh ? `${hh}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
+}
+function tLabel(ms) {
+  const m = Math.round(ms / 60000), hh = Math.floor(m / 60), mm = m % 60;
+  return [hh ? `${hh}시간` : "", mm ? `${mm}분` : ""].filter(Boolean).join(" ");
+}
+function tDraw() {
+  const left = tLeft();
+  $("t-time").textContent = tFmt(left);
+  $("t-go").textContent = timer.run ? "멈춤" : left > 0 && left < timer.total ? "계속" : "시작";
+  $("timer").style.setProperty("--p", 1 - left / timer.total);
+  $("timer").classList.toggle("running", timer.run);
+  for (const b of $("t-presets").children) b.setAttribute("aria-pressed", String(Number(b.dataset.min) * 60000 === timer.total));
+  if (timer.run && left <= 0) tDone();
+}
+function beep() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audioCtx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), at = t0 + i * 0.5;
+      o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.3, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.35);
+      o.start(at); o.stop(at + 0.4);
+    }
+  } catch {}
+}
+function tStopTick() { clearInterval(tTick); tTick = null; }
+function tDone() {
+  timer.run = false; timer.left = 0; tSave(); tStopTick();
+  $("timer").classList.add("ring");
+  beep();
+  try { navigator.vibrate?.([400, 200, 400, 200, 400]); } catch {}
+  toast(`⏰ ${tLabel(timer.total)} 끝났어요! 잠깐 쉬어 가요`);
+  tDraw();
+}
+$("t-go").addEventListener("click", () => {
+  $("timer").classList.remove("ring");
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
+  if (timer.run) { timer.left = tLeft(); timer.run = false; tStopTick(); }
+  else {
+    if (timer.left <= 0) timer.left = timer.total;
+    timer.endAt = Date.now() + timer.left; timer.run = true;
+    tStopTick(); tTick = setInterval(tDraw, 250);
+  }
+  tSave(); tDraw();
+});
+function tSet(ms) {
+  timer.total = timer.left = ms; timer.run = false; tStopTick(); tSave();
+  $("timer").classList.remove("ring"); tDraw();
+}
+$("t-reset").addEventListener("click", () => tSet(timer.total));
+$("t-presets").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-min]");
+  if (b) tSet(Number(b.dataset.min) * 60000);
+});
+if (timer.run) tTick = setInterval(tDraw, 250);
+tDraw();
+
+// ---------- 시작 ----------
+renderStore();
+let lastLoad = 0;
+$("refresh").addEventListener("click", () => { if (mcp) load().then(() => (lastLoad = Date.now())); else renderWeek(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  renderWeek();
+  if (mcp && Date.now() - lastLoad > 120000) load().then(() => (lastLoad = Date.now()));
+});
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch { db = null; }
+  if (db) watchStore(); else renderStore();
+})();
+(async () => {
+  try { mcp = window.claude ? await window.claude.use("mcp") : null; } catch { mcp = null; }
+  if (!mcp) {
+    $("status").textContent = "연결 안 됨";
+    $("posts").replaceChildren(h("div", { class: "list" }, h("div", { class: "empty" }, "이 페이지는 claude.ai에서 열어야 Todoist를 불러올 수 있어요.")));
+    $("wip").replaceChildren(h("div", { class: "empty" }, "claude.ai에서 열어 주세요."));
+    $("done").replaceChildren(h("div", { class: "empty" }, "claude.ai에서 열어 주세요."));
+    return;
+  }
+  await load(); lastLoad = Date.now();
+})();
+</script>
+</body>
+</html>

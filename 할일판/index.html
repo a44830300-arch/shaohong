@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>샤오홍슈 작업목록</title>
+<title>할일판</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 할 일판 1 = 샤오홍슈 작업목록 (나들로그만). 2026-11-25 손그림 수정안:
    🧭 작업 순서 → [🛠️ 작업중 | 🗓️ 월별/분기별 + 📅 이번 주] → 🗂️ 게시물(두 줄, 체크=작업중으로·✕=숨기기)
@@ -169,6 +169,21 @@ details.fold > summary .cnt { font-family: var(--font-num); font-size: 13px; col
   .grid2 > .row:nth-child(2) { border-top: 1px solid var(--line); }
   .grid2 > .row:nth-child(odd) { border-right: 0; }
 }
+
+/* ── 앱 탭 (2026-11-28: 스케줄표 + 샤오홍슈 작업목록을 한 앱 두 페이지로) ── */
+body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+body[data-tab="schedule"] > .wrap, body[data-tab="schedule"] > .toast { display: none !important; }
+body[data-tab="xhs"] > #schedule-app { display: none; }
+.apptabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; justify-content: center; gap: 6px;
+  padding: 6px max(16px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface); border-top: 1px solid var(--line); }
+.apptabs button { flex: 1; max-width: 220px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 8px; border: 0; border-radius: 10px; background: transparent; color: var(--muted);
+  font: 600 13px/1.2 var(--font-body); cursor: pointer; }
+.apptabs button span { font-size: 20px; line-height: 1; }
+.apptabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important; }
+@media print { .apptabs { display: none; } }
 </style>
 </head>
 <body>
@@ -664,6 +679,440 @@ document.addEventListener("visibilitychange", () => {
     return;
   }
   await load(); lastLoad = Date.now();
+})();
+</script>
+
+<div id="schedule-app"></div>
+<nav class="apptabs" role="tablist" aria-label="페이지">
+  <button type="button" role="tab" data-tab="schedule"><span>🗓️</span>스케줄</button>
+  <button type="button" role="tab" data-tab="xhs"><span>📮</span>샤오홍슈 작업목록</button>
+</nav>
+<script>
+/* 스케줄 페이지 (원본 할일판2/index.html) */
+(() => {
+const HOST = document.getElementById("schedule-app");
+const ROOT = HOST.attachShadow({ mode: "open" });
+ROOT.innerHTML = "<style>*, *::before, *::after { box-sizing: border-box; }\n:host { display: block; min-height: 100vh; }\n[hidden] { display: none !important; }\n\n/* \ud560\uc77c\ud310 2 \u2014 \ub178\ud2b8 \uc62e\uaca8\uc801\uae30 \ubaa8\ub4dc (2026-11-21 \uc694\uccad, \uae30\uc874 \ud560 \uc77c\ud310\uacfc \ub530\ub85c)\n   \uac15\uc815\uc900\ube44\uc900 \ub178\ud2b8 \ud55c \uc7a5 = 3\uc77c. \ub0a0\uc9dc \u2192 10\ubd84 \ub208\uae08 \u2192 7~24\uc2dc \uce78(\ud615\uad11\ud39c: \ub178\ub791 = \uc218\uc5c5\u00b7\uad50\uc721, \uc8fc\ud669 = \uc57d\uc18d, \ud30c\ub791 = \uacf5\ubd80, \ud68c\uc0c9 = \uc810\uc2ec\u00b7\uc800\ub141) \u2192 \ube68\uac04 \uba54\ubaa8(\u2605 \uc624\ub298 \ud560 \uc77c \u00b7 \ub2e4\uc74c\ub0a0 \uc900\ube44) */\n:host {\n  --paper: #fbfbf7;\n  --grid: #d9e1e6;\n  --grid-strong: #b9c6ce;\n  --ink: #232323;\n  --muted: #7a8288;\n  --red: #c8321f;\n  --hl-yellow: rgba(255, 214, 10, .62);\n  --hl-blue: rgba(120, 196, 232, .55);\n  --hl-red: rgba(255, 99, 99, .5);\n  --hl-orange: rgba(255, 150, 40, .55);\n  --hl-gray: rgba(150, 150, 150, .32);\n  --chip: #ffffff;\n  --done: #a3a9ad;\n  --hand: \"Gaegu\", \"Nanum Pen Script\", \"IBM Plex Sans KR\", \"Malgun Gothic\", sans-serif;\n  --body: \"IBM Plex Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif;\n  --num: \"IBM Plex Mono\", ui-monospace, Menlo, monospace;\n}\n@media (prefers-color-scheme: dark) { :host {\n  --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;\n  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --hl-orange: rgba(255, 150, 50, .4); --hl-gray: rgba(170, 170, 170, .26); --chip: #24292c; --done: #646b70; color-scheme: dark } }\n:host([data-theme=\"dark\"]) {\n  --paper: #1b1e20; --grid: #2b3236; --grid-strong: #3d474d; --ink: #ecebe6; --muted: #98a0a5; --red: #ff7a68;\n  --hl-yellow: rgba(255, 205, 40, .38); --hl-blue: rgba(110, 190, 230, .35); --hl-red: rgba(255, 100, 100, .38); --hl-orange: rgba(255, 150, 50, .4); --hl-gray: rgba(170, 170, 170, .26); --chip: #24292c; --done: #646b70; color-scheme: dark }\n\n:host { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.4; }\n.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 48px; display: grid; gap: 14px; }\n\n/* \uc704 \ub9c9\ub300: \uc81c\ubaa9 \u00b7 \ub0a0\uc9dc \ub118\uae30\uae30 \u00b7 \uc0c8\ub85c\uace0\uce68 */\n.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }\nh1 { margin: 0; font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; }\nh1 small { font-family: var(--body); font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 6px; }\n.nav { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }\n.btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--grid-strong); background: var(--chip); color: var(--ink); border-radius: 8px; padding: 6px 11px; cursor: pointer; }\n.btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }\n.status { font-size: 12px; color: var(--muted); }\n.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }\n.legend i { display: inline-block; width: 22px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }\n.legend .y { background: var(--hl-yellow); } .legend .b { background: var(--hl-blue); } .legend .p { background: var(--hl-orange); } .legend .g { background: var(--hl-gray); }\n.legend .r { color: var(--red); font-weight: 600; }\n.banner { border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 12px; font-size: 13px; }\n\n/* \ub178\ud2b8 \ud55c \uc7a5: 3\uc77c \ub098\ub780\ud788 (\ud734\ub300\ud3f0\uc740 \uc704\uc544\ub798\ub85c) */\n.day { overflow: clip; overflow-clip-margin: 40px; }\n.page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 46px; }\n.day { padding-right: 0; }\n@media (max-width: 900px) { .day { padding-right: 40px; } }\n.day { min-width: 0; }\n.dh { font-family: var(--hand); font-size: 26px; font-weight: 700; line-height: 1.1; padding: 0 0 2px 46px; display: flex; align-items: baseline; gap: 8px; }\n.dh .today { font-family: var(--body); font-size: 11px; font-weight: 600; color: var(--red); border: 1px solid var(--red); border-radius: 999px; padding: 0 7px; }\n.dh.sun { color: var(--red); }\n.scale { display: grid; grid-template-columns: 46px repeat(6, minmax(0, 1fr)); font-family: var(--num); font-size: 10px; color: var(--muted); }\n.scale span { text-align: right; padding-right: 2px; }\n\n.grid { position: relative; }\n.hr { display: grid; grid-template-columns: 46px 1fr; height: 30px; }\n.hr .lab { font-family: var(--hand); font-size: 18px; font-weight: 700; line-height: 30px; text-align: right; padding-right: 6px; }\n.trk { position: relative; border-top: 1px solid var(--grid); border-right: 1px solid var(--grid);\n  background-image: repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px calc(100% / 6)); }\n.hr:last-child .trk { border-bottom: 1px solid var(--grid); }\n/* \ud615\uad11\ud39c: \uce78\ub9c8\ub2e4 \ub530\ub85c \uce60\ud55c \uac83\ucc98\ub7fc \uc0b4\uc9dd \ube44\ub6a4\uac8c */\n.hl { position: absolute; top: 5px; bottom: 5px; border-radius: 3px 6px 4px 7px; transform: skewX(-6deg); }\n/* \ub178\ub791 = \uc218\uc5c5\u00b7\uad50\uc721, \uc8fc\ud669 = \uc57d\uc18d, \ud30c\ub791 = \uacf5\ubd80 \uc2dc\uac04(\uc804\uacf5\u00b7\uc0e4\uc624\ud64d\uc288\u00b7\uacf5\ubb34\uc6d0 \ub4f1), \ud68c\uc0c9 = \uc810\uc2ec\u00b7\uc800\ub141 (2026-11-27 \uc694\uccad) */\n.hl.class { background: var(--hl-yellow); }\n.hl.appt { background: var(--hl-orange); } /* \uc57d\uc18d = \uc8fc\ud669 \ud615\uad11\ud39c (2026-11-27 \ubc14\uafc8, \uc804\uc5d0\ub294 \ube68\uac15) */\n.hl.review { background: var(--hl-blue); }\n.hl.meal { background: var(--hl-gray); } /* \uc810\uc2ec\u00b7\uc800\ub141 = \ud68c\uc0c9 \ud615\uad11\ud39c (2026-11-27) */\n.hl { cursor: pointer; overflow: hidden; }\n.hl span { position: absolute; top: 0; bottom: 0; left: 3px; display: flex; align-items: baseline; gap: 4px; font-family: var(--hand); font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); white-space: nowrap; overflow: visible; transform: skewX(6deg); z-index: 2; pointer-events: none; }\n.hl span b { font-weight: 700; }\n.hl span i { font-style: normal; pointer-events: auto; cursor: pointer; }\n.hl span i::before { content: \"\u25a1\"; font-size: .8em; margin-right: 1px; }\n.hl span i.copied { color: var(--done); text-decoration: line-through; }\n.hl span.items { gap: 3px; font-size: 11.5px; }\n.hl span.tight { font-size: 12px; gap: 3px; }\n.hl span.items.tight { font-size: 10.5px; gap: 2px; }\n.hl span.tight small { font-size: 8.5px; }\n.hl span.items small { font-size: 9px; }\n.it.arrow::before { display: none; }\n.hl span small { font-family: var(--num); font-size: 10px; font-weight: 500; color: var(--muted); flex: none; }\n.hl.copied { opacity: .35; }\n.hl.copied span { text-decoration: line-through; }\n.hl.done span { color: var(--done); }\n/* \uac80\uc740 \uae00\uc528 \uc77c\uc815: \uc2dc\uc791 \uc790\ub9ac\uc5d0 \uc810, \uae00\uc528 \uc544\ub798\ub85c \uc904\uc744 \uce78 \ub05d\uae4c\uc9c0 */\n.tx { position: absolute; bottom: 3px; right: 0; display: flex; align-items: flex-end; gap: 10px; font-family: var(--hand); font-size: 17px; font-weight: 700; line-height: 1; padding-bottom: 2px; white-space: nowrap; overflow: hidden; z-index: 2; }\n.it { display: inline-flex; align-items: flex-end; gap: 3px; cursor: pointer; background: var(--paper); padding: 0 2px; border-radius: 3px; }\n.it::before { content: \"\"; width: 5px; height: 5px; border-radius: 50%; background: currentColor; margin-bottom: 1px; flex: none; }\n.it.red { color: var(--red); }\n.it .imp { color: var(--red); }\n.it.copied, .todo.copied { color: var(--done); text-decoration: line-through; }\n.it.done { color: var(--done); }\n.tx.memo { border-bottom: 0; }\n.tx.dense { flex-wrap: wrap; justify-content: flex-start; gap: 1px 7px; font-size: 13px; white-space: normal; }\n.tx.dense .it { white-space: nowrap; }\n.tx.memo .it::before { display: none; }\n/* \uc808\ub300 \ud3f0X: \ube68\uac04 \uaebe\uc1e0 */\n.brk { position: absolute; left: 18px; width: 6px; border: 2px solid var(--red); border-right: 0; border-radius: 3px 0 0 3px; z-index: 3; pointer-events: none; }\n.brk b { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: var(--hand); font-size: 13px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: -1px; }\n/* \uae08\uc694\uc77c \uc800\ub141 \u2192 \ud1a0\uc694\uc77c: \uc624\ub978\ucabd \ub465\uadfc \uad04\ud638 */\n.rbrk { position: absolute; right: -14px; width: 12px; border: 1.5px solid var(--ink); border-left: 0; border-radius: 0 50% 50% 0 / 0 50% 50% 0; z-index: 3; pointer-events: none; }\n.rbrk b { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: var(--hand); font-size: 15px; font-weight: 700; white-space: nowrap; }\n/* \u25a1 \ubc11\uc5d0 [ \ub85c \ubb36\uc740 \uc791\uc740 \ubaa9\ub85d (\uac00\ubc29, \ub3c4\uc2dc\ub77d \ub4f1) */\n.sub { margin: 2px 0 2px 6px; padding-left: 10px; border-left: 2px solid var(--red); font-size: 16px; line-height: 1.25; }\n.dday { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }\n.dday .dl { font-family: var(--hand); font-size: 18px; font-weight: 700; color: var(--red); margin-right: 2px; }\n.dchip { display: inline-flex; align-items: baseline; gap: 6px; border: 1.5px solid var(--red); border-radius: 999px; padding: 2px 10px; font-size: 13px; background: var(--chip); }\n.dchip b { font-family: var(--num); font-size: 13px; color: var(--red); }\n.dchip.soon { background: var(--red); color: var(--paper); } .dchip.soon b { color: var(--paper); }\n.dchip small { color: var(--muted); font-size: 11px; } .dchip.soon small { color: var(--paper); opacity: .85; }\n.dh .dmark { font-family: var(--body); font-size: 11px; font-weight: 700; color: var(--paper); background: var(--red); border-radius: 4px; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }\n.week .dh .dmark { font-size: 9.5px; padding: 0 4px; }\n.nowl { position: absolute; left: 46px; right: 0; height: 0; border-top: 2px dashed var(--red); z-index: 4; pointer-events: none; opacity: .7; }\n\n/* \ube68\uac04 \uba54\ubaa8 */\n.memo-box { margin-top: 12px; color: var(--red); font-family: var(--hand); font-size: 18px; font-weight: 700; line-height: 1.3; display: grid; gap: 6px; }\n.memo-box h3 { margin: 0; font-size: 19px; }\n.memo-box ul { margin: 0; padding: 0 0 0 18px; list-style: none; display: grid; gap: 2px; }\n.todo { cursor: pointer; }\n.todo::before { content: \"\u25a1 \"; margin-left: -16px; }\n.todo .why { font-family: var(--body); font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 4px; }\n.star::before { content: \"\u2605 \"; }\n.memo-box .ink { color: var(--ink); }\n.empty { color: var(--muted); font-family: var(--body); font-size: 12px; font-weight: 400; }\n\n@media (hover: hover) { .btn:hover { border-color: var(--red); } .it:hover, .todo:hover { opacity: .7; } }\n@media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); gap: 30px; } .nav { margin-left: 0; } }\n\n/* \uc77c\uc8fc\uc77c \ubcf4\uae30 (2026-11-21 \uc694\uccad): \uc6d4~\uc77c 7\uc77c\uc744 \ud55c \ud654\uba74\uc5d0. \uc881\uc740 \ud654\uba74\uc740 \ud45c \uc548\uc5d0\uc11c\ub9cc \uc606\uc73c\ub85c \ubc00\uae30 */\n.wrap.wk { max-width: none; }\n.page.week { grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 20px; overflow-x: auto; padding-bottom: 6px; }\n.page.week .day { padding-right: 0; }\n.week .dh { font-size: 19px; padding-left: 22px; }\n.week .scale { grid-template-columns: 22px repeat(6, minmax(0, 1fr)); font-size: 8px; }\n.week .hr { grid-template-columns: 22px 1fr; height: 26px; }\n.week .hr .lab { font-size: 13px; line-height: 26px; padding-right: 3px; }\n.week .hl { top: 3px; bottom: 3px; }\n.week .hl span { font-size: 12px; line-height: 20px; gap: 3px; }\n.week .hl span.tight { font-size: 10px; gap: 2px; }\n.week .hl span small, .week .hl span.items small { font-size: 8px; }\n.week .hl span.tight small { font-size: 7px; }\n.week .hl span.items { font-size: 9.5px; gap: 2px; }\n.week .hl span.items.tight { font-size: 8.5px; }\n.week .tx { font-size: 12px; bottom: 2px; }\n.week .tx.dense { font-size: 10px; }\n.week .it::before { width: 4px; height: 4px; }\n.week .brk { left: 2px; width: 4px; }\n.week .brk b { font-size: 10px; right: 6px; }\n.week .rbrk { right: -12px; width: 9px; }\n.week .rbrk b { font-size: 11px; left: 10px; }\n.week .nowl { left: 22px; }\n.week .memo-box { font-size: 13px; gap: 3px; margin-top: 8px; }\n.week .memo-box h3 { font-size: 14px; }\n.week .memo-box ul { padding-left: 13px; }\n.week .todo::before { margin-left: -12px; }\n.week .sub { font-size: 12px; padding-left: 7px; margin-left: 3px; }\n</style>" + "<div class=\"wrap\">\n  <div class=\"bar\">\n    <h1>\ud560\uc77c\ud310 2<small>\ub178\ud2b8 \uc62e\uaca8\uc801\uae30</small></h1>\n    <div class=\"nav\">\n      <button class=\"btn\" id=\"prev\" type=\"button\" aria-label=\"\ud558\ub8e8 \uc55e\uc73c\ub85c\">\u25c0</button>\n      <button class=\"btn\" id=\"today\" type=\"button\">\uc624\ub298</button>\n      <button class=\"btn\" id=\"next\" type=\"button\" aria-label=\"\ud558\ub8e8 \ub4a4\ub85c\">\u25b6</button>\n      <button class=\"btn\" id=\"mode\" type=\"button\">3\uc77c \ubcf4\uae30</button>\n      <button class=\"btn\" id=\"reload\" type=\"button\">\uc0c8\ub85c\uace0\uce68</button>\n      <span class=\"status\" id=\"status\">\ubd88\ub7ec\uc624\ub294 \uc911\u2026</span>\n    </div>\n  </div>\n  <!-- \uc0c9 \uc124\uba85\u00b7\uc548\ub0b4 \uae00\uc528\ub294 \uc5c6\uc570 (2026-11-21 \uc694\uccad) -->\n  <!-- \uc2dc\ud5d8\u00b7\uae30\ub9d0\uace0\uc0ac\u00b7\ubc1c\ud45c \ub514\ub370\uc774 (2026-11-27 \uc694\uccad) -->\n  <div class=\"dday\" id=\"dday\" hidden></div>\n  <div id=\"notice\" hidden></div>\n  <div class=\"page\" id=\"page\"></div>\n</div>";
+
+const TD = "Todoist", GC = "Google Calendar";
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+const H0 = 7, H1 = 25; // 7시 줄 ~ 24시 줄 (노트와 같음)
+const BLOG_SECTION = "6hqfPfX2XVqVFGCc";
+const GONG_SECTION = "6hvm37HXmvpXrPjv";
+const IMPORTANT = /과제|업로드|올리기/;
+
+// 학교 수업 (12/18까지 매주) — 노랑 형광펜
+const SCHOOL_END = "2026-12-18";
+const SCHOOL = [
+  [1, "13:30", "14:45", "전기자기학II"], [1, "16:00", "17:45", "유럽문학산책"],
+  [2, "10:30", "11:45", "회로이론II"], [2, "13:30", "14:45", "전기자기학II"], [2, "16:00", "17:45", "아시아 속의 제주문화"],
+  [3, "09:00", "10:15", "공업수학II"], [3, "10:30", "11:45", "회로이론II"],
+  [4, "09:00", "10:15", "공업수학II"],
+];
+// 평일 고정 스케줄. [시각, 이름, "b"] = 파랑 형광펜(개인공부·전공 복습, 50분 고정, 이어지면 50분 + 쉬는 10분)
+// [시각, 이름] = 검은 점 글씨. 학교 가는 시간(씻기·출발)은 그날 첫 수업에서 거꾸로 계산 (2026-11-21 요청)
+const BLOCK = 50;
+const EVE0 = [["18:00", "운동 + 저녁", "m"], ["20:40", "샤오홍슈 ①", "b"], ["21:40", "샤오홍슈 ②", "b"]]; // 샤오홍슈도 파랑 (2026-11-21)
+const EVE = [...EVE0, ["22:40", "공무원 ①", "b"], ["23:40", "공무원 ②", "b"], ["24:40", "→ 내일 일정"]];
+// 7시: 기상·철봉·스케줄 확인·씻기를 하나씩 눌러 체크 (2026-11-21 요청)
+// 7시도 파랑 형광펜(07:00~07:50), 안의 할 일은 하나씩 눌러 체크. 07:30 제주라이브 날씨 올리기도 여기 안에
+const UP = [["07:00", "아침", "b", 50, ["기상", "철봉", "스케줄 확인", "씻기", "날씨 7:30"]]];
+// 매일(주말 포함) 07:30 제주라이브 날씨 올리기 (2026-11-21, 전에는 20:30)
+const DAILY = [["07:30", "제주라이브 날씨 올리기"]];
+// 국어 비문학 + 영어 독해는 50분 한 세트 (2026-11-21 요청)
+const KE = "국어 비문학 + 영어 독해";
+const FIXED = {
+  1: [...UP, ["08:30", KE, "b"], ["12:00", "점심", "m"], ["14:50", "전공 복습", "b"], ...EVE], // 월요일도 공무원 ①② 다시 넣음 (2026-11-21)
+  2: [...UP, ["08:00", KE, "b"], ["11:45", "전공 복습", "b"], ["12:40", "점심", "m"], ["14:50", "전공 복습", "b"], ...EVE],
+  3: [...UP, ["12:00", "점심", "m", 30], ["12:30", "전공 복습", "b"], ...EVE],
+  4: [...UP, ["10:15", "전공 복습", "b"], ["11:15", KE, "b"], ["12:10", "점심", "m"], ...EVE],
+  5: [...UP, ["08:00", KE, "b"], ["12:00", "점심", "m"], ...EVE],
+};
+// 첫 수업 전: 40분 전 출발, 출발 30분 전(= 수업 70분 전) 씻기
+const LEAVE = 40, WASH = 30;
+// 절대 폰X 꺾쇠가 끝나는 시각 (노트 그대로: 월 10시 줄까지, 화 10:30 수업 전까지, 수·목·금 8시 줄까지). 주말은 없음
+const BRK = { 1: 11 * 60, 2: 10 * 60 + 30, 3: 9 * 60, 4: 9 * 60, 5: 9 * 60 };
+// 내일 가방 (11/23 노트)
+const BAG = ["노트북 · 마우스 · 충전기", "태블릿", "빅노트 · 작은 노트", "지갑", "휴대폰 충전기", "양치도구", "핸드크림 · 선크림"];
+// 요일별 빨간 메모 (11/23~11/28 노트). notes = ★ 한 줄 메모, prep = ★ 내일 스케줄 □ 목록, extra = 따로 묶은 □ 목록
+const PREP_WD = ["운동 뭐 할지", "공무원 공부 뭐 할지", "샤오홍슈 · 공부 어디서 할지", "뭐 입을지", "내일 가방 싸기"];
+const MEMO = {
+  // 주말(토·일)은 빨간 메모 없이 가방 싸기만 (2026-11-21 요청)
+  0: { notes: [], prep: ["뭐 입을지", "내일 가방 싸기"] },
+  1: { notes: ["오전 시간은 최대한 비워 두기 (변수 대비)"], prep: PREP_WD },
+  2: { notes: [], prep: ["점심 뭐 먹을지", "저녁 뭐 먹을지", "운동 뭐 할지", "공부 어디서 할지", "뭐 입을지", "오전에 뭐 할지", "내일 가방 싸기"] },
+  3: { notes: ["블로그는 수 or 목", "블로그도 갔다 온 날 바로"], prep: ["오후에 뭐 할지", "운동 뭐 할지", "저녁 뭐 먹을지", "공부 어디서 할지", "뭐 입을지", "내일 가방 싸기"] },
+  4: { notes: ["블로그는 수 or 목", "블로그도 갔다 온 날 바로"], prep: ["공부 어디서 할지", "공부 뭐 할지", "저녁 뭐 먹을지", "운동 뭐 할지", "뭐 입을지", "내일 가방 싸기"] },
+  5: { notes: ["금요일 저녁은 술약속으로 비워도 됨 → 토요일 4시간 확보"], extra: ["주말에 어디 갈지 정하기", ["축제 or 관광지"], ["도시락, 텀블러", "버스 시간표"]], prep: ["뭐 입을지", "내일 가방 싸기"] },
+  6: { notes: [], prep: ["뭐 입을지", "내일 가방 싸기"] },
+};
+
+const $ = (id) => ROOT.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const x = parseYmd(s); x.setDate(x.getDate() + n); return ymd(x); };
+const toMin = (t) => { const [a, b] = t.split(":").map(Number); return a * 60 + b; };
+const hm = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+const cleanSummary = (s) => (s || "(제목 없음)").split("\n")[0].trim().replace(/^✅\s*/, "");
+const isChecked = (e) => /^✅/.test((e.summary || "").trim());
+const taskDate = (t) => (t.dueDate ? t.dueDate.slice(0, 10) : null);
+const taskTime = (t) => (t.dueDate && t.dueDate.length > 10 ? t.dueDate.slice(11, 16) : null);
+function nameMin(t) { const m = (t.content || "").match(/\((?:(\d+)시간)?\s*(?:(\d+)분)?\)\s*$/); return m && (m[1] || m[2]) ? Number(m[1] || 0) * 60 + Number(m[2] || 0) : 0; }
+function durMin(t) {
+  const v = t.duration;
+  if (!v) return nameMin(t) || 60;
+  if (typeof v === "number") return v;
+  if (typeof v === "object") return v.unit === "day" ? 1440 : (v.amount || 60);
+  const m = String(v).match(/^(?:(\d+(?:\.\d+)?)h)?(?:(\d+)m)?$/);
+  return (m ? Math.round(parseFloat(m[1] || 0) * 60 + Number(m[2] || 0)) : 0) || 60;
+}
+function taskLevel(t) {
+  if (t.sectionId === BLOG_SECTION || IMPORTANT.test(t.content) || t.priority === "p1") return 3;
+  return t.priority === "p2" ? 2 : 0;
+}
+const isStudyTitle = (s) => /공부|복습|공무원|샤오홍슈|독해|비문학/.test(s) && !/스터디카페/.test(s);
+const isClassTitle = (s) => /수업|강의|교육|전기자기학|회로이론|공업수학|문학산책|제주문화/.test(s);
+// 디데이로 세는 일정: 제목에 시험·고사·기말·중간·발표·퀴즈·면접이 들어간 캘린더 일정과 Todoist 할 일 (2026-11-27 요청)
+const DDAY_RE = /시험|고사|기말|중간고사|발표|퀴즈|과제|리포트|레포트/; // 과제도 디데이 (2026-11-27 요청)
+// 강정준비준 시험만 (2026-11-27 요청): 원서접수·장소 공고·합격 발표·면접 같은 건 빼고 필기시험 날만
+const DDAY_NOT = /원서|접수|합격|결과|장소|공고|면접|발표일 ?공지/;
+// 친구 시험은 뺌 (2026-11-27 요청): 이름 + 시험 모양(예: 준호시험, 형범 시험). 과목·시험 이름이 앞에 오면 내 시험으로 봄
+const MINE = /전기|회로|공업|수학|자기|문학|제주|국어|영어|행정|한국사|필기|기말|중간|공무원|9급|국가직|지방직|토익|자격|기사/;
+const isFriend = (s) => /준호|형범/.test(s) || (/^[가-힣]{2,3}\s?시험$/.test(s.trim()) && !MINE.test(s));
+const isDday = (s) => DDAY_RE.test(s) && !DDAY_NOT.test(s) && !isFriend(s);
+const isGong = (t) => t.sectionId === GONG_SECTION || /공무원|행정법|행정학/.test(t.content);
+
+// 옮겨 적은 것 줄 긋기 (이 기기에만 기억)
+const CKEY = "nb2-copied";
+let copied = {};
+try { copied = JSON.parse(localStorage.getItem(CKEY)) || {}; } catch {}
+function toggleCopied(id, el) {
+  copied[id] ? delete copied[id] : (copied[id] = 1);
+  try { localStorage.setItem(CKEY, JSON.stringify(copied)); } catch {}
+  el.classList.toggle("copied", !!copied[id]);
+}
+
+let mcp = null;
+const TODAY = () => ymd(new Date());
+// 보기: "week" = 월~일 일주일 (기본), "3" = 노트 한 장(3일)
+let mode = "week";
+try { mode = localStorage.getItem("nb2-mode") || "week"; } catch {}
+const NDAYS = () => (mode === "week" ? 7 : 3);
+const monday = (s) => { const w = parseYmd(s).getDay(); return addDays(s, w === 0 ? -6 : 1 - w); };
+const home = () => (mode === "week" ? monday(TODAY()) : TODAY());
+let start = home();
+let data = { tasks: [], events: [], errors: [] };
+let ddays = []; // [{ d: "YYYY-MM-DD", title }]
+const dLabel = (d) => { const n = Math.round((parseYmd(d) - parseYmd(TODAY())) / 86400000); return n === 0 ? "D-DAY" : n > 0 ? `D-${n}` : `D+${-n}`; };
+function renderDday() {
+  const box = $("dday");
+  const list = ddays.filter((x) => x.d >= TODAY()).sort((a, b) => a.d.localeCompare(b.d));
+  box.hidden = !list.length;
+  box.replaceChildren(h("span", { class: "dl" }, "디데이"), ...list.map((x) => {
+    const dt = parseYmd(x.d), n = Math.round((dt - parseYmd(TODAY())) / 86400000);
+    return h("span", { class: "dchip" + (n <= 7 ? " soon" : ""), title: x.title }, h("b", null, dLabel(x.d)), x.title, h("small", null, `${dt.getMonth() + 1}/${dt.getDate()} (${WD[dt.getDay()]})`));
+  }));
+}
+
+// 하루치를 노트 모양 자료로 정리
+function buildDay(d) {
+  const wd = parseYmd(d).getDay();
+  const bars = [], texts = [];
+  const events = data.events.filter((e) => (e.start?.dateTime ? ymd(new Date(e.start.dateTime)) : e.start?.date?.slice(0, 10)) === d);
+  const allday = [];
+  for (const e of events) {
+    const title = cleanSummary(e.summary);
+    if (!e.start?.dateTime) { allday.push({ title, done: isChecked(e), lvl: e.colorId === "11" ? 3 : 0 }); continue; }
+    const s = new Date(e.start.dateTime), en = e.end?.dateTime ? new Date(e.end.dateTime) : new Date(s.getTime() + 3600000);
+    const sm = s.getHours() * 60 + s.getMinutes();
+    let em = ymd(en) === d ? en.getHours() * 60 + en.getMinutes() : 1440 + en.getHours() * 60 + en.getMinutes();
+    if (em <= sm) em = sm + 30;
+    // 캘린더의 시간 있는 일정 = 수업·교육·약속 → 모두 노랑 (2026-11-21 요청)
+    // 수업·교육 = 노랑, 공부 = 파랑, 그 밖의 약속 = 주황 (2026-11-27 요청)
+    const kind = isClassTitle(title) ? "class" : isStudyTitle(title) ? "review" : "appt";
+    bars.push({ s: sm, e: em, kind, name: title, done: isChecked(e), cal: true });
+  }
+  if (d <= SCHOOL_END) for (const [w, s, e, n] of SCHOOL) {
+    if (w !== wd) continue;
+    const key = n.replace(/II$/, "");
+    if (bars.some((b) => b.name.includes(key))) continue;
+    bars.push({ s: toMin(s), e: toMin(e), kind: "class", name: n });
+  }
+  const dayTasks = data.tasks.filter((t) => {
+    const td = taskDate(t);
+    return td === d || (d === TODAY() && td && td < d);
+  });
+  const todos = [];
+  for (const t of dayTasks) {
+    const tm = taskTime(t);
+    if (tm && taskDate(t) === d) {
+      const key = t.content.split(" ")[0];
+      if (key.length >= 2 && texts.some((x) => x.real && x.text.includes(key))) continue;
+      const sm = toMin(tm);
+      texts.push({ s: sm, text: t.content, lvl: taskLevel(t), real: true, tip: `${tm}–${hm(sm + durMin(t))} ${t.content}` });
+    } else todos.push({ text: t.content, lvl: taskLevel(t), late: taskDate(t) < d, id: t.id });
+  }
+  // 평일 고정 스케줄: 노랑(못 바꾸는 일정)과 겹치거나 실제 일정이 그 자리에 있으면 고정 칸은 뺌
+  const yellow = bars.filter((b) => b.kind === "class" || b.kind === "appt" || b.cal);
+  const hitsYellow = (s, e) => yellow.some((y) => s < y.e && e > y.s);
+  // 학교 가는 시간: 그날 첫 수업(노랑 수업·교육)에서 거꾸로
+  const first = bars.filter((b) => b.kind === "class").sort((a, b) => a.s - b.s)[0];
+  const go = first ? [[first.s - LEAVE, `→ 출발 ${hm(first.s - LEAVE)}`]] : []; // 출발에도 시간 (2026-11-21 요청) // 씻기는 아침 7시 루틴으로 옮김 (2026-11-21)
+  for (const [s, text] of go) texts.push({ s, text, tip: `${hm(s)} ${text} (첫 수업 ${hm(first.s)} ${first.name})` });
+  const goBusy = first ? [first.s - LEAVE, first.s] : null;
+  for (const f of [...(FIXED[wd] ? [] : DAILY), ...(FIXED[wd] || [])]) {
+    const s = toMin(f[0]);
+    if (f[2] === "b" || f[2] === "m") {
+      const e = s + (f[3] || BLOCK);
+      if (hitsYellow(s, e) || (goBusy && s < goBusy[1] && e > goBusy[0])) continue;
+      bars.push({ s, e, kind: f[2] === "m" ? "meal" : "review", name: f[1], items: f[4] || null });
+      continue;
+    }
+    if (hitsYellow(s, s + 1) || texts.some((x) => x.real && Math.abs(x.s - s) < 30)) continue;
+    texts.push({ s, text: f[1], tip: `고정 · ${hm(s)} ${f[1]}` });
+  }
+  // 절대 폰X 꺾쇠: 노트처럼 요일마다 끝나는 시각이 정해져 있음. 주말은 없음
+  const brkEnd = BRK[wd] || 0;
+
+  todos.sort((a, b) => (/계획 옮겨적기/.test(b.text) - /계획 옮겨적기/.test(a.text)) || b.lvl - a.lvl || a.text.localeCompare(b.text, "ko"));
+  // 다음날 준비: 내일 Todoist에 있는 운동·공무원 공부를 같이 적어 줌
+  const nd = addDays(d, 1), ndw = parseYmd(nd).getDay();
+  const nTasks = data.tasks.filter((t) => taskDate(t) === nd);
+  const workout = nTasks.filter((t) => /^운동:/.test(t.content)).map((t) => t.content.replace(/^운동:\s*/, ""));
+  const gong = nTasks.filter(isGong).map((t) => t.content);
+  // 요일별 빨간 메모 (2026-11-21, 강정준비준 노트 11/23~11/28 그대로)
+  const M = MEMO[wd];
+  const why = {
+    "운동 뭐 할지": workout.length ? `내일 Todoist: ${workout.join(", ")}` : "맨몸 / 러닝",
+    "공무원 공부 뭐 할지": gong.length ? `내일 Todoist: ${gong.slice(0, 3).join(", ")}` : "행정법 / 행정학",
+    "공부 뭐 할지": gong.length ? `내일 Todoist: ${gong.slice(0, 3).join(", ")}` : "",
+  };
+  const prep = M.prep.map((p) => [p, why[p] || "", p === "내일 가방 싸기" ? BAG : null]);
+  return { d, wd, bars, texts, todos, allday, prep, notes: M.notes, extra: M.extra || null, prepTitle: M.title || "내일 스케줄", brkEnd, nd, friArrow: wd === 5 };
+}
+
+function renderDay(day) {
+  const { d, wd } = day;
+  const dt = parseYmd(d);
+  const col = h("section", { class: "day", "aria-label": `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${WD[wd]}요일` });
+  col.append(h("div", { class: "dh" + (wd === 0 ? " sun" : "") }, `${dt.getMonth() + 1}.${dt.getDate()} ${WD[wd]}`, d === TODAY() ? h("span", { class: "today" }, "오늘") : null,
+    ...ddays.filter((x) => x.d === d).map((x) => h("span", { class: "dmark", title: x.title }, `🎯 ${x.title}`))));
+  col.append(h("div", { class: "scale", "aria-hidden": "true" }, h("span"), [10, 20, 30, 40, 50, 60].map((n) => h("span", null, n))));
+  const grid = h("div", { class: "grid" });
+  const ROW = mode === "week" ? 26 : 30; // CSS .hr 높이와 같게
+  for (let hr = H0; hr < H1; hr++) {
+    const a = hr * 60, b = a + 60;
+    const trk = h("div", { class: "trk" });
+    for (const bar of day.bars) {
+      const s = Math.max(bar.s, a), e = Math.min(bar.e, b);
+      if (e <= s) continue;
+      // 형광펜 안 글씨: 시작 자리부터 한 줄로. 칸이 모자라면 같은 형광펜의 다음 줄 칸에 이어서 (2026-11-21 요청)
+      const id = `${d}|bar|${bar.s}|${bar.name}`;
+      const el = h("div", { class: `hl ${bar.kind}` + (bar.done ? " done" : "") + (copied[id] ? " copied" : ""), "data-id": id, style: `left:${(s - a) / 60 * 100}%;width:${(e - s) / 60 * 100}%`, title: `${hm(bar.s)}–${hm(bar.e)} ${bar.name}`,
+        onclick: () => { toggleCopied(id, el); ROOT.querySelectorAll(`.hl[data-id="${CSS.escape(id)}"]`).forEach((x) => x.classList.toggle("copied", !!copied[id])); } },
+        // 글씨 조각(제목 낱말·시간)은 첫 칸에 다 넣고, fitTexts가 칸 길이에 맞춰 조각째 다음 줄 칸으로 옮긴다
+        h("span", { class: bar.items ? "items" : null }, s === bar.s ? [
+          ...(bar.items ? bar.items.map((t) => { const iid = `${d}|up|${t}`; const ie = h("i", { class: copied[iid] ? "copied" : null, onclick: (ev) => { ev.stopPropagation(); toggleCopied(iid, ie); } }, t); return ie; }) : [h("b", null, bar.name)]), // 제목은 한 덩어리 (낱말끼리 떨어지지 않게, 2026-11-21 요청)
+          h("small", null, `${hm(bar.s)}~${hm(bar.e)}`)].map((x, i) => (x.dataset.tok = i, x)) : null));
+      trk.append(el);
+    }
+    const inRow = day.texts.filter((t) => (hr === H0 ? t.s < b : hr === H1 - 1 ? t.s >= a : t.s >= a && t.s < b)).sort((x, y) => x.s - y.s);
+    for (const grp of [inRow.filter((t) => !t.memo), inRow.filter((t) => t.memo)]) {
+      if (!grp.length) continue;
+      const left = Math.max(0, Math.min(55, (grp[0].s - a) / 60 * 100));
+      trk.append(h("div", { class: "tx" + (grp[0].memo ? " memo" : ""), style: `left:${left}%` }, grp.map((t) => {
+        const id = `${d}|${t.s}|${t.text}`;
+        const el = h("span", { class: "it" + (/^→/.test(t.text) ? " arrow" : "") + (t.red ? " red" : "") + (t.done ? " done" : "") + (copied[id] ? " copied" : ""), title: t.tip, onclick: () => toggleCopied(id, el) }, t.lvl === 3 ? h("span", { class: "imp" }, "!") : null, t.text);
+        return el;
+      })));
+    }
+    grid.append(h("div", { class: "hr" }, h("div", { class: "lab" }, hr), trk));
+  }
+  const top = (7 * 60 - H0 * 60) / 60 * ROW;
+  if (day.brkEnd) grid.append(h("div", { class: "brk", style: `top:${top + 3}px;height:${(day.brkEnd - 7 * 60) / 60 * ROW - 6}px` }, h("b", null, "절대 폰X")));
+  // 금요일 저녁(19~24시)은 토요일로 옮겨도 됨: 오른쪽 둥근 괄호 + ↔ 토
+  if (day.friArrow) grid.append(h("div", { class: "rbrk", style: `top:${(19 - H0) * ROW + 4}px;height:${6 * ROW - 8}px`, title: "금요일 저녁은 비워도 됨 → 토요일로" }, h("b", null, "↔ 토")));
+  if (d === TODAY()) {
+    const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+    if (m >= H0 * 60 && m < H1 * 60) grid.append(h("div", { class: "nowl", style: `top:${(m - H0 * 60) / 60 * ROW}px` }));
+  }
+  col.append(grid);
+
+  // 빨간 메모
+  const memo = h("div", { class: "memo-box" });
+  for (const n of day.notes) memo.append(h("div", { class: "star" }, n));
+  if (day.allday.length) memo.append(h("div", { class: "star" }, "종일: ", day.allday.map((a) => a.title).join(" · ")));
+  const li = (id, cls, ...kids) => { const el = h("li", { class: cls + (copied[id] ? " copied" : ""), onclick: (ev) => { ev.stopPropagation(); toggleCopied(id, el); } }, ...kids); return el; };
+  // 금요일: ★ 주말에 어디 갈지 정하기 □ 축제 or 관광지 [도시락, 텀블러 / 버스 시간표]
+  if (day.extra) {
+    const [title, boxes, sub] = day.extra;
+    memo.append(h("h3", { class: "star" }, title));
+    const ul = h("ul");
+    for (const b of boxes) ul.append(li(`${d}|ex|${b}`, "todo", b, h("div", { class: "sub" }, sub.map((s) => h("div", null, s)))));
+    memo.append(ul);
+  }
+  // ★ 내일 스케줄 □ ...
+  if (day.prep.length) {
+    const nd = parseYmd(day.nd);
+    memo.append(h("h3", { class: "star" }, `${day.prepTitle} (${nd.getMonth() + 1}.${nd.getDate()} ${WD[nd.getDay()]})`));
+    const pl = h("ul");
+    // 빨간 글씨 아래 검은(회색) 보조 글씨는 넣지 않는다 (2026-11-21 요청)
+    for (const [p, , bag] of day.prep) pl.append(li(`${d}|prep|${p}`, "todo", p, bag ? h("div", { class: "sub" }, bag.map((s) => h("div", null, s))) : null));
+    memo.append(pl);
+  }
+  // Todoist 시간 없는 할 일(검은 글씨) 칸은 없앰 (2026-11-21 요청: 할일판2는 검은 글씨 추가 없음)
+  col.append(memo);
+  return col;
+}
+
+// 긴 글씨가 칸 오른쪽 끝에서 잘리면 왼쪽으로 당겨서 다 보이게
+function fitTexts() {
+  for (const tx of ROOT.querySelectorAll(".tx")) {
+    tx.style.removeProperty("transform");
+    const over = tx.scrollWidth - tx.clientWidth;
+    if (over > 0) {
+      const room = tx.offsetLeft;
+      tx.style.left = Math.max(0, room - over - 2) + "px";
+    }
+    // 그래도 넘치면(7시 줄처럼 할 일이 많을 때) 글씨를 줄이고 두 줄로
+    tx.classList.remove("dense");
+    if (tx.scrollWidth > tx.clientWidth) tx.classList.add("dense");
+  }
+  // 형광펜 글씨 이어쓰기: 제목 낱말·시간을 조각째로 칸에 채우고, 안 들어가는 조각은 같은 형광펜의 다음 줄 칸으로 (글자 중간에서 자르지 않음)
+  const groups = {};
+  for (const hl of ROOT.querySelectorAll(".hl[data-id]")) (groups[hl.dataset.id] ||= []).push(hl);
+  for (const segs of Object.values(groups)) {
+    const spans = segs.map((hl) => hl.querySelector("span"));
+    const toks = spans.flatMap((sp) => [...sp.children]).sort((x, y) => x.dataset.tok - y.dataset.tok);
+    // 제목 = 한 덩어리, 시간 = 한 덩어리 (2026-11-21 요청: 제목 글자끼리·시간 글자끼리 이어지게)
+    const fill = () => {
+      toks.forEach((t) => { t.hidden = false; t.remove(); });
+      let k = 0, lost = false, moved = false;
+      for (const t of toks) {
+        while (true) {
+          const sp = spans[k], room = segs[k].offsetWidth - 6;
+          sp.append(t);
+          if (sp.scrollWidth <= room) break;
+          if (k < spans.length - 1) { k++; continue; } // 다음 줄 칸으로 덩어리째
+          lost = true;
+          if (sp.children.length > 1 || t.tagName === "SMALL") t.hidden = true; // 마지막 칸에도 안 들어가면 그 덩어리는 숨김
+          break;
+        }
+        if (t.dataset.tok === "0" && k > 0) moved = true; // 제목이 시작 칸에 못 들어감
+      }
+      return { lost, moved };
+    };
+    const tight = (on) => spans.forEach((sp) => sp.classList.toggle("tight", on));
+    // 1) 보통 글씨로 시작 칸에 제목이 들어가면 끝 → 2) 글씨를 줄여서 시작 칸에 넣기 → 3) 안 숨겨지는 쪽 → 4) 작은 글씨
+    tight(false); const a = fill();
+    if (a.lost || a.moved) {
+      tight(true); const b = fill();
+      // 작은 글씨가 실제로 나아질 때만 작게 둠 (숨김이 사라지거나, 제목이 시작 칸에 들어감)
+      const better = (!b.lost && !b.moved) || (a.lost && !b.lost) || (a.lost === b.lost && a.moved && !b.moved) || (a.lost && b.lost);
+      if (!better) { tight(false); fill(); }
+    }
+  }
+}
+
+function render() {
+  const page = $("page");
+  page.classList.toggle("week", mode === "week");
+  ROOT.querySelector(".wrap").classList.toggle("wk", mode === "week");
+  $("mode").textContent = mode === "week" ? "3일 보기" : "일주일 보기";
+  $("prev").setAttribute("aria-label", mode === "week" ? "지난주" : "하루 앞으로");
+  $("next").setAttribute("aria-label", mode === "week" ? "다음 주" : "하루 뒤로");
+  page.replaceChildren(...Array.from({ length: NDAYS() }, (_, i) => renderDay(buildDay(addDays(start, i)))));
+  // 일주일 보기를 옆으로 밀어야 하는 좁은 화면이면 오늘 칸이 보이게
+  if (mode === "week") { const t = page.querySelector(".today")?.closest(".day"); if (t && page.scrollWidth > page.clientWidth) page.scrollLeft = t.offsetLeft - page.offsetLeft - 8; }
+  requestAnimationFrame(fitTexts);
+}
+
+async function load() {
+  $("status").textContent = "불러오는 중…";
+  $("notice").replaceChildren();
+  const today = TODAY();
+  const base = start <= today ? today : start;
+  const last = addDays(start, NDAYS()); // 마지막 날 + 다음날(내일 스케줄 메모용)
+  const days = Math.min(30, Math.max(1, Math.round((parseYmd(last) - parseYmd(base)) / 86400000) + 1));
+  const [tk, ev, dc, dt] = await Promise.allSettled([
+    mcp.callTool(TD, "find-tasks-by-date", { startDate: base === today ? "today" : base, daysCount: days, limit: 100 }, { cache: false }),
+    mcp.callTool(GC, "list_events", { startTime: `${start}T00:00:00`, endTime: `${addDays(start, NDAYS() + 1)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+    // 디데이: 앞으로 1년 캘린더 + Todoist 전체에서 시험·발표 찾기
+    mcp.callTool(GC, "list_events", { startTime: `${today}T00:00:00`, endTime: `${addDays(today, 365)}T00:00:00`, orderBy: "startTime", pageSize: 250 }, { cache: false }),
+    mcp.callTool(TD, "find-tasks", { filter: "search: 시험 | search: 고사 | search: 기말 | search: 발표 | search: 퀴즈 | search: 과제 | search: 리포트 | search: 레포트", limit: 100 }, { cache: false }),
+  ]);
+  const dd = [];
+  if (dc.status === "fulfilled") for (const e of dc.value.payload?.events || []) {
+    const t = cleanSummary(e.summary);
+    if (e.status === "cancelled" || isChecked(e) || !isDday(t)) continue;
+    dd.push({ d: e.start?.dateTime ? ymd(new Date(e.start.dateTime)) : e.start?.date?.slice(0, 10), title: t });
+  }
+  if (dt.status === "fulfilled") for (const t of dt.value.payload?.tasks || []) {
+    const td = taskDate(t);
+    if (!td || !isDday(t.content)) continue;
+    const title = t.content.replace(/\s*\(.*?\)/g, "").replace(/\s*\S+까지$/, "").trim();
+    if (!dd.some((x) => x.d === td && x.title === title)) dd.push({ d: td, title });
+  }
+  ddays = dd.filter((x) => x.d);
+  const errs = [];
+  data.tasks = tk.status === "fulfilled" ? tk.value.payload?.tasks || [] : (errs.push("Todoist"), []);
+  // 마케팅은 끝남 → 캘린더에 남아 있어도 보여 주지 않음 (2026-11-27 요청)
+  data.events = ev.status === "fulfilled" ? (ev.value.payload?.events || []).filter((e) => e.status !== "cancelled" && !/마케팅|마킴|마뗑/.test(e.summary || "")) : (errs.push("구글 캘린더"), []);
+  render();
+  renderDday();
+  const n = new Date();
+  // 긴 안내 글씨 대신 위 막대에 짧게만 (2026-11-21 요청)
+  $("status").textContent = errs.length ? `${errs.join("·")} 못 불러옴` : `${pad(n.getHours())}:${pad(n.getMinutes())}에 불러옴`;
+}
+
+function go(n) { start = n === 0 ? home() : addDays(start, mode === "week" ? n * 7 : n); mcp ? load().catch(() => render()) : render(); }
+$("mode").addEventListener("click", () => {
+  mode = mode === "week" ? "3" : "week";
+  try { localStorage.setItem("nb2-mode", mode); } catch {}
+  go(0);
+});
+$("prev").addEventListener("click", () => go(-1));
+$("next").addEventListener("click", () => go(1));
+$("today").addEventListener("click", () => go(0));
+$("reload").addEventListener("click", () => (mcp ? load().catch(() => render()) : render()));
+window.addEventListener("resize", () => requestAnimationFrame(fitTexts));
+document.fonts?.ready?.then(fitTexts).catch(() => {});
+
+render(); // 불러오기 전에도 수업·고정표가 있는 노트 모양을 먼저 보여 줌
+(async () => {
+  try { mcp = window.claude ? await window.claude.use("mcp") : null; } catch { mcp = null; }
+  if (!mcp) { $("status").textContent = "Todoist·캘린더 연결 안 됨 (claude.ai에서 열어 주세요)"; return; }
+  load().catch(() => { $("status").textContent = "불러오지 못했어요"; });
+})();
+
+})();
+/* 탭 넘기기: 마지막으로 본 탭을 기억 (이 기기에만) */
+(() => {
+  const tabs = document.querySelectorAll(".apptabs button");
+  const show = (t) => {
+    document.body.dataset.tab = t;
+    tabs.forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+    try { localStorage.setItem("app-tab", t); } catch {}
+    document.title = t === "schedule" ? "스케줄표" : "샤오홍슈 작업목록";
+    window.scrollTo(0, 0);
+    if (t === "schedule") requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  };
+  let t = location.hash === "#xhs" ? "xhs" : location.hash === "#schedule" ? "schedule" : null;
+  if (!t) { try { t = localStorage.getItem("app-tab"); } catch {} }
+  show(t === "xhs" ? "xhs" : "schedule");
+  tabs.forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
 })();
 </script>
 </body>
