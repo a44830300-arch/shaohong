@@ -2,6 +2,8 @@
 name = "halilpan"
 main = "src/worker.js"
 compatibility_date = "2025-09-01"
+# Cloudflare 홈페이지에서 넣은 값(TODOIST_TOKEN·ICAL_URL)을 다시 올릴 때 지우지 않게 함
+keep_vars = true
 
 # 화면 파일(public/) — 잠금 확인을 먼저 하려고 worker가 먼저 받음
 [assets]
@@ -12,7 +14,7 @@ run_worker_first = true
 # 체크·작업목록 저장 칸
 [[kv_namespaces]]
 binding = "BOARD"
-id = "KV_ID_HERE"
+id = "eb8a4b260a5548c58ca91090f02183d7"
 
 # 비밀값(wrangler secret put 으로 넣음, 이 파일에는 적지 않음):
 #   APP_PASSWORD  — 앱 잠금 비밀번호
