@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="120" viewBox="-8 -28 84 120">
+<g id="흰 테두리">
+<path d="M30.5 2C13.4 2 2 16.5412 2 35.2371C2 56.0102 30.5 83.0153 30.5 83.0153C30.5 83.0153 59 56.0102 59 35.2371C59 16.5412 47.6 2 30.5 2Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" />
+<path d="M9 7 C12 -14 36 -24 53 -14 C61 -9 65 -1 64 9 C61 3 56 -1 50 -1 L50 7 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" transform="rotate(14 30 8)"/>
+<circle cx="64" cy="12" r="6" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" transform="rotate(14 30 8)"/>
+<rect x="5" y="3" width="50" height="11" rx="5.5" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" transform="rotate(14 30 8)"/>
+</g>
+<g id="핀">
+<path d="M30.5 2C13.4 2 2 16.5412 2 35.2371C2 56.0102 30.5 83.0153 30.5 83.0153C30.5 83.0153 59 56.0102 59 35.2371C59 16.5412 47.6 2 30.5 2Z" fill="#EF3D32"  stroke-linejoin="round" />
+<ellipse cx="30.5" cy="33.16" rx="9.5" ry="10.39" fill="#FFFFFF"/>
+</g>
+<g id="소품">
+<path d="M9 7 C12 -14 36 -24 53 -14 C61 -9 65 -1 64 9 C61 3 56 -1 50 -1 L50 7 Z" fill="#D42A22"  stroke-linejoin="round" transform="rotate(14 30 8)"/>
+<circle cx="64" cy="12" r="6" fill="#FFFFFF" stroke="#CFCFCF" stroke-width="1.2" stroke-linejoin="round" transform="rotate(14 30 8)"/>
+<rect x="5" y="3" width="50" height="11" rx="5.5" fill="#FFFFFF" stroke="#CFCFCF" stroke-width="1.2" stroke-linejoin="round" transform="rotate(14 30 8)"/>
+</g>
+</svg>
