@@ -1,0 +1,20 @@
+# 할일판 독립 앱 (강정준비준 혼자 쓰는 앱) — Cloudflare Workers 설정
+name = "halilpan"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+
+# 화면 파일(public/) — 잠금 확인을 먼저 하려고 worker가 먼저 받음
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = true
+
+# 체크·작업목록 저장 칸
+[[kv_namespaces]]
+binding = "BOARD"
+id = "KV_ID_HERE"
+
+# 비밀값(wrangler secret put 으로 넣음, 이 파일에는 적지 않음):
+#   APP_PASSWORD  — 앱 잠금 비밀번호
+#   TODOIST_TOKEN — Todoist 설정 > 연동 > 개발자 > API 토큰
+#   ICAL_URL      — 구글 캘린더 설정 > 캘린더 통합 > iCal 형식의 비공개 주소
