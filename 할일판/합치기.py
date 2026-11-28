@@ -1,4 +1,4 @@
-# 할일판 앱 만들기: 작업목록.html(샤오홍슈) + ../할일판2/index.html(스케줄) → index.html (탭 2개)
+# 할일판 앱 만들기: 작업목록.html(샤오홍슈) + ../할일판2/index.html(스케줄) → 할일판앱.html (탭 2개)
 # 스케줄 페이지는 shadow DOM 안에 넣어 글씨체·색·아이디가 서로 섞이지 않게 한다.
 import re, pathlib
 D = pathlib.Path(__file__).parent
@@ -70,5 +70,5 @@ out = re.sub(r'<link rel="stylesheet" href="[^"]+">', f'<link rel="stylesheet" h
 out = out.replace("</style>", shell_css + "</style>", 1)
 i = out.rindex("</body>")
 out = out[:i] + shell_html + out[i:]
-(D / "index.html").write_text(out, encoding="utf-8")
+(D / "할일판앱.html").write_text(out, encoding="utf-8")
 print("ok", len(out))

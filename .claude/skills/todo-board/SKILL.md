@@ -1,6 +1,6 @@
 ---
 name: todo-board
-description: 할 일판(https://claude.ai/artifact/2PtRYP8i1fQmzAxTaA6GRo) = 샤오홍슈(나들로그) 작업목록 전용 페이지의 기능과 모양(작업 순서·작업중·월별/분기별·이번 주·게시물 체크/숨기기·끝난 작업물·컨텐츠 가이드·작업 타이머). 할 일판을 고치거나, 기능을 설명하거나, 규칙이 바뀌어 페이지를 함께 고칠 때 쓴다.
+description: 할 일판(할일판 앱 https://claude.ai/artifact/3mV2YEYqVPTioscAG2QtRq 의 📮 샤오홍슈 탭) = 샤오홍슈(나들로그) 작업목록 전용 페이지의 기능과 모양(작업 순서·작업중·월별/분기별·이번 주·게시물 체크/숨기기·끝난 작업물·컨텐츠 가이드·작업 타이머). 할 일판을 고치거나, 기능을 설명하거나, 규칙이 바뀌어 페이지를 함께 고칠 때 쓴다.
 ---
 
 # 할 일판 (= 할일판 1 · 샤오홍슈 작업목록)
@@ -11,7 +11,7 @@ description: 할 일판(https://claude.ai/artifact/2PtRYP8i1fQmzAxTaA6GRo) = 샤
 
 - **할 일판 1은 오로지 샤오홍슈 작업목록만 보여 준다** (2026-11-24). 스케줄(시간표·수업·약속·공무원·전공·마케팅·블로그 체험단)은 할일판2(https://claude.ai/artifact/TwYMBC8WgMe7NwSvZL1H8K)에서 본다. 할 일판 1에 다시 넣지 않는다.
 - **나들로그만 다룬다** (2026-11-25 손그림 수정안). 제주라이브 게시물(이름이 "🆘 제주라이브:"로 시작하거나 라벨 `제주라이브`, 「📋 제주라이브 게시물 후보」 밑)은 보여 주지 않고, 계정 옮기기 버튼·제주라이브 칸도 없다.
-- 원본 코드: 저장소 `할일판/작업목록.html` (2026-11-28부터 스케줄 탭과 한 앱으로 합침). 고친 뒤 `python 할일판/합치기.py`를 돌려 `할일판/index.html`을 만들고, 그 파일로 같은 주소에 다시 올린다(capabilities: db·sample + Todoist `find-tasks`·`update-tasks`·`complete-tasks`·`find-completed-tasks`·`add-tasks`·`find-tasks-by-date` + Google Calendar `list_events` — 스케줄 탭 몫까지 함께, 빠뜨리면 스케줄 탭이 안 불러와짐).
+- 원본 코드: 저장소 `할일판/작업목록.html` (2026-11-28부터 스케줄 탭과 한 앱으로 합침). 고친 뒤 `python 할일판/합치기.py`를 돌려 `할일판/할일판앱.html`을 만들고, 그 파일로 할일판 앱 주소(https://claude.ai/artifact/3mV2YEYqVPTioscAG2QtRq)에 다시 올린다(capabilities: db·sample + Todoist `find-tasks`·`update-tasks`·`complete-tasks`·`find-completed-tasks`·`add-tasks`·`find-tasks-by-date` + Google Calendar `list_events` — 스케줄 탭 몫까지 함께, 빠뜨리면 스케줄 탭이 안 불러와짐).
 
 ## 화면 순서 (2026-11-25 손그림 수정안, 위 → 아래)
 
